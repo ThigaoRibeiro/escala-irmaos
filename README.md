@@ -28,7 +28,7 @@ A escala está dividida em dois turnos diários de 12 horas:
 
 ## ⚙️ Configurando o Banco de Dados (Supabase)
 1. Crie uma conta gratuita em [supabase.com](https://supabase.com) e inicie um projeto.
-2. Acesse o **SQL Editor**, crie uma **New Query**, copie o script da aba **Configurar** do app e execute.
-3. O SQL cria as tabelas, remove policies antigas, libera acesso pela chave **Publishable/anon** e habilita Supabase Realtime, sem login no app.
-4. Em **Project Settings > API**, use a **Project URL** e a chave **Publishable/anon** no `.env` e nos GitHub Secrets.
+2. Execute o script SQL mantido no projeto para criar as tabelas, remover policies antigas e habilitar Supabase Realtime.
+3. Em **Project Settings > API**, use a **Project URL** e a chave **Publishable/anon** no `.env` e nos GitHub Secrets.
+4. A aba **Cuidadoras** do app permite editar apenas os nomes das cuidadoras.
 5. Nunca coloque `service_role`, `sb_secret_*` ou senha de banco no frontend.

@@ -11,7 +11,7 @@ import {
   getCaregivers,
   subscribeToRealtimeChanges
 } from './utils/db';
-import { CalendarDays, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { CalendarDays, FileText, Users as UsersIcon } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('calendar'); // calendar, logs, config
@@ -253,9 +253,9 @@ export default function App() {
             
             {activeTab === 'logs' && (
               <DailyLogs 
+                shifts={shifts}
                 logs={logs} 
                 onSaveLog={handleSaveLog} 
-                activeMember={activeMember} 
                 caregivers={caregivers}
               />
             )}
@@ -291,8 +291,8 @@ export default function App() {
           className={`nav-item ${activeTab === 'config' ? 'nav-item-active' : ''}`}
           onClick={() => setActiveTab('config')}
         >
-          <SettingsIcon />
-          <span>Configurar</span>
+          <UsersIcon />
+          <span>Cuidadoras</span>
         </button>
       </nav>
     </div>

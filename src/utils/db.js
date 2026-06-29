@@ -2,19 +2,19 @@ import { createClient } from '@supabase/supabase-js';
 
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
 export const MEMBERS = [
-  { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '👨‍💻' }, // Masculino
-  { name: 'Aldeyr', color: '#0369a1', lightColor: '#e0f2fe', avatar: '👨‍⚕️' }, // Masculino
-  { name: 'Ana Nery', color: '#be185d', lightColor: '#fce7f3', avatar: '👩‍⚕️' }, // Feminino
-  { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '👩‍🏫' }, // Feminino
-  { name: 'Haniel', color: '#15803d', lightColor: '#dcfce7', avatar: '👨‍🌾' }, // Masculino
-  { name: 'Ester', color: '#c2410c', lightColor: '#ffedd5', avatar: '👩‍🎨' }  // Feminino
+  { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '💙 👨' },
+  { name: 'Aldeyr', color: '#0369a1', lightColor: '#e0f2fe', avatar: '💙 👨' },
+  { name: 'Ana Nery', color: '#be185d', lightColor: '#fce7f3', avatar: '💗 👩' },
+  { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '💗 👩' },
+  { name: 'Haniel', color: '#15803d', lightColor: '#dcfce7', avatar: '💙 👨' },
+  { name: 'Ester', color: '#c2410c', lightColor: '#ffedd5', avatar: '💗 👩' }
 ];
 
 // Ícone padrão e cor para as Cuidadoras Contratadas
 export const CAREGIVER_STYLE = {
   color: '#6d28d9', // Roxo
   lightColor: '#f3e8ff',
-  avatar: '👩‍❤️‍🩹' // Ícone de cuidado
+  avatar: '👩‍⚕️' // Cuidadora de jaleco
 };
 
 const CONFIG_KEY = 'escala_supabase_config';

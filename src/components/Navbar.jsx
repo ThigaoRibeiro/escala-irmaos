@@ -37,7 +37,7 @@ export default function Navbar({ activeMember, setActiveMember }) {
           >
             {MEMBERS.map(member => (
               <option key={member.name} value={member.name}>
-                {member.name} ({member.avatar})
+                {member.name} {member.avatar}
               </option>
             ))}
           </select>
