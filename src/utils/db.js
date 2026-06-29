@@ -23,8 +23,8 @@ const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 
 // Credenciais padrão do Supabase carregadas via variáveis de ambiente para boas práticas de segurança
-const DEFAULT_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const DEFAULT_URL = import.meta.env.VITE_SUPABASE_URL || 'https://uccupbxozqnmhcloptcq.supabase.co';
+const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_6Oj5Ze1yE9UyHNIgvSKCyA_JTK3ZAny';
 
 // --- CONFIGURAÇÕES DO SUPABASE ---
 
