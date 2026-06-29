@@ -10,12 +10,7 @@ import {
 
 export default function Calendar({ shifts, onUpdateShift, activeMember, caregivers }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day;
-    const sunday = new Date(today.setDate(diff));
-    sunday.setHours(0, 0, 0, 0);
-    return sunday;
+    return getMondayStart(new Date());
   });
 
   const [copiedText, setCopiedText] = useState(false);
@@ -40,12 +35,7 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
   };
 
   const jumpToToday = () => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = today.getDate() - day;
-    const sunday = new Date(today.setDate(diff));
-    sunday.setHours(0, 0, 0, 0);
-    setCurrentWeekStart(sunday);
+    setCurrentWeekStart(getMondayStart(new Date()));
   };
 
   const formatDateLabel = (date) => {
@@ -239,6 +229,15 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
       )}
     </div>
   );
+}
+
+function getMondayStart(date) {
+  const start = new Date(date);
+  const day = start.getDay();
+  const daysSinceMonday = day === 0 ? 6 : day - 1;
+  start.setDate(start.getDate() - daysSinceMonday);
+  start.setHours(0, 0, 0, 0);
+  return start;
 }
 
 function ShiftRow({ timeLabel, shift, onClick }) {
