@@ -24,30 +24,68 @@ export default function App() {
   const [dbTrigger, setDbTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [loadWarning, setLoadWarning] = useState('');
 
   // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
       setLoadError('');
+      setLoadWarning('');
+
       try {
         const fetchedShifts = await getShifts();
-        const fetchedLogs = await getDailyLogs();
-        const fetchedCaregivers = await getCaregivers();
-        
         setShifts(fetchedShifts);
+      } catch (e) {
+        console.error('Erro ao carregar escalas:', e);
+        setLoadError(`Não foi possível carregar a escala do Supabase. ${e?.message || 'Confira a configuração do banco.'}`);
+        setIsLoading(false);
+        return;
+      }
+
+      const warnings = [];
+
+      try {
+        const fetchedLogs = await getDailyLogs();
         setLogs(fetchedLogs);
+      } catch (e) {
+        console.error('Erro ao carregar diário:', e);
+        setLogs({});
+        warnings.push('Diário indisponível');
+      }
+
+      try {
+        const fetchedCaregivers = await getCaregivers();
         setCaregivers(fetchedCaregivers);
       } catch (e) {
-        console.error('Erro ao carregar dados:', e);
-        setLoadError('Não foi possível carregar os dados do Supabase. Confira a configuração do banco.');
-      } finally {
-        setIsLoading(false);
+        console.error('Erro ao carregar cuidadoras:', e);
+        setCaregivers([]);
+        warnings.push('Cuidadoras indisponíveis');
       }
+
+      if (warnings.length > 0) {
+        setLoadWarning(warnings.join(' · '));
+      }
+
+      setIsLoading(false);
     }
-    
+
     loadData();
   }, [dbTrigger]);
+
+  const handleResetConnection = () => {
+    try {
+      localStorage.removeItem('escala_supabase_config');
+      localStorage.removeItem('escala_local_shifts_v2');
+      localStorage.removeItem('escala_local_logs_v2');
+      localStorage.removeItem('escala_local_caregivers_v2');
+      localStorage.setItem('escala_local_mode_active', 'false');
+    } catch (e) {
+      console.error('Erro ao limpar configuração local:', e);
+    } finally {
+      window.location.reload();
+    }
+  };
 
   // Atualizar escala
   const handleUpdateShift = async (date, period, assignedTo, caregiverAssigned, status) => {
@@ -103,9 +141,23 @@ export default function App() {
           <div className="card" style={{ borderLeft: '4px solid var(--color-danger)' }}>
             <h3 className="card-title" style={{ color: 'var(--color-danger)' }}>Banco indisponível</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{loadError}</p>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={() => setDbTrigger(prev => prev + 1)}>
+                Tentar novamente
+              </button>
+              <button className="btn btn-secondary" onClick={handleResetConnection}>
+                Limpar conexão deste navegador
+              </button>
+            </div>
           </div>
         ) : (
           <>
+            {loadWarning && (
+              <div className="info-banner" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)', backgroundColor: 'var(--color-warning-light)' }}>
+                {loadWarning}
+              </div>
+            )}
+
             {activeTab === 'calendar' && (
               <Calendar 
                 shifts={shifts} 
