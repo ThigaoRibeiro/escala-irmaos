@@ -5,24 +5,35 @@ import {
   clearSupabaseConfig, 
   SUPABASE_SQL_SETUP,
   resetSupabaseClient,
-  getSupabaseClient
+  getSupabaseClient,
+  getCaregivers,
+  addCaregiver,
+  deleteCaregiver
 } from '../utils/db';
 import { 
   Settings, 
   Database, 
   Clipboard, 
   Check, 
-  AlertCircle,
   HelpCircle,
-  Link2
+  Users,
+  Plus,
+  Trash2,
+  Heart
 } from 'lucide-react';
 
 export default function Config({ onConfigChanged }) {
+  // Configs Banco
   const [url, setUrl] = useState('');
   const [key, setKey] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+
+  // Cuidadoras
+  const [caregivers, setCaregivers] = useState([]);
+  const [newCaregiverName, setNewCaregiverName] = useState('');
+  const [caregiverTrigger, setCaregiverTrigger] = useState(0);
 
   useEffect(() => {
     const config = getSupabaseConfig();
@@ -32,6 +43,15 @@ export default function Config({ onConfigChanged }) {
     const client = getSupabaseClient();
     setIsConnected(!!client);
   }, []);
+
+  // Recarrega cuidadoras quando o gatilho muda
+  useEffect(() => {
+    async function loadCaregivers() {
+      const list = await getCaregivers();
+      setCaregivers(list);
+    }
+    loadCaregivers();
+  }, [caregiverTrigger]);
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -43,11 +63,11 @@ export default function Config({ onConfigChanged }) {
     saveSupabaseConfig(url.trim(), key.trim());
     resetSupabaseClient();
     
-    // Testa se o cliente foi inicializado com sucesso
     const client = getSupabaseClient();
     setIsConnected(!!client);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+    setCaregiverTrigger(prev => prev + 1);
     
     if (onConfigChanged) onConfigChanged();
   };
@@ -59,6 +79,7 @@ export default function Config({ onConfigChanged }) {
       setUrl('');
       setKey('');
       setIsConnected(false);
+      setCaregiverTrigger(prev => prev + 1);
       if (onConfigChanged) onConfigChanged();
     }
   };
@@ -68,6 +89,24 @@ export default function Config({ onConfigChanged }) {
       setCopiedSql(true);
       setTimeout(() => setCopiedSql(false), 3000);
     });
+  };
+
+  const handleAddCaregiver = async (e) => {
+    e.preventDefault();
+    if (!newCaregiverName.trim()) return;
+    
+    await addCaregiver(newCaregiverName.trim());
+    setNewCaregiverName('');
+    setCaregiverTrigger(prev => prev + 1);
+    if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+  };
+
+  const handleDeleteCaregiver = async (id, name) => {
+    if (window.confirm(`Tem certeza de que deseja remover a cuidadora "${name}"?`)) {
+      await deleteCaregiver(id);
+      setCaregiverTrigger(prev => prev + 1);
+      if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+    }
   };
 
   return (
@@ -92,22 +131,96 @@ export default function Config({ onConfigChanged }) {
         </h4>
         <p style={{ fontSize: '0.9rem', marginTop: '6px' }}>
           {isConnected ? (
-            <span>Conectado ao Supabase em tempo real! Os dados estão sendo salvos na nuvem e compartilhados com todos.</span>
+            <span>Conectado ao Supabase em tempo real! Os dados estão na nuvem e compartilhados com todos.</span>
           ) : (
             <span>Modo Demonstração (Local). As alterações estão sendo salvas apenas no navegador deste celular.</span>
           )}
         </p>
       </div>
 
-      {/* Formulário de Configuração */}
-      <form onSubmit={handleSave} className="card">
+      {/* PAINEL DE GERENCIAMENTO DE CUIDADORAS */}
+      <div className="card">
         <h3 className="card-title">
-          <Settings size={20} />
-          <span>Configuração de Conexão</span>
+          <Users size={20} />
+          <span>Gerenciar Cuidadoras</span>
         </h3>
         
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Conecte o aplicativo ao seu banco de dados Supabase para que as escalas e diários sejam sincronizados nos aparelhos de todos os irmãos.
+          Adicione, remova ou edite os nomes das cuidadoras profissionais que aparecem nas opções de escala.
+        </p>
+
+        {/* Form para Adicionar */}
+        <form onSubmit={handleAddCaregiver} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <input 
+            type="text"
+            value={newCaregiverName}
+            onChange={(e) => setNewCaregiverName(e.target.value)}
+            placeholder="Nome da cuidadora (ex: Paula)"
+            className="form-control"
+            style={{ flex: 1 }}
+            required
+          />
+          <button type="submit" className="btn btn-primary" style={{ padding: '10px 14px' }}>
+            <Plus size={18} />
+            <span>Adicionar</span>
+          </button>
+        </form>
+
+        {/* Lista de Cuidadoras */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {caregivers.length === 0 ? (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '8px' }}>
+              Nenhuma cuidadora cadastrada.
+            </p>
+          ) : (
+            caregivers.map(item => (
+              <div 
+                key={item.id} 
+                style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  padding: '10px 14px', 
+                  backgroundColor: 'var(--bg-subtle)', 
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                  <span style={{ fontSize: '1.2rem' }}>👩‍❤️‍🩹</span>
+                  <span>{item.name}</span>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => handleDeleteCaregiver(item.id, item.name)}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: 'var(--color-danger)', 
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title="Excluir cuidadora"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* CONFIGURAÇÃO SUPABASE */}
+      <form onSubmit={handleSave} className="card">
+        <h3 className="card-title">
+          <Settings size={20} />
+          <span>Conexão Supabase</span>
+        </h3>
+        
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          Insira os dados do seu projeto Supabase para que a escala seja sincronizada online.
         </p>
 
         <div className="form-group">
@@ -141,29 +254,27 @@ export default function Config({ onConfigChanged }) {
           
           {isConnected && (
             <button type="button" className="btn btn-danger" onClick={handleClear}>
-              Desconectar
+              Voltar ao Modo Local
             </button>
           )}
         </div>
       </form>
 
-      {/* Tutorial Supabase SQL */}
+      {/* SQL TUTORIAL */}
       <div className="card">
         <h3 className="card-title" style={{ color: 'var(--primary)' }}>
           <HelpCircle size={20} />
-          <span>Como criar o Banco de Dados?</span>
+          <span>Script SQL de Instalação</span>
         </h3>
         
         <ol style={{ paddingLeft: '16px', fontSize: '0.85rem', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <li>Acesse <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>supabase.com</a> e crie uma conta gratuita.</li>
-          <li>Crie um novo projeto (guarde a senha do banco se desejar, mas não será usada aqui).</li>
-          <li>No painel lateral esquerdo, clique no ícone **SQL Editor** (um ícone de terminal com <code>&gt;_</code>).</li>
-          <li>Clique em **New Query**, cole o código SQL abaixo e clique no botão **Run** no canto inferior direito.</li>
-          <li>Vá em **Project Settings** (ícone de engrenagem) &gt; **API**, e copie a **Project URL** e a **API anon key** para colar no formulário acima. Pronto!</li>
+          <li>Acesse <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>supabase.com</a>.</li>
+          <li>Vá em **SQL Editor** &gt; **New Query**, cole o código SQL abaixo e clique em **Run**.</li>
+          <li>Copie a **Project URL** e a **API anon key** em **Settings** &gt; **API** e cole nos campos acima.</li>
         </ol>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Código SQL Necessário:</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Código SQL:</span>
           <button 
             type="button" 
             className="btn btn-secondary btn-sm" 

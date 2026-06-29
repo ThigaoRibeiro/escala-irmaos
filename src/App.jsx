@@ -3,7 +3,7 @@ import Navbar from './components/Navbar';
 import Calendar from './components/Calendar';
 import DailyLogs from './components/DailyLogs';
 import Config from './components/Config';
-import { getShifts, updateShift, getDailyLogs, saveDailyLog } from './utils/db';
+import { getShifts, updateShift, getDailyLogs, saveDailyLog, getCaregivers } from './utils/db';
 import { CalendarDays, FileText, Settings as SettingsIcon } from 'lucide-react';
 
 export default function App() {
@@ -14,18 +14,22 @@ export default function App() {
   
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
+  const [caregivers, setCaregivers] = useState([]);
   const [dbTrigger, setDbTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega as escalas e logs na inicialização ou quando mudar o banco
+  // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
       try {
         const fetchedShifts = await getShifts();
         const fetchedLogs = await getDailyLogs();
+        const fetchedCaregivers = await getCaregivers();
+        
         setShifts(fetchedShifts);
         setLogs(fetchedLogs);
+        setCaregivers(fetchedCaregivers);
       } catch (e) {
         console.error('Erro ao carregar dados:', e);
       } finally {
@@ -37,9 +41,10 @@ export default function App() {
   }, [dbTrigger]);
 
   // Atualizar escala
-  const handleUpdateShift = async (date, period, assignedTo, status) => {
-    // Atualização otimista na tela (UI rápida)
+  const handleUpdateShift = async (date, period, assignedTo, caregiverAssigned, status) => {
     const id = `${date}_${period}`;
+    
+    // Atualização otimista na tela (UI rápida)
     setShifts(prev => ({
       ...prev,
       [id]: {
@@ -48,13 +53,14 @@ export default function App() {
         date,
         period,
         assigned_to: assignedTo,
+        caregiver_assigned: caregiverAssigned,
         status,
         updated_at: new Date().toISOString()
       }
     }));
 
     try {
-      await updateShift(date, period, assignedTo, status);
+      await updateShift(date, period, assignedTo, caregiverAssigned, status);
     } catch (e) {
       console.error('Falha ao gravar alteração na escala:', e);
       // Força recarga para reverter
@@ -63,10 +69,9 @@ export default function App() {
   };
 
   // Salvar diário de bordo
-  const handleSaveLog = async (date, period, author, medsGiven, mealsOk, notes) => {
+  const handleSaveLog = async (date, period, author, caregiver, medsGiven, mealsOk, notes) => {
     try {
-      await saveDailyLog(date, period, author, medsGiven, mealsOk, notes);
-      // Força a recarga dos logs para refletir a alteração
+      await saveDailyLog(date, period, author, caregiver, medsGiven, mealsOk, notes);
       setDbTrigger(prev => prev + 1);
     } catch (e) {
       console.error('Falha ao salvar diário de bordo:', e);
@@ -89,6 +94,7 @@ export default function App() {
                 shifts={shifts} 
                 onUpdateShift={handleUpdateShift} 
                 activeMember={activeMember} 
+                caregivers={caregivers}
               />
             )}
             
@@ -97,6 +103,7 @@ export default function App() {
                 logs={logs} 
                 onSaveLog={handleSaveLog} 
                 activeMember={activeMember} 
+                caregivers={caregivers}
               />
             )}
             

@@ -1,31 +1,32 @@
 import React, { useState } from 'react';
-import { MEMBERS } from '../utils/db';
+import { MEMBERS, CAREGIVER_STYLE } from '../utils/db';
 import { 
   Sun, 
   Moon, 
   ChevronLeft, 
   ChevronRight, 
-  CalendarDays, 
   Share2, 
-  HelpCircle,
-  AlertTriangle,
-  Check
+  Check, 
+  X,
+  User,
+  Users,
+  Heart,
+  AlertTriangle
 } from 'lucide-react';
 
-export default function Calendar({ shifts, onUpdateShift, activeMember }) {
-  // Estado para controlar o primeiro dia da semana exibida (começa no domingo da semana atual)
+export default function Calendar({ shifts, onUpdateShift, activeMember, caregivers }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = new Date();
-    const day = today.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-    const diff = today.getDate() - day; // Ajusta para o domingo
+    const day = today.getDay();
+    const diff = today.getDate() - day;
     const sunday = new Date(today.setDate(diff));
     sunday.setHours(0, 0, 0, 0);
     return sunday;
   });
 
   const [copiedText, setCopiedText] = useState(false);
+  const [editingShift, setEditingShift] = useState(null); // { date, period, shiftObj }
 
-  // Auxiliares para cálculo de data
   const getDaysOfWeek = (start) => {
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -70,7 +71,13 @@ export default function Calendar({ shifts, onUpdateShift, activeMember }) {
       date.getFullYear() === today.getFullYear();
   };
 
-  // Gerar resumo para WhatsApp
+  const getWeekRangeLabel = () => {
+    const startStr = days[0].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+    const endStr = days[6].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${startStr} - ${endStr}`;
+  };
+
+  // Gerar resumo de texto formatado para o WhatsApp
   const shareToWhatsapp = () => {
     const startStr = days[0].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const endStr = days[6].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -85,18 +92,25 @@ export default function Calendar({ shifts, onUpdateShift, activeMember }) {
       const shiftDiurno = shifts[`${dateStr}_diurno`];
       const shiftNoturno = shifts[`${dateStr}_noturno`];
 
-      const diurnoName = shiftDiurno?.assigned_to 
+      // Formatação Diurno
+      const famDiurno = shiftDiurno?.assigned_to 
         ? `${shiftDiurno.assigned_to} ${MEMBERS.find(m => m.name === shiftDiurno.assigned_to)?.avatar || ''}`
-        : '❌ [VAGO]';
-        
-      const noturnoName = shiftNoturno?.assigned_to 
+        : '❌ [Vago]';
+      const careDiurno = shiftDiurno?.caregiver_assigned
+        ? `+ ${shiftDiurno.caregiver_assigned} 🩺`
+        : '';
+      const statusDiurno = shiftDiurno?.status === 'needs_swap' ? ' ⚠️ (Precisa de troca)' : '';
+
+      // Formatação Noturno
+      const famNoturno = shiftNoturno?.assigned_to 
         ? `${shiftNoturno.assigned_to} ${MEMBERS.find(m => m.name === shiftNoturno.assigned_to)?.avatar || ''}`
-        : '❌ [VAGO]';
+        : '❌ [Vago]';
+      const careNoturno = shiftNoturno?.caregiver_assigned
+        ? `+ ${shiftNoturno.caregiver_assigned} 🩺`
+        : '';
+      const statusNoturno = shiftNoturno?.status === 'needs_swap' ? ' ⚠️ (Precisa de troca)' : '';
 
-      const diurnoStatus = shiftDiurno?.status === 'needs_swap' ? ' ⚠️ (Precisa de troca)' : '';
-      const noturnoStatus = shiftNoturno?.status === 'needs_swap' ? ' ⚠️ (Precisa de troca)' : '';
-
-      text += `*${dayName} (${dayNum})*\n☀️ Diurno (07h-19h): ${diurnoName}${diurnoStatus}\n🌙 Noturno (19h-07h): ${noturnoName}${noturnoStatus}\n\n`;
+      text += `*${dayName} (${dayNum})*\n☀️ Diurno: ${famDiurno} ${careDiurno}${statusDiurno}\n🌙 Noturno: ${famNoturno} ${careNoturno}${statusNoturno}\n\n`;
     });
 
     text += `👉 Atualize pelo app da escala!`;
@@ -107,25 +121,24 @@ export default function Calendar({ shifts, onUpdateShift, activeMember }) {
     });
   };
 
-  // Tratar ação de clique em turno
-  const handleShiftAction = (dateStr, period, currentShift) => {
-    if (!currentShift || !currentShift.assigned_to) {
-      // Turno Vago -> Assumir
-      onUpdateShift(dateStr, period, activeMember, 'confirmed');
-    } else if (currentShift.assigned_to === activeMember) {
-      // É o próprio usuário
-      // Vamos mostrar uma pergunta ou realizar a ação direta
-      // Para ser simples, se o usuário clicar no seu próprio turno:
-      // Se for confirmado, pode pedir troca ou liberar. Vamos abrir um menu de escolha
-      // Mas para fazer de forma rápida na UI sem complicados modals:
-      // Vamos criar um pequeno popover ou alternar o estado.
-    }
+  const openEditModal = (dateStr, period) => {
+    const shiftKey = `${dateStr}_${period}`;
+    const currentShift = shifts[shiftKey] || {
+      id: shiftKey,
+      date: dateStr,
+      period,
+      assigned_to: null,
+      caregiver_assigned: null,
+      status: 'confirmed'
+    };
+    setEditingShift({ date: dateStr, period, shiftObj: currentShift });
   };
 
-  const getWeekRangeLabel = () => {
-    const startStr = days[0].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
-    const endStr = days[6].toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
-    return `${startStr} - ${endStr}`;
+  const handleModalSave = (assignedTo, caregiverAssigned, status) => {
+    if (editingShift) {
+      onUpdateShift(editingShift.date, editingShift.period, assignedTo, caregiverAssigned, status);
+      setEditingShift(null);
+    }
   };
 
   return (
@@ -190,7 +203,7 @@ export default function Calendar({ shifts, onUpdateShift, activeMember }) {
           const shiftNoturno = shifts[`${dateStr}_noturno`];
 
           return (
-            <div key={dateStr} className="day-card">
+            <div key={dateStr} className="day-card animate-fade">
               <div className={`day-header ${isDayToday ? 'day-header-today' : ''}`}>
                 <span>{dayName}</span>
                 <span>{formatDateLabel(day)}</span>
@@ -200,160 +213,331 @@ export default function Calendar({ shifts, onUpdateShift, activeMember }) {
                 {/* TURNO DIURNO */}
                 <ShiftRow 
                   period="diurno"
-                  timeLabel="07:00 - 19:00"
-                  dateStr={dateStr}
+                  timeLabel="☀️ 07:00 - 19:00"
                   shift={shiftDiurno}
-                  activeMember={activeMember}
-                  onUpdateShift={onUpdateShift}
+                  onClick={() => openEditModal(dateStr, 'diurno')}
                 />
                 
                 {/* TURNO NOTURNO */}
                 <ShiftRow 
                   period="noturno"
-                  timeLabel="19:00 - 07:00"
-                  dateStr={dateStr}
+                  timeLabel="🌙 19:00 - 07:00"
                   shift={shiftNoturno}
-                  activeMember={activeMember}
-                  onUpdateShift={onUpdateShift}
+                  onClick={() => openEditModal(dateStr, 'noturno')}
                 />
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Modal de Escala/Edição */}
+      {editingShift && (
+        <EditShiftModal 
+          dateStr={editingShift.date}
+          period={editingShift.period}
+          shift={editingShift.shiftObj}
+          caregivers={caregivers}
+          activeMember={activeMember}
+          onClose={() => setEditingShift(null)}
+          onSave={handleModalSave}
+        />
+      )}
     </div>
   );
 }
 
-function ShiftRow({ period, timeLabel, dateStr, shift, activeMember, onUpdateShift }) {
-  const [showOptions, setShowOptions] = useState(false);
-  const isDiurno = period === 'diurno';
-  
+function ShiftRow({ period, timeLabel, shift, onClick }) {
   const assignedName = shift?.assigned_to;
-  const status = shift?.status || 'open';
-  
+  const caregiverName = shift?.caregiver_assigned;
+  const status = shift?.status || 'confirmed';
+
   const assignedMember = MEMBERS.find(m => m.name === assignedName);
 
-  const handleClaim = () => {
-    onUpdateShift(dateStr, period, activeMember, 'confirmed');
-    setShowOptions(false);
-  };
-
-  const handleRelease = () => {
-    onUpdateShift(dateStr, period, null, 'open');
-    setShowOptions(false);
-  };
-
-  const handleRequestSwap = () => {
-    onUpdateShift(dateStr, period, assignedName, 'needs_swap');
-    setShowOptions(false);
-  };
-
-  const handleResolveSwap = () => {
-    onUpdateShift(dateStr, period, activeMember, 'confirmed');
-    setShowOptions(false);
-  };
-
   return (
-    <div className="shift-row">
-      <div className="shift-info">
-        <div className="shift-icon" style={{ color: isDiurno ? '#f59e0b' : '#3b82f6' }}>
-          {isDiurno ? <Sun size={20} fill="currentColor" /> : <Moon size={20} fill="currentColor" />}
-        </div>
-        <div className="shift-details">
-          <span className="shift-time">{timeLabel}</span>
+    <div className="shift-row" onClick={onClick} style={{ cursor: 'pointer', transition: 'background var(--transition-fast)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+        <span className="shift-time">{timeLabel}</span>
+        
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          {/* Slot de Filho(a) */}
           {assignedMember ? (
-            <span className="shift-assignee">
-              <span style={{ fontSize: '1.1rem' }}>{assignedMember.avatar}</span>
-              <span 
-                style={{ 
-                  color: assignedMember.color,
-                  backgroundColor: assignedMember.lightColor,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '0.9rem'
-                }}
-              >
-                {assignedName}
-              </span>
-            </span>
+            <div 
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: assignedMember.color,
+                backgroundColor: assignedMember.lightColor,
+                padding: '4px 10px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                border: `1px solid ${assignedMember.color}`
+              }}
+            >
+              <span>{assignedMember.avatar}</span>
+              <span>{assignedName}</span>
+              {status === 'needs_swap' && (
+                <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 'bold', marginLeft: '4px' }}>
+                  ⚠️ Troca
+                </span>
+              )}
+            </div>
           ) : (
-            <span className="shift-assignee vacant">Vago</span>
+            <div 
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-muted)',
+                backgroundColor: 'var(--bg-subtle)',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontStyle: 'italic',
+                border: '1px dashed var(--border-color)'
+              }}
+            >
+              <span>👤</span>
+              <span>Família: Vago</span>
+            </div>
+          )}
+
+          {/* Slot de Cuidadora */}
+          {caregiverName ? (
+            <div 
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: CAREGIVER_STYLE.color,
+                backgroundColor: CAREGIVER_STYLE.lightColor,
+                padding: '4px 10px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                border: `1px solid ${CAREGIVER_STYLE.color}`
+              }}
+            >
+              <span>{CAREGIVER_STYLE.avatar}</span>
+              <span>{caregiverName}</span>
+            </div>
+          ) : (
+            <div 
+              style={{ 
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-muted)',
+                backgroundColor: 'var(--bg-subtle)',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontStyle: 'italic',
+                border: '1px dashed var(--border-color)'
+              }}
+            >
+              <span>🩺</span>
+              <span>Cuidadora: Vaga</span>
+            </div>
           )}
         </div>
       </div>
+      
+      <div>
+        <button className="btn btn-secondary btn-sm" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+          Escalar
+        </button>
+      </div>
+    </div>
+  );
+}
 
-      <div className="shift-actions">
-        {/* Caso 1: Turno Vago */}
-        {status === 'open' && (
-          <button className="btn btn-secondary btn-sm" onClick={handleClaim} style={{ fontSize: '0.85rem', padding: '6px 12px' }}>
-            Assumir
+function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onClose, onSave }) {
+  const [assignedTo, setAssignedTo] = useState(shift.assigned_to);
+  const [caregiverAssigned, setCaregiverAssigned] = useState(shift.caregiver_assigned);
+  const [status, setStatus] = useState(shift.status || 'confirmed');
+
+  const formattedDate = () => {
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleSave = () => {
+    onSave(assignedTo, caregiverAssigned, status);
+  };
+
+  const selectMyself = () => {
+    setAssignedTo(activeMember);
+    setStatus('confirmed');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <h3 className="card-title" style={{ color: 'var(--primary)', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <span>Escalar Turno</span>
+          <button className="btn btn-secondary btn-icon" onClick={onClose} style={{ width: '28px', height: '28px' }}>
+            <X size={16} />
           </button>
-        )}
+        </h3>
 
-        {/* Caso 2: Reservado por mim */}
-        {status === 'confirmed' && assignedName === activeMember && (
-          <div style={{ position: 'relative' }}>
-            {!showOptions ? (
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={() => setShowOptions(true)}
-                style={{ fontSize: '0.85rem', padding: '6px 12px', border: '1px solid var(--primary)' }}
-              >
-                Meu Turno
-              </button>
-            ) : (
-              <div className="animate-scale" style={{ display: 'flex', gap: '6px' }}>
-                <button className="btn btn-danger btn-sm" onClick={handleRelease} style={{ fontSize: '0.8rem', padding: '6px 10px' }}>
-                  Liberar
-                </button>
-                <button 
-                  className="btn btn-secondary btn-sm" 
-                  onClick={handleRequestSwap}
-                  style={{ fontSize: '0.8rem', padding: '6px 10px', backgroundColor: 'var(--color-warning-light)', color: 'var(--color-warning)' }}
+        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '16px', display: 'flex', gap: '8px' }}>
+          <span>📅 <strong>{formattedDate()}</strong></span>
+          <span>•</span>
+          <span>{period === 'diurno' ? '☀️ Diurno (07h-19h)' : '🌙 Noturno (19h-07h)'}</span>
+        </div>
+
+        {/* 1. SELEÇÃO DE FAMILIAR */}
+        <div className="form-group">
+          <label className="form-label" style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Familiar Responsável:</span>
+            <button 
+              type="button" 
+              onClick={selectMyself} 
+              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+            >
+              Me Escalar
+            </button>
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '6px' }}>
+            {MEMBERS.map(m => {
+              const isSelected = assignedTo === m.name;
+              return (
+                <button
+                  key={m.name}
+                  type="button"
+                  onClick={() => setAssignedTo(m.name)}
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: '8px',
+                    border: isSelected ? `2px solid ${m.color}` : '1px solid var(--border-color)',
+                    backgroundColor: isSelected ? m.lightColor : 'var(--bg-card)',
+                    color: isSelected ? m.color : 'var(--text-primary)',
+                    fontWeight: isSelected ? 700 : 500,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'all var(--transition-fast)'
+                  }}
                 >
-                  Pedir Troca
+                  <span style={{ fontSize: '1.2rem' }}>{m.avatar}</span>
+                  <span>{m.name}</span>
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => setShowOptions(false)} style={{ fontSize: '0.8rem', padding: '6px 10px' }}>
-                  X
-                </button>
-              </div>
-            )}
+              );
+            })}
+          </div>
+          
+          {assignedTo && (
+            <button 
+              type="button" 
+              onClick={() => setAssignedTo(null)}
+              style={{ 
+                marginTop: '8px', 
+                background: 'none', 
+                border: 'none', 
+                color: 'var(--color-danger)', 
+                fontSize: '0.75rem', 
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Remover Familiar do Turno
+            </button>
+          )}
+        </div>
+
+        {/* Status de Troca para o Familiar */}
+        {assignedTo && (
+          <div className="form-group" style={{ backgroundColor: 'var(--bg-subtle)', padding: '10px', borderRadius: '8px', marginBottom: '16px' }}>
+            <label className="form-label" style={{ fontSize: '0.85rem' }}>Status do Familiar:</label>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                <input 
+                  type="radio" 
+                  name="shift_status" 
+                  checked={status === 'confirmed'} 
+                  onChange={() => setStatus('confirmed')} 
+                />
+                <span>Confirmado ✅</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer', color: 'var(--color-danger)', fontWeight: 600 }}>
+                <input 
+                  type="radio" 
+                  name="shift_status" 
+                  checked={status === 'needs_swap'} 
+                  onChange={() => setStatus('needs_swap')} 
+                />
+                <span>Precisa de Troca ⚠️</span>
+              </label>
+            </div>
           </div>
         )}
 
-        {/* Caso 3: Reservado por outro irmão (Confirmado) */}
-        {status === 'confirmed' && assignedName !== activeMember && (
-          <span className="badge badge-confirmed">Ok</span>
-        )}
-
-        {/* Caso 4: Precisa de Troca (Cadastrado por qualquer um, inclusive eu) */}
-        {status === 'needs_swap' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="badge badge-swap" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <AlertTriangle size={12} />
-              Troca
-            </span>
-            {assignedName !== activeMember && (
-              <button 
-                className="btn btn-primary btn-sm" 
-                onClick={handleResolveSwap}
-                style={{ fontSize: '0.85rem', padding: '6px 12px', backgroundColor: 'var(--color-success)' }}
-              >
-                Pegar
-              </button>
-            )}
-            {assignedName === activeMember && (
-              <button 
-                className="btn btn-secondary btn-sm" 
-                onClick={handleRelease}
-                style={{ fontSize: '0.85rem', padding: '6px 10px', color: 'var(--color-danger)' }}
-              >
-                Desistir
-              </button>
-            )}
+        {/* 2. SELEÇÃO DE CUIDADORA */}
+        <div className="form-group" style={{ marginTop: '16px' }}>
+          <label className="form-label" style={{ fontWeight: 600 }}>Cuidadora Escala:</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px' }}>
+            {caregivers.map(c => {
+              const isSelected = caregiverAssigned === c.name;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCaregiverAssigned(c.name)}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: isSelected ? `2px solid ${CAREGIVER_STYLE.color}` : '1px solid var(--border-color)',
+                    backgroundColor: isSelected ? CAREGIVER_STYLE.lightColor : 'var(--bg-card)',
+                    color: isSelected ? CAREGIVER_STYLE.color : 'var(--text-primary)',
+                    fontWeight: isSelected ? 700 : 500,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all var(--transition-fast)'
+                  }}
+                >
+                  <span>{CAREGIVER_STYLE.avatar}</span>
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
           </div>
-        )}
+          
+          {caregiverAssigned && (
+            <button 
+              type="button" 
+              onClick={() => setCaregiverAssigned(null)}
+              style={{ 
+                marginTop: '8px', 
+                background: 'none', 
+                border: 'none', 
+                color: 'var(--color-danger)', 
+                fontSize: '0.75rem', 
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Remover Cuidadora do Turno
+            </button>
+          )}
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn btn-primary" onClick={handleSave}>
+            Salvar Escala
+          </button>
+        </div>
       </div>
     </div>
   );

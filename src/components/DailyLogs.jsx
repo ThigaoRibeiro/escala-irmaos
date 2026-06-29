@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
-import { MEMBERS } from '../utils/db';
+import { MEMBERS, CAREGIVER_STYLE } from '../utils/db';
 import { 
-  FileText, 
-  CheckSquare, 
-  Square, 
   Plus, 
   Share2, 
   Calendar, 
-  Clock, 
   Check, 
   X,
   FileSpreadsheet
 } from 'lucide-react';
 
-export default function DailyLogs({ logs, onSaveLog, activeMember }) {
+export default function DailyLogs({ logs, onSaveLog, activeMember, caregivers }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [period, setPeriod] = useState('diurno');
+  const [caregiver, setCaregiver] = useState('');
   const [medsGiven, setMedsGiven] = useState(false);
   const [mealsOk, setMealsOk] = useState(false);
   const [notes, setNotes] = useState('');
@@ -29,10 +26,13 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
       alert('Por favor, escreva uma breve observação sobre o plantão.');
       return;
     }
-    onSaveLog(date, period, activeMember, medsGiven, mealsOk, notes);
+    
+    // Salva o log incluindo a cuidadora do plantão
+    onSaveLog(date, period, activeMember, caregiver || null, medsGiven, mealsOk, notes);
     
     // Reset Form
     setNotes('');
+    setCaregiver('');
     setMedsGiven(false);
     setMealsOk(false);
     setShowAddForm(false);
@@ -65,8 +65,13 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
     let text = `📝 *PASSAGEM DE PLANTÃO DA MÃE*\n`;
     text += `📅 Data: ${formatLogDate(log.date)}\n`;
     text += `⏰ Turno: ${periodLabel}\n`;
-    text += `👤 Cuidador: ${log.author} ${authorAvatar}\n\n`;
-    text += `💊 Remédios do turno: ${log.meds_given ? '✅ Tomou todos' : '❌ Não tomou / Pendente'}\n`;
+    text += `👤 Familiar de Plantão: ${log.author} ${authorAvatar}\n`;
+    
+    if (log.caregiver) {
+      text += `🩺 Cuidadora Escala: ${log.caregiver} 🩺\n`;
+    }
+    
+    text += `\n💊 Remédios do turno: ${log.meds_given ? '✅ Tomou todos' : '❌ Não tomou / Pendente'}\n`;
     text += `🍲 Alimentação: ${log.meals_ok ? '✅ Comeu bem' : '❌ Comeu pouco / Recusou'}\n\n`;
     text += `✍️ *Observações do Plantão:*\n${log.notes}\n`;
     
@@ -76,9 +81,7 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
     });
   };
 
-  // Transforma o objeto de logs em array ordenado por data de criação descrescente
   const logsList = Object.values(logs).sort((a, b) => {
-    // Ordenação secundária por data e turno se created_at não for preciso
     const dateA = new Date(a.created_at || `${a.date}T${a.period === 'diurno' ? '19:00' : '07:00'}`);
     const dateB = new Date(b.created_at || `${b.date}T${b.period === 'diurno' ? '19:00' : '07:00'}`);
     return dateB - dateA;
@@ -135,22 +138,42 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Cuidador ativo:</label>
-            <div 
-              style={{ 
-                padding: '10px', 
-                backgroundColor: getMemberLightColor(activeMember), 
-                borderRadius: '8px', 
-                border: `1px solid ${getMemberColor(activeMember)}`,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              <span>{getMemberAvatar(activeMember)}</span>
-              <span>{activeMember}</span>
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label className="form-label">Familiar ativo:</label>
+              <div 
+                style={{ 
+                  padding: '10px', 
+                  backgroundColor: getMemberLightColor(activeMember), 
+                  borderRadius: '8px', 
+                  border: `1px solid ${getMemberColor(activeMember)}`,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  height: '42px'
+                }}
+              >
+                <span>{getMemberAvatar(activeMember)}</span>
+                <span>{activeMember}</span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="form-label">Cuidadora no plantão:</label>
+              <select 
+                value={caregiver} 
+                onChange={(e) => setCaregiver(e.target.value)} 
+                className="form-control"
+                style={{ height: '42px' }}
+              >
+                <option value="">Nenhuma / Sem cuidadora</option>
+                {caregivers.map(c => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -183,7 +206,7 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
               onChange={(e) => setNotes(e.target.value)} 
               className="form-control"
               rows={4}
-              placeholder="Ex: Comeu bem, dormiu à tarde, tomou os remédios do horário. Estava um pouco agitada às 17h mas acalmou após o chá..."
+              placeholder="Ex: Comeu bem, dormiu à tarde. A Nathália cuidou do banho e deu o almoço. Mãe estava calma."
               required
             ></textarea>
           </div>
@@ -213,7 +236,6 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
         logsList.map(log => {
           const authorAvatar = getMemberAvatar(log.author);
           const authorColor = getMemberColor(log.author);
-          const authorLightColor = getMemberLightColor(log.author);
           
           return (
             <div 
@@ -224,6 +246,22 @@ export default function DailyLogs({ logs, onSaveLog, activeMember }) {
               <div className="log-meta">
                 <span className="log-author" style={{ color: authorColor }}>
                   {authorAvatar} {log.author}
+                  {log.caregiver && (
+                    <span 
+                      style={{ 
+                        color: CAREGIVER_STYLE.color, 
+                        backgroundColor: CAREGIVER_STYLE.lightColor,
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        marginLeft: '8px',
+                        border: `1px solid ${CAREGIVER_STYLE.color}`
+                      }}
+                    >
+                      {CAREGIVER_STYLE.avatar} {log.caregiver}
+                    </span>
+                  )}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Calendar size={12} />

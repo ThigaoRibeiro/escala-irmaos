@@ -1,19 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Lista pré-cadastrada de membros da família
+// Lista pré-cadastrada de membros da família (com avatares por gênero)
 export const MEMBERS = [
-  { name: 'David', color: '#4f46e5', lightColor: '#e0e7ff', avatar: '👨‍💻' },
-  { name: 'Ana Nery', color: '#db2777', lightColor: '#fce7f3', avatar: '👩‍⚕️' },
-  { name: 'Jeane', color: '#0d9488', lightColor: '#ccfbf1', avatar: '👩‍🏫' },
-  { name: 'Haniel', color: '#16a34a', lightColor: '#dcfce7', avatar: '👨‍🌾' },
-  { name: 'Ester', color: '#ea580c', lightColor: '#ffedd5', avatar: '👩‍🎨' }
+  { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '👨‍💻' }, // Masculino
+  { name: 'Aldeyr', color: '#0369a1', lightColor: '#e0f2fe', avatar: '👨‍⚕️' }, // Masculino
+  { name: 'Ana Nery', color: '#be185d', lightColor: '#fce7f3', avatar: '👩‍⚕️' }, // Feminino
+  { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '👩‍🏫' }, // Feminino
+  { name: 'Haniel', color: '#15803d', lightColor: '#dcfce7', avatar: '👨‍🌾' }, // Masculino
+  { name: 'Ester', color: '#c2410c', lightColor: '#ffedd5', avatar: '👩‍🎨' }  // Feminino
 ];
 
-const CONFIG_KEY = 'escala_supabase_config';
-const LOCAL_SHIFTS_KEY = 'escala_local_shifts';
-const LOCAL_LOGS_KEY = 'escala_local_logs';
+// Ícone padrão e cor para as Cuidadoras Contratadas
+export const CAREGIVER_STYLE = {
+  color: '#6d28d9', // Roxo
+  lightColor: '#f3e8ff',
+  avatar: '👩‍❤️‍🩹' // Ícone de cuidado
+};
 
-// Recuperar credenciais do Supabase salvas localmente
+const CONFIG_KEY = 'escala_supabase_config';
+const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
+const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
+const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
+
+// --- CONFIGURAÇÕES DO SUPABASE ---
+
 export function getSupabaseConfig() {
   try {
     const config = localStorage.getItem(CONFIG_KEY);
@@ -24,21 +34,17 @@ export function getSupabaseConfig() {
   }
 }
 
-// Salvar credenciais do Supabase
 export function saveSupabaseConfig(url, key) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify({ url, key }));
 }
 
-// Limpar credenciais do Supabase
 export function clearSupabaseConfig() {
   localStorage.removeItem(CONFIG_KEY);
 }
 
-// Inicializar cliente Supabase se configurado
 let supabaseClient = null;
 export function getSupabaseClient() {
   if (supabaseClient) return supabaseClient;
-  
   const { url, key } = getSupabaseConfig();
   if (url && key) {
     try {
@@ -52,32 +58,38 @@ export function getSupabaseClient() {
   return null;
 }
 
-// Resetar o cliente em caso de alteração de configuração
 export function resetSupabaseClient() {
   supabaseClient = null;
 }
 
-// --- MOCK DATA PARA SEGUNDA CHANCE (LOCAL STORAGE) ---
+// --- MOCK DATA INICIAL ---
+
+function getInitialMockCaregivers() {
+  return [
+    { id: '1', name: 'Nathália' },
+    { id: '2', name: 'Viviane' },
+    { id: '3', name: 'Paula' }
+  ];
+}
+
 function getInitialMockShifts() {
   const shifts = {};
   const today = new Date();
   
-  // Vamos criar escalas para 15 dias no passado e 30 dias no futuro
   for (let i = -15; i <= 30; i++) {
     const current = new Date();
     current.setDate(today.getDate() + i);
     const dateStr = current.toISOString().split('T')[0];
-    
-    // Distribui alguns turnos aleatórios para demonstração
     const dayOfWeek = current.getDay();
     
-    // Turno Diurno (Manhã)
+    // Distribui alguns turnos aleatórios para demonstração
     if (dayOfWeek === 0) { // Domingo
       shifts[`${dateStr}_diurno`] = {
         id: `${dateStr}_diurno`,
         date: dateStr,
         period: 'diurno',
         assigned_to: 'David',
+        caregiver_assigned: 'Nathália',
         status: 'confirmed',
         updated_at: new Date().toISOString()
       };
@@ -87,6 +99,16 @@ function getInitialMockShifts() {
         date: dateStr,
         period: 'diurno',
         assigned_to: 'Ana Nery',
+        caregiver_assigned: 'Viviane',
+        status: 'confirmed',
+        updated_at: new Date().toISOString()
+      };
+      shifts[`${dateStr}_noturno`] = {
+        id: `${dateStr}_noturno`,
+        date: dateStr,
+        period: 'noturno',
+        assigned_to: 'Aldeyr',
+        caregiver_assigned: 'Paula',
         status: 'confirmed',
         updated_at: new Date().toISOString()
       };
@@ -96,6 +118,7 @@ function getInitialMockShifts() {
         date: dateStr,
         period: 'diurno',
         assigned_to: 'Jeane',
+        caregiver_assigned: 'Nathália',
         status: 'confirmed',
         updated_at: new Date().toISOString()
       };
@@ -105,36 +128,7 @@ function getInitialMockShifts() {
         date: dateStr,
         period: 'diurno',
         assigned_to: 'Haniel',
-        status: 'confirmed',
-        updated_at: new Date().toISOString()
-      };
-    }
-
-    // Turno Noturno (Noite)
-    if (dayOfWeek === 0 || dayOfWeek === 6) { // Finais de semana à noite
-      shifts[`${dateStr}_noturno`] = {
-        id: `${dateStr}_noturno`,
-        date: dateStr,
-        period: 'noturno',
-        assigned_to: 'Ester',
-        status: 'confirmed',
-        updated_at: new Date().toISOString()
-      };
-    } else if (dayOfWeek === 2) { // Terça à noite
-      shifts[`${dateStr}_noturno`] = {
-        id: `${dateStr}_noturno`,
-        date: dateStr,
-        period: 'noturno',
-        assigned_to: 'David',
-        status: 'needs_swap',
-        updated_at: new Date().toISOString()
-      };
-    } else if (dayOfWeek === 4) { // Quinta à noite
-      shifts[`${dateStr}_noturno`] = {
-        id: `${dateStr}_noturno`,
-        date: dateStr,
-        period: 'noturno',
-        assigned_to: 'Jeane',
+        caregiver_assigned: 'Viviane',
         status: 'confirmed',
         updated_at: new Date().toISOString()
       };
@@ -145,8 +139,6 @@ function getInitialMockShifts() {
 
 function getInitialMockLogs() {
   const today = new Date();
-  const dateStr = today.toISOString().split('T')[0];
-  
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
   const yestStr = yesterday.toISOString().split('T')[0];
@@ -158,29 +150,87 @@ function getInitialMockLogs() {
     date: yestStr,
     period: 'diurno',
     author: 'Ana Nery',
+    caregiver: 'Viviane',
     meds_given: true,
     meals_ok: true,
-    notes: 'Mãe comeu toda a sopa do almoço. Tomou os remédios das 08:00 e das 14:00 certinho. À tarde caminhou um pouco no quintal e estava calma.',
+    notes: 'Mãe passou o dia super bem com a Viviane. Almoçou toda a refeição, tomou o remédio de manhã e da tarde. Ficou um pouco sonolenta após o almoço.',
     created_at: new Date(yesterday.setHours(18, 0, 0)).toISOString()
-  };
-
-  logs[`${yestStr}_noturno`] = {
-    id: `${yestStr}_noturno`,
-    date: yestStr,
-    period: 'noturno',
-    author: 'Ester',
-    meds_given: true,
-    meals_ok: true,
-    notes: 'Dormiu bem, acordou apenas uma vez às 03:00 para ir ao banheiro, mas voltou a dormir logo depois. Tomou a medicação noturna às 21:00.',
-    created_at: new Date(today.setHours(6, 30, 0)).toISOString()
   };
 
   return logs;
 }
 
-// --- FUNÇÕES DE OPERAÇÃO DE DADOS ---
+// --- OPERAÇÕES DE CUIDADORAS ---
 
-// Buscar Escalas
+export async function getCaregivers() {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('caregivers')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('Erro ao carregar cuidadoras do Supabase, caindo para local:', e);
+    }
+  }
+  
+  const local = localStorage.getItem(LOCAL_CAREGIVERS_KEY);
+  if (!local) {
+    const initial = getInitialMockCaregivers();
+    localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  return JSON.parse(local);
+}
+
+export async function addCaregiver(name) {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('caregivers')
+        .insert({ name })
+        .select();
+      if (error) throw error;
+      return data[0];
+    } catch (e) {
+      console.error('Erro ao adicionar cuidadora no Supabase:', e);
+    }
+  }
+  
+  const list = await getCaregivers();
+  const newItem = { id: String(Date.now()), name };
+  list.push(newItem);
+  localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(list));
+  return newItem;
+}
+
+export async function deleteCaregiver(id) {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { error } = await client
+        .from('caregivers')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Erro ao remover cuidadora no Supabase:', e);
+    }
+  }
+  
+  const list = await getCaregivers();
+  const filtered = list.filter(item => item.id !== id);
+  localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(filtered));
+  return true;
+}
+
+// --- OPERAÇÕES DE ESCALAS (SHIFTS) ---
+
 export async function getShifts() {
   const client = getSupabaseClient();
   if (client) {
@@ -190,18 +240,16 @@ export async function getShifts() {
         .select('*');
       if (error) throw error;
       
-      // Converte o array para objeto chaveado por {date}_{period}
       const shiftsObj = {};
       data.forEach(shift => {
         shiftsObj[`${shift.date}_${shift.period}`] = shift;
       });
       return shiftsObj;
     } catch (e) {
-      console.error('Erro ao buscar escalas no Supabase, caindo para LocalStorage:', e);
+      console.error('Erro ao buscar escalas no Supabase, caindo para local:', e);
     }
   }
   
-  // Fallback LocalStorage
   let local = localStorage.getItem(LOCAL_SHIFTS_KEY);
   if (!local) {
     const initial = getInitialMockShifts();
@@ -211,8 +259,7 @@ export async function getShifts() {
   return JSON.parse(local);
 }
 
-// Candidatar-se, Trocar ou Alterar Turno
-export async function updateShift(date, period, assigned_to, status = 'confirmed') {
+export async function updateShift(date, period, assigned_to, caregiver_assigned, status = 'confirmed') {
   const id = `${date}_${period}`;
   const updatedAt = new Date().toISOString();
   
@@ -226,6 +273,7 @@ export async function updateShift(date, period, assigned_to, status = 'confirmed
           date,
           period,
           assigned_to,
+          caregiver_assigned,
           status,
           updated_at: updatedAt
         });
@@ -236,13 +284,13 @@ export async function updateShift(date, period, assigned_to, status = 'confirmed
     }
   }
   
-  // Fallback LocalStorage
   const shifts = await getShifts();
   shifts[id] = {
     id,
     date,
     period,
     assigned_to,
+    caregiver_assigned,
     status,
     updated_at: updatedAt
   };
@@ -250,7 +298,8 @@ export async function updateShift(date, period, assigned_to, status = 'confirmed
   return true;
 }
 
-// Buscar Diários de Bordo
+// --- OPERAÇÕES DE DIÁRIO (LOGS) ---
+
 export async function getDailyLogs() {
   const client = getSupabaseClient();
   if (client) {
@@ -267,11 +316,10 @@ export async function getDailyLogs() {
       });
       return logsObj;
     } catch (e) {
-      console.error('Erro ao buscar logs no Supabase, caindo para LocalStorage:', e);
+      console.error('Erro ao buscar logs no Supabase, caindo para local:', e);
     }
   }
   
-  // Fallback LocalStorage
   let local = localStorage.getItem(LOCAL_LOGS_KEY);
   if (!local) {
     const initial = getInitialMockLogs();
@@ -281,8 +329,7 @@ export async function getDailyLogs() {
   return JSON.parse(local);
 }
 
-// Salvar/Editar Diário de Bordo
-export async function saveDailyLog(date, period, author, meds_given, meals_ok, notes) {
+export async function saveDailyLog(date, period, author, caregiver, meds_given, meals_ok, notes) {
   const id = `${date}_${period}`;
   const createdAt = new Date().toISOString();
   
@@ -296,6 +343,7 @@ export async function saveDailyLog(date, period, author, meds_given, meals_ok, n
           date,
           period,
           author,
+          caregiver,
           meds_given,
           meals_ok,
           notes,
@@ -308,13 +356,13 @@ export async function saveDailyLog(date, period, author, meds_given, meals_ok, n
     }
   }
   
-  // Fallback LocalStorage
   const logs = await getDailyLogs();
   logs[id] = {
     id,
     date,
     period,
     author,
+    caregiver,
     meds_given,
     meals_ok,
     notes,
@@ -324,29 +372,45 @@ export async function saveDailyLog(date, period, author, meds_given, meals_ok, n
   return true;
 }
 
-// SQL Script exposto para os usuários configurarem o Supabase
+// --- SCRIPT SQL DO SUPABASE ---
+
 export const SUPABASE_SQL_SETUP = `-- Script para criar as tabelas no Supabase SQL Editor
 
--- 1. Tabela de Escalas (shifts)
+-- 1. Tabela de Cuidadoras (caregivers)
+CREATE TABLE IF NOT EXISTS public.caregivers (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Habilitar RLS (Row Level Security) e permitir acesso público
+ALTER TABLE public.caregivers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Acesso público total caregivers" ON public.caregivers FOR ALL USING (true) WITH CHECK (true);
+
+-- Inserir cuidadoras padrão
+INSERT INTO public.caregivers (name) VALUES ('Nathália'), ('Viviane'), ('Paula') ON CONFLICT DO NOTHING;
+
+-- 2. Tabela de Escalas (shifts)
 CREATE TABLE IF NOT EXISTS public.shifts (
     id text PRIMARY KEY,
     date date NOT NULL,
     period text NOT NULL,
     assigned_to text,
+    caregiver_assigned text,
     status text DEFAULT 'confirmed'::text,
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Habilitar RLS (Row Level Security) se desejar, ou deixar livre para facilidade inicial
 ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Acesso público total" ON public.shifts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso público total shifts" ON public.shifts FOR ALL USING (true) WITH CHECK (true);
 
--- 2. Tabela de Diários de Bordo (daily_logs)
+-- 3. Tabela de Diários de Bordo (daily_logs)
 CREATE TABLE IF NOT EXISTS public.daily_logs (
     id text PRIMARY KEY,
     date date NOT NULL,
     period text NOT NULL,
     author text NOT NULL,
+    caregiver text,
     meds_given boolean DEFAULT false,
     meals_ok boolean DEFAULT false,
     notes text,
