@@ -361,6 +361,17 @@ button, input, select, textarea {
   color: var(--primary);
 }
 
+.day-card-weekend {
+  border-color: rgba(249, 115, 22, 0.25);
+  background-color: var(--accent-light);
+}
+
+.day-header-weekend {
+  background-color: #ffedd5; /* Warm light orange */
+  color: #c2410c;
+  border-bottom-color: rgba(249, 115, 22, 0.15);
+}
+
 .shifts-container {
   display: flex;
   flex-direction: column;

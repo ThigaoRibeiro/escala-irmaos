@@ -198,13 +198,15 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
           const dateStr = day.toISOString().split('T')[0];
           const isDayToday = isToday(day);
           const dayName = getDayName(day);
+          const dayOfWeek = day.getDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Domingo, 6 = Sábado
           
           const shiftDiurno = shifts[`${dateStr}_diurno`];
           const shiftNoturno = shifts[`${dateStr}_noturno`];
 
           return (
-            <div key={dateStr} className="day-card animate-fade">
-              <div className={`day-header ${isDayToday ? 'day-header-today' : ''}`}>
+            <div key={dateStr} className={`day-card animate-fade ${isWeekend && !isDayToday ? 'day-card-weekend' : ''}`}>
+              <div className={`day-header ${isDayToday ? 'day-header-today' : isWeekend ? 'day-header-weekend' : ''}`}>
                 <span>{dayName}</span>
                 <span>{formatDateLabel(day)}</span>
               </div>
