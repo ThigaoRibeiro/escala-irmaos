@@ -22,8 +22,19 @@ const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
 const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 
+function normalizeSupabaseUrl(url) {
+  const trimmed = (url || '').trim();
+  if (!trimmed) return '';
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
+}
+
 // Credenciais do Supabase carregadas EXCLUSIVAMENTE via variáveis de ambiente (.env ou GitHub Secrets)
-const DEFAULT_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const DEFAULT_URL = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL || '');
 const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // --- CONFIGURAÇÕES DO SUPABASE ---
@@ -46,7 +57,7 @@ export function getSupabaseConfig() {
     if (config) {
       const parsed = JSON.parse(config);
       if (parsed.url && parsed.key) {
-        return parsed;
+        return { url: normalizeSupabaseUrl(parsed.url), key: parsed.key };
       }
     }
 
@@ -58,7 +69,7 @@ export function getSupabaseConfig() {
 }
 
 export function saveSupabaseConfig(url, key) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify({ url, key }));
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({ url: normalizeSupabaseUrl(url), key }));
   localStorage.setItem('escala_local_mode_active', 'false');
 }
 
