@@ -183,16 +183,12 @@ function getInitialMockLogs() {
 export async function getCaregivers() {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('caregivers')
-        .select('*')
-        .order('name');
-      if (error) throw error;
-      return data;
-    } catch (e) {
-      console.error('Erro ao carregar cuidadoras do Supabase, caindo para local:', e);
-    }
+    const { data, error } = await client
+      .from('caregivers')
+      .select('*')
+      .order('name');
+    if (error) throw error;
+    return data;
   }
   
   const local = localStorage.getItem(LOCAL_CAREGIVERS_KEY);
@@ -207,16 +203,12 @@ export async function getCaregivers() {
 export async function addCaregiver(name) {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('caregivers')
-        .insert({ name })
-        .select();
-      if (error) throw error;
-      return data[0];
-    } catch (e) {
-      console.error('Erro ao adicionar cuidadora no Supabase:', e);
-    }
+    const { data, error } = await client
+      .from('caregivers')
+      .insert({ name })
+      .select();
+    if (error) throw error;
+    return data[0];
   }
   
   const list = await getCaregivers();
@@ -229,16 +221,12 @@ export async function addCaregiver(name) {
 export async function deleteCaregiver(id) {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { error } = await client
-        .from('caregivers')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      return true;
-    } catch (e) {
-      console.error('Erro ao remover cuidadora no Supabase:', e);
-    }
+    const { error } = await client
+      .from('caregivers')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    return true;
   }
   
   const list = await getCaregivers();
@@ -252,20 +240,16 @@ export async function deleteCaregiver(id) {
 export async function getShifts() {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('shifts')
-        .select('*');
-      if (error) throw error;
-      
-      const shiftsObj = {};
-      data.forEach(shift => {
-        shiftsObj[`${shift.date}_${shift.period}`] = shift;
-      });
-      return shiftsObj;
-    } catch (e) {
-      console.error('Erro ao buscar escalas no Supabase, caindo para local:', e);
-    }
+    const { data, error } = await client
+      .from('shifts')
+      .select('*');
+    if (error) throw error;
+
+    const shiftsObj = {};
+    data.forEach(shift => {
+      shiftsObj[`${shift.date}_${shift.period}`] = shift;
+    });
+    return shiftsObj;
   }
   
   let local = localStorage.getItem(LOCAL_SHIFTS_KEY);
@@ -283,23 +267,19 @@ export async function updateShift(date, period, assigned_to, caregiver_assigned,
   
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { error } = await client
-        .from('shifts')
-        .upsert({
-          id,
-          date,
-          period,
-          assigned_to,
-          caregiver_assigned,
-          status,
-          updated_at: updatedAt
-        });
-      if (error) throw error;
-      return true;
-    } catch (e) {
-      console.error('Erro ao atualizar escala no Supabase, tentando local:', e);
-    }
+    const { error } = await client
+      .from('shifts')
+      .upsert({
+        id,
+        date,
+        period,
+        assigned_to,
+        caregiver_assigned,
+        status,
+        updated_at: updatedAt
+      });
+    if (error) throw error;
+    return true;
   }
   
   const shifts = await getShifts();
@@ -321,21 +301,17 @@ export async function updateShift(date, period, assigned_to, caregiver_assigned,
 export async function getDailyLogs() {
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { data, error } = await client
-        .from('daily_logs')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      
-      const logsObj = {};
-      data.forEach(log => {
-        logsObj[`${log.date}_${log.period}`] = log;
-      });
-      return logsObj;
-    } catch (e) {
-      console.error('Erro ao buscar logs no Supabase, caindo para local:', e);
-    }
+    const { data, error } = await client
+      .from('daily_logs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    const logsObj = {};
+    data.forEach(log => {
+      logsObj[`${log.date}_${log.period}`] = log;
+    });
+    return logsObj;
   }
   
   let local = localStorage.getItem(LOCAL_LOGS_KEY);
@@ -353,25 +329,21 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
   
   const client = getSupabaseClient();
   if (client) {
-    try {
-      const { error } = await client
-        .from('daily_logs')
-        .upsert({
-          id,
-          date,
-          period,
-          author,
-          caregiver,
-          meds_given,
-          meals_ok,
-          notes,
-          created_at: createdAt
-        });
-      if (error) throw error;
-      return true;
-    } catch (e) {
-      console.error('Erro ao salvar log no Supabase, tentando local:', e);
-    }
+    const { error } = await client
+      .from('daily_logs')
+      .upsert({
+        id,
+        date,
+        period,
+        author,
+        caregiver,
+        meds_given,
+        meals_ok,
+        notes,
+        created_at: createdAt
+      });
+    if (error) throw error;
+    return true;
   }
   
   const logs = await getDailyLogs();
@@ -392,7 +364,9 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
 
 // --- SCRIPT SQL DO SUPABASE ---
 
-export const SUPABASE_SQL_SETUP = `-- Script para criar as tabelas no Supabase SQL Editor
+export const SUPABASE_SQL_SETUP = `-- Script para criar/atualizar as tabelas no Supabase SQL Editor
+-- Modelo simples: sem login no app. Todos que acessarem o link usam a chave publishable/anon.
+-- Atenção: isso é funcional e simples, mas não impede que alguém com o link/chave pública acesse a API.
 
 -- 1. Tabela de Cuidadoras (caregivers)
 CREATE TABLE IF NOT EXISTS public.caregivers (
@@ -401,12 +375,9 @@ CREATE TABLE IF NOT EXISTS public.caregivers (
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Habilitar RLS (Row Level Security) e permitir acesso público
-ALTER TABLE public.caregivers ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Acesso público total caregivers" ON public.caregivers FOR ALL USING (true) WITH CHECK (true);
-
--- Inserir cuidadoras padrão
-INSERT INTO public.caregivers (name) VALUES ('Nathália'), ('Viviane'), ('Paula') ON CONFLICT DO NOTHING;
+INSERT INTO public.caregivers (name)
+VALUES ('Nathália'), ('Viviane'), ('Paula')
+ON CONFLICT DO NOTHING;
 
 -- 2. Tabela de Escalas (shifts)
 CREATE TABLE IF NOT EXISTS public.shifts (
@@ -418,9 +389,6 @@ CREATE TABLE IF NOT EXISTS public.shifts (
     status text DEFAULT 'confirmed'::text,
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
-
-ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Acesso público total shifts" ON public.shifts FOR ALL USING (true) WITH CHECK (true);
 
 -- 3. Tabela de Diários de Bordo (daily_logs)
 CREATE TABLE IF NOT EXISTS public.daily_logs (
@@ -435,6 +403,118 @@ CREATE TABLE IF NOT EXISTS public.daily_logs (
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+ALTER TABLE public.caregivers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Acesso público total logs" ON public.daily_logs FOR ALL USING (true) WITH CHECK (true);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.caregivers TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO anon, authenticated;
+
+-- Remove policies antigas, inclusive a versão com login/allowlist se ela tiver sido aplicada.
+DROP POLICY IF EXISTS "Acesso público total caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Acesso público total shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Acesso público total logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Acesso publico total caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Acesso publico total shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Acesso publico total logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Familia pode ler caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Familia pode inserir caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Familia pode atualizar caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Familia pode remover caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "Familia pode ler shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Familia pode inserir shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Familia pode atualizar shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Familia pode remover shifts" ON public.shifts;
+DROP POLICY IF EXISTS "Familia pode ler daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Familia pode inserir daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Familia pode atualizar daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Familia pode remover daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "App publico pode ler caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "App publico pode inserir caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "App publico pode atualizar caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "App publico pode remover caregivers" ON public.caregivers;
+DROP POLICY IF EXISTS "App publico pode ler shifts" ON public.shifts;
+DROP POLICY IF EXISTS "App publico pode inserir shifts" ON public.shifts;
+DROP POLICY IF EXISTS "App publico pode atualizar shifts" ON public.shifts;
+DROP POLICY IF EXISTS "App publico pode remover shifts" ON public.shifts;
+DROP POLICY IF EXISTS "App publico pode ler daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "App publico pode inserir daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "App publico pode atualizar daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "App publico pode remover daily_logs" ON public.daily_logs;
+
+CREATE POLICY "App publico pode ler caregivers"
+ON public.caregivers
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+CREATE POLICY "App publico pode inserir caregivers"
+ON public.caregivers
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode atualizar caregivers"
+ON public.caregivers
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode remover caregivers"
+ON public.caregivers
+FOR DELETE
+TO anon, authenticated
+USING (true);
+
+CREATE POLICY "App publico pode ler shifts"
+ON public.shifts
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+CREATE POLICY "App publico pode inserir shifts"
+ON public.shifts
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode atualizar shifts"
+ON public.shifts
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode remover shifts"
+ON public.shifts
+FOR DELETE
+TO anon, authenticated
+USING (true);
+
+CREATE POLICY "App publico pode ler daily_logs"
+ON public.daily_logs
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+CREATE POLICY "App publico pode inserir daily_logs"
+ON public.daily_logs
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode atualizar daily_logs"
+ON public.daily_logs
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode remover daily_logs"
+ON public.daily_logs
+FOR DELETE
+TO anon, authenticated
+USING (true);
 `;

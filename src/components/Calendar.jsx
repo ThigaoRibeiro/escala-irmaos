@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { MEMBERS, CAREGIVER_STYLE } from '../utils/db';
 import { 
-  Sun, 
-  Moon, 
   ChevronLeft, 
   ChevronRight, 
   Share2, 
   Check, 
-  X,
-  User,
-  Users,
-  Heart,
-  AlertTriangle
+  X
 } from 'lucide-react';
 
 export default function Calendar({ shifts, onUpdateShift, activeMember, caregivers }) {
@@ -214,7 +208,6 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
               <div className="shifts-container">
                 {/* TURNO DIURNO */}
                 <ShiftRow 
-                  period="diurno"
                   timeLabel="☀️ 07:00 - 19:00"
                   shift={shiftDiurno}
                   onClick={() => openEditModal(dateStr, 'diurno')}
@@ -222,7 +215,6 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
                 
                 {/* TURNO NOTURNO */}
                 <ShiftRow 
-                  period="noturno"
                   timeLabel="🌙 19:00 - 07:00"
                   shift={shiftNoturno}
                   onClick={() => openEditModal(dateStr, 'noturno')}
@@ -249,7 +241,7 @@ export default function Calendar({ shifts, onUpdateShift, activeMember, caregive
   );
 }
 
-function ShiftRow({ period, timeLabel, shift, onClick }) {
+function ShiftRow({ timeLabel, shift, onClick }) {
   const assignedName = shift?.assigned_to;
   const caregiverName = shift?.caregiver_assigned;
   const status = shift?.status || 'confirmed';

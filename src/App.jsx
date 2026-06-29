@@ -3,7 +3,13 @@ import Navbar from './components/Navbar';
 import Calendar from './components/Calendar';
 import DailyLogs from './components/DailyLogs';
 import Config from './components/Config';
-import { getShifts, updateShift, getDailyLogs, saveDailyLog, getCaregivers } from './utils/db';
+import {
+  getShifts,
+  updateShift,
+  getDailyLogs,
+  saveDailyLog,
+  getCaregivers
+} from './utils/db';
 import { CalendarDays, FileText, Settings as SettingsIcon } from 'lucide-react';
 
 export default function App() {
@@ -17,11 +23,13 @@ export default function App() {
   const [caregivers, setCaregivers] = useState([]);
   const [dbTrigger, setDbTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      setLoadError('');
       try {
         const fetchedShifts = await getShifts();
         const fetchedLogs = await getDailyLogs();
@@ -32,6 +40,7 @@ export default function App() {
         setCaregivers(fetchedCaregivers);
       } catch (e) {
         console.error('Erro ao carregar dados:', e);
+        setLoadError('Não foi possível carregar os dados do Supabase. Confira a configuração do banco.');
       } finally {
         setIsLoading(false);
       }
@@ -80,12 +89,20 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar activeMember={activeMember} setActiveMember={setActiveMember} />
+      <Navbar
+        activeMember={activeMember}
+        setActiveMember={setActiveMember}
+      />
 
       <main className="container" style={{ flex: 1 }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', color: 'var(--text-muted)' }}>
             Carregando informações...
+          </div>
+        ) : loadError ? (
+          <div className="card" style={{ borderLeft: '4px solid var(--color-danger)' }}>
+            <h3 className="card-title" style={{ color: 'var(--color-danger)' }}>Banco indisponível</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{loadError}</p>
           </div>
         ) : (
           <>

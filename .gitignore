@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+scratch_*.js
+vite-dev*.log
 .env
 .env.local
 .env.development.local

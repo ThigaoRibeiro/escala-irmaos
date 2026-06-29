@@ -18,8 +18,7 @@ import {
   HelpCircle,
   Users,
   Plus,
-  Trash2,
-  Heart
+  Trash2
 } from 'lucide-react';
 
 export default function Config({ onConfigChanged }) {
@@ -47,8 +46,13 @@ export default function Config({ onConfigChanged }) {
   // Recarrega cuidadoras quando o gatilho muda
   useEffect(() => {
     async function loadCaregivers() {
-      const list = await getCaregivers();
-      setCaregivers(list);
+      try {
+        const list = await getCaregivers();
+        setCaregivers(list);
+      } catch (e) {
+        console.error('Erro ao carregar cuidadoras:', e);
+        setCaregivers([]);
+      }
     }
     loadCaregivers();
   }, [caregiverTrigger]);
@@ -95,17 +99,27 @@ export default function Config({ onConfigChanged }) {
     e.preventDefault();
     if (!newCaregiverName.trim()) return;
     
-    await addCaregiver(newCaregiverName.trim());
-    setNewCaregiverName('');
-    setCaregiverTrigger(prev => prev + 1);
-    if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+    try {
+      await addCaregiver(newCaregiverName.trim());
+      setNewCaregiverName('');
+      setCaregiverTrigger(prev => prev + 1);
+      if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+    } catch (e) {
+      console.error('Erro ao adicionar cuidadora:', e);
+      alert('Não foi possível adicionar. Confira as permissões no Supabase.');
+    }
   };
 
   const handleDeleteCaregiver = async (id, name) => {
     if (window.confirm(`Tem certeza de que deseja remover a cuidadora "${name}"?`)) {
-      await deleteCaregiver(id);
-      setCaregiverTrigger(prev => prev + 1);
-      if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+      try {
+        await deleteCaregiver(id);
+        setCaregiverTrigger(prev => prev + 1);
+        if (onConfigChanged) onConfigChanged(); // Notifica App.jsx para recarregar
+      } catch (e) {
+        console.error('Erro ao remover cuidadora:', e);
+        alert('Não foi possível remover. Confira as permissões no Supabase.');
+      }
     }
   };
 
@@ -220,7 +234,7 @@ export default function Config({ onConfigChanged }) {
         </h3>
         
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Insira os dados do seu projeto Supabase para que a escala seja sincronizada online.
+          Insira a URL e a chave publishable/anon do projeto Supabase para sincronizar a escala entre celulares e computadores.
         </p>
 
         <div className="form-group">
@@ -236,7 +250,7 @@ export default function Config({ onConfigChanged }) {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Supabase Anon Key:</label>
+          <label className="form-label">Supabase Publishable / Anon Key:</label>
           <input 
             type="password" 
             value={key} 
@@ -269,8 +283,8 @@ export default function Config({ onConfigChanged }) {
         
         <ol style={{ paddingLeft: '16px', fontSize: '0.85rem', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <li>Acesse <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>supabase.com</a>.</li>
-          <li>Vá em **SQL Editor** &gt; **New Query**, cole o código SQL abaixo e clique em **Run**.</li>
-          <li>Copie a **Project URL** e a **API anon key** em **Settings** &gt; **API** e cole nos campos acima.</li>
+          <li>Vá em <strong>SQL Editor</strong> &gt; <strong>New Query</strong>, cole o código SQL abaixo e clique em <strong>Run</strong>.</li>
+          <li>Copie a <strong>Project URL</strong> e a chave <strong>Publishable/anon</strong> em <strong>Settings</strong> &gt; <strong>API</strong> e cole nos campos acima.</li>
         </ol>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', marginBottom: '8px' }}>
