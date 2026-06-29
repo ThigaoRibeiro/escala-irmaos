@@ -32,7 +32,10 @@ export function getSupabaseConfig() {
   try {
     const config = localStorage.getItem(CONFIG_KEY);
     if (config) {
-      return JSON.parse(config);
+      const parsed = JSON.parse(config);
+      if (parsed.url && parsed.key) {
+        return parsed;
+      }
     }
     // Se o usuário desativou explicitamente, roda local
     const isLocalMode = localStorage.getItem('escala_local_mode_active') === 'true';
