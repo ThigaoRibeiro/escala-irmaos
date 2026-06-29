@@ -30,6 +30,18 @@ const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export function getSupabaseConfig() {
   try {
+    if (DEFAULT_URL && DEFAULT_KEY) {
+      localStorage.removeItem(CONFIG_KEY);
+      localStorage.setItem('escala_local_mode_active', 'false');
+      return { url: DEFAULT_URL, key: DEFAULT_KEY };
+    }
+
+    // Se o usuário desativou explicitamente, roda local
+    const isLocalMode = localStorage.getItem('escala_local_mode_active') === 'true';
+    if (isLocalMode) {
+      return { url: '', key: '' };
+    }
+
     const config = localStorage.getItem(CONFIG_KEY);
     if (config) {
       const parsed = JSON.parse(config);
@@ -37,12 +49,7 @@ export function getSupabaseConfig() {
         return parsed;
       }
     }
-    // Se o usuário desativou explicitamente, roda local
-    const isLocalMode = localStorage.getItem('escala_local_mode_active') === 'true';
-    if (isLocalMode) {
-      return { url: '', key: '' };
-    }
-    // Por padrão, usa as credenciais do banco online
+
     return { url: DEFAULT_URL, key: DEFAULT_KEY };
   } catch (e) {
     console.error('Erro ao ler config do Supabase:', e);
