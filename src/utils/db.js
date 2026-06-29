@@ -21,6 +21,7 @@ const CONFIG_KEY = 'escala_supabase_config';
 const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
 const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
+const REALTIME_CHANNEL = 'escala-familia-live';
 
 function normalizeSupabaseUrl(url) {
   const trimmed = (url || '').trim();
@@ -96,6 +97,105 @@ export function getSupabaseClient() {
 
 export function resetSupabaseClient() {
   supabaseClient = null;
+  broadcastChannel = null;
+  broadcastReadyPromise = null;
+}
+
+let broadcastChannel = null;
+let broadcastReadyPromise = null;
+
+function getBroadcastChannel() {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  if (broadcastChannel) return broadcastChannel;
+
+  broadcastReadyPromise = new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(false), 2500);
+
+    broadcastChannel = client.channel(REALTIME_CHANNEL);
+    broadcastChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        clearTimeout(timeout);
+        resolve(true);
+      }
+
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        clearTimeout(timeout);
+        resolve(false);
+      }
+    });
+  });
+
+  return broadcastChannel;
+}
+
+async function sendRealtimeBroadcast(event, payload) {
+  try {
+    const channel = getBroadcastChannel();
+    if (!channel || !broadcastReadyPromise) return false;
+
+    const isReady = await broadcastReadyPromise;
+    if (!isReady) return false;
+
+    await channel.send({
+      type: 'broadcast',
+      event,
+      payload
+    });
+
+    return true;
+  } catch (e) {
+    console.warn('Falha ao enviar broadcast realtime:', e);
+    return false;
+  }
+}
+
+export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCaregiverChange, onStatusChange } = {}) {
+  const client = getSupabaseClient();
+  if (!client) return () => {};
+
+  const channel = client
+    .channel(REALTIME_CHANNEL)
+    .on('broadcast', { event: 'shift-change' }, (message) => {
+      const payload = message.payload || {};
+      if (onShiftChange) onShiftChange({
+        eventType: payload.eventType || 'UPSERT',
+        new: payload.row || payload.new,
+        old: payload.old
+      });
+    })
+    .on('broadcast', { event: 'log-change' }, (message) => {
+      const payload = message.payload || {};
+      if (onLogChange) onLogChange({
+        eventType: payload.eventType || 'UPSERT',
+        new: payload.row || payload.new,
+        old: payload.old
+      });
+    })
+    .on('broadcast', { event: 'caregiver-change' }, (message) => {
+      const payload = message.payload || {};
+      if (onCaregiverChange) onCaregiverChange({
+        eventType: payload.eventType || 'UPSERT',
+        new: payload.row || payload.new,
+        old: payload.old
+      });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'shifts' }, (payload) => {
+      if (onShiftChange) onShiftChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_logs' }, (payload) => {
+      if (onLogChange) onLogChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'caregivers' }, (payload) => {
+      if (onCaregiverChange) onCaregiverChange(payload);
+    })
+    .subscribe((status) => {
+      if (onStatusChange) onStatusChange(status);
+    });
+
+  return () => {
+    client.removeChannel(channel);
+  };
 }
 
 // --- MOCK DATA INICIAL ---
@@ -226,6 +326,10 @@ export async function addCaregiver(name) {
       .insert({ name })
       .select();
     if (error) throw error;
+    await sendRealtimeBroadcast('caregiver-change', {
+      eventType: 'UPSERT',
+      row: data[0]
+    });
     return data[0];
   }
   
@@ -244,6 +348,10 @@ export async function deleteCaregiver(id) {
       .delete()
       .eq('id', id);
     if (error) throw error;
+    await sendRealtimeBroadcast('caregiver-change', {
+      eventType: 'DELETE',
+      old: { id }
+    });
     return true;
   }
   
@@ -282,26 +390,7 @@ export async function getShifts() {
 export async function updateShift(date, period, assigned_to, caregiver_assigned, status = 'confirmed') {
   const id = `${date}_${period}`;
   const updatedAt = new Date().toISOString();
-  
-  const client = getSupabaseClient();
-  if (client) {
-    const { error } = await client
-      .from('shifts')
-      .upsert({
-        id,
-        date,
-        period,
-        assigned_to,
-        caregiver_assigned,
-        status,
-        updated_at: updatedAt
-      });
-    if (error) throw error;
-    return true;
-  }
-  
-  const shifts = await getShifts();
-  shifts[id] = {
+  const row = {
     id,
     date,
     period,
@@ -310,6 +399,22 @@ export async function updateShift(date, period, assigned_to, caregiver_assigned,
     status,
     updated_at: updatedAt
   };
+
+  const client = getSupabaseClient();
+  if (client) {
+    const { error } = await client
+      .from('shifts')
+      .upsert(row);
+    if (error) throw error;
+    await sendRealtimeBroadcast('shift-change', {
+      eventType: 'UPSERT',
+      row
+    });
+    return true;
+  }
+
+  const shifts = await getShifts();
+  shifts[id] = row;
   localStorage.setItem(LOCAL_SHIFTS_KEY, JSON.stringify(shifts));
   return true;
 }
@@ -344,28 +449,7 @@ export async function getDailyLogs() {
 export async function saveDailyLog(date, period, author, caregiver, meds_given, meals_ok, notes) {
   const id = `${date}_${period}`;
   const createdAt = new Date().toISOString();
-  
-  const client = getSupabaseClient();
-  if (client) {
-    const { error } = await client
-      .from('daily_logs')
-      .upsert({
-        id,
-        date,
-        period,
-        author,
-        caregiver,
-        meds_given,
-        meals_ok,
-        notes,
-        created_at: createdAt
-      });
-    if (error) throw error;
-    return true;
-  }
-  
-  const logs = await getDailyLogs();
-  logs[id] = {
+  const row = {
     id,
     date,
     period,
@@ -376,6 +460,22 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
     notes,
     created_at: createdAt
   };
+  
+  const client = getSupabaseClient();
+  if (client) {
+    const { error } = await client
+      .from('daily_logs')
+      .upsert(row);
+    if (error) throw error;
+    await sendRealtimeBroadcast('log-change', {
+      eventType: 'UPSERT',
+      row
+    });
+    return true;
+  }
+  
+  const logs = await getDailyLogs();
+  logs[id] = row;
   localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
   return true;
 }
@@ -424,6 +524,10 @@ CREATE TABLE IF NOT EXISTS public.daily_logs (
 ALTER TABLE public.caregivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_logs ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.caregivers REPLICA IDENTITY FULL;
+ALTER TABLE public.shifts REPLICA IDENTITY FULL;
+ALTER TABLE public.daily_logs REPLICA IDENTITY FULL;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.caregivers TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO anon, authenticated;
@@ -535,4 +639,29 @@ ON public.daily_logs
 FOR DELETE
 TO anon, authenticated
 USING (true);
+
+-- Habilitar Supabase Realtime para atualizações ao vivo entre navegadores.
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.caregivers;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.shifts;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_logs;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
 `;

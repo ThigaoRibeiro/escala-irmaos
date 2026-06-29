@@ -8,7 +8,8 @@ import {
   updateShift,
   getDailyLogs,
   saveDailyLog,
-  getCaregivers
+  getCaregivers,
+  subscribeToRealtimeChanges
 } from './utils/db';
 import { CalendarDays, FileText, Settings as SettingsIcon } from 'lucide-react';
 
@@ -71,6 +72,69 @@ export default function App() {
     }
 
     loadData();
+  }, [dbTrigger]);
+
+  useEffect(() => {
+    const getPayloadId = (row) => {
+      if (!row) return null;
+      return row.id || (row.date && row.period ? `${row.date}_${row.period}` : null);
+    };
+
+    const unsubscribe = subscribeToRealtimeChanges({
+      onShiftChange: (payload) => {
+        setShifts(prev => {
+          const id = getPayloadId(payload.new) || getPayloadId(payload.old);
+          if (!id) return prev;
+
+          if (payload.eventType === 'DELETE') {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          }
+
+          return {
+            ...prev,
+            [id]: payload.new
+          };
+        });
+      },
+      onLogChange: (payload) => {
+        setLogs(prev => {
+          const id = getPayloadId(payload.new) || getPayloadId(payload.old);
+          if (!id) return prev;
+
+          if (payload.eventType === 'DELETE') {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          }
+
+          return {
+            ...prev,
+            [id]: payload.new
+          };
+        });
+      },
+      onCaregiverChange: (payload) => {
+        setCaregivers(prev => {
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(item => item.id !== payload.old?.id);
+          }
+
+          if (!payload.new?.id) return prev;
+
+          const withoutCurrent = prev.filter(item => item.id !== payload.new.id);
+          return [...withoutCurrent, payload.new].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+        });
+      },
+      onStatusChange: (status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('Realtime indisponível:', status);
+        }
+      }
+    });
+
+    return unsubscribe;
   }, [dbTrigger]);
 
   const handleResetConnection = () => {
