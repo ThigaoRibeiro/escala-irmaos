@@ -22,24 +22,39 @@ const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
 const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 
+// Credenciais padrão do Supabase para conexão automática
+const DEFAULT_URL = 'https://uccupbxozqnmhcloptcq.supabase.co';
+const DEFAULT_KEY = 'sb_publishable_sawJoncFegw0N9lvSRWFng_6r3DtsKO';
+
 // --- CONFIGURAÇÕES DO SUPABASE ---
 
 export function getSupabaseConfig() {
   try {
     const config = localStorage.getItem(CONFIG_KEY);
-    return config ? JSON.parse(config) : { url: '', key: '' };
+    if (config) {
+      return JSON.parse(config);
+    }
+    // Se o usuário desativou explicitamente, roda local
+    const isLocalMode = localStorage.getItem('escala_local_mode_active') === 'true';
+    if (isLocalMode) {
+      return { url: '', key: '' };
+    }
+    // Por padrão, usa as credenciais do banco online
+    return { url: DEFAULT_URL, key: DEFAULT_KEY };
   } catch (e) {
     console.error('Erro ao ler config do Supabase:', e);
-    return { url: '', key: '' };
+    return { url: DEFAULT_URL, key: DEFAULT_KEY };
   }
 }
 
 export function saveSupabaseConfig(url, key) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify({ url, key }));
+  localStorage.setItem('escala_local_mode_active', 'false');
 }
 
 export function clearSupabaseConfig() {
   localStorage.removeItem(CONFIG_KEY);
+  localStorage.setItem('escala_local_mode_active', 'true');
 }
 
 let supabaseClient = null;
