@@ -26,6 +26,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [loadWarning, setLoadWarning] = useState('');
+  const [liveNotice, setLiveNotice] = useState('');
 
   // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
@@ -80,6 +81,13 @@ export default function App() {
       return row.id || (row.date && row.period ? `${row.date}_${row.period}` : null);
     };
 
+    let noticeTimer = null;
+    const showLiveNotice = (message) => {
+      setLiveNotice(message);
+      if (noticeTimer) clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => setLiveNotice(''), 3500);
+    };
+
     const unsubscribe = subscribeToRealtimeChanges({
       onShiftChange: (payload) => {
         setShifts(prev => {
@@ -97,6 +105,7 @@ export default function App() {
             [id]: payload.new
           };
         });
+        showLiveNotice('Escala atualizada por outra pessoa.');
       },
       onLogChange: (payload) => {
         setLogs(prev => {
@@ -114,6 +123,7 @@ export default function App() {
             [id]: payload.new
           };
         });
+        showLiveNotice('Diário atualizado por outra pessoa.');
       },
       onCaregiverChange: (payload) => {
         setCaregivers(prev => {
@@ -126,6 +136,7 @@ export default function App() {
           const withoutCurrent = prev.filter(item => item.id !== payload.new.id);
           return [...withoutCurrent, payload.new].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
         });
+        showLiveNotice('Lista de cuidadoras atualizada.');
       },
       onStatusChange: (status) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -134,7 +145,10 @@ export default function App() {
       }
     });
 
-    return unsubscribe;
+    return () => {
+      if (noticeTimer) clearTimeout(noticeTimer);
+      unsubscribe();
+    };
   }, [dbTrigger]);
 
   const handleResetConnection = () => {
@@ -219,6 +233,12 @@ export default function App() {
             {loadWarning && (
               <div className="info-banner" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)', backgroundColor: 'var(--color-warning-light)' }}>
                 {loadWarning}
+              </div>
+            )}
+
+            {liveNotice && (
+              <div className="info-banner" style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)' }}>
+                {liveNotice}
               </div>
             )}
 

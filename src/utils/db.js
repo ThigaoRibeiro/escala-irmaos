@@ -112,7 +112,13 @@ function getBroadcastChannel() {
   broadcastReadyPromise = new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(false), 2500);
 
-    broadcastChannel = client.channel(REALTIME_CHANNEL);
+    broadcastChannel = client.channel(REALTIME_CHANNEL, {
+      config: {
+        broadcast: {
+          self: false
+        }
+      }
+    });
     broadcastChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         clearTimeout(timeout);
@@ -154,8 +160,24 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
   const client = getSupabaseClient();
   if (!client) return () => {};
 
-  const channel = client
-    .channel(REALTIME_CHANNEL)
+  if (broadcastChannel) {
+    client.removeChannel(broadcastChannel);
+    broadcastChannel = null;
+    broadcastReadyPromise = null;
+  }
+
+  broadcastReadyPromise = new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(false), 2500);
+
+    broadcastChannel = client.channel(REALTIME_CHANNEL, {
+      config: {
+        broadcast: {
+          self: false
+        }
+      }
+    });
+
+    broadcastChannel
     .on('broadcast', { event: 'shift-change' }, (message) => {
       const payload = message.payload || {};
       if (onShiftChange) onShiftChange({
@@ -190,11 +212,26 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
       if (onCaregiverChange) onCaregiverChange(payload);
     })
     .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        clearTimeout(timeout);
+        resolve(true);
+      }
+
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        clearTimeout(timeout);
+        resolve(false);
+      }
+
       if (onStatusChange) onStatusChange(status);
     });
+  });
 
   return () => {
-    client.removeChannel(channel);
+    if (broadcastChannel) {
+      client.removeChannel(broadcastChannel);
+      broadcastChannel = null;
+      broadcastReadyPromise = null;
+    }
   };
 }
 
