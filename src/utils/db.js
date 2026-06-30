@@ -2,7 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 
 export const USER_MAPPING = {
   'thiagor21@gmail.com': { role: 'SUPERADMIN', name: 'Thiago', avatar: '👨', color: '#475569', lightColor: '#f1f5f9' },
-  'esterlessa13@gmail.com': { role: 'ADMIN', name: 'Ester', avatar: '❤️‍🩹 👩', color: '#db2777', lightColor: '#fdf2f8' }
+  'esterlessa13@gmail.com': { role: 'ADMIN', name: 'Ester', avatar: '❤️‍🩹', color: '#10b981', lightColor: '#d1fae5' },
+  'professorajeanelessa@gmail.com': { role: 'ADMIN', name: 'Jeane', avatar: '👩', color: '#f59e0b', lightColor: '#fef3c7' },
+  'ananerianlv@gmail.com': { role: 'ADMIN', name: 'Ana Neri', avatar: '👩', color: '#8b5cf6', lightColor: '#ede9fe' },
 };
 
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
