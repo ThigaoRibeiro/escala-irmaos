@@ -215,7 +215,21 @@ export default function Config({ onConfigChanged }) {
             <input
               type="text"
               value={newCaregiverName}
-              onChange={(e) => setNewCaregiverName(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setNewCaregiverName(val);
+                if (val) {
+                  const generatedEmail = val
+                    .trim()
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, '') + '@lessacare.com';
+                  setNewCaregiverEmail(generatedEmail);
+                } else {
+                  setNewCaregiverEmail('');
+                }
+              }}
               placeholder="Nome da cuidadora"
               className="form-control"
               style={{ flex: 1 }}
@@ -225,7 +239,7 @@ export default function Config({ onConfigChanged }) {
               type="email"
               value={newCaregiverEmail}
               onChange={(e) => setNewCaregiverEmail(e.target.value)}
-              placeholder="E-mail de acesso (opcional)"
+              placeholder="E-mail de acesso"
               className="form-control"
               style={{ flex: 1 }}
             />
