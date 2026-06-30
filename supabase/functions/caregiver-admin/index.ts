@@ -201,6 +201,44 @@ Deno.serve(async (req) => {
       return jsonResponse(200, { success: true, caregiverId })
     }
 
+    if (action === 'reset_caregiver_password') {
+      const caregiverId = String(body?.caregiverId ?? '').trim()
+      const newPassword = String(body?.newPassword ?? '').trim()
+
+      if (!caregiverId) {
+        return jsonResponse(400, { error: 'Informe a cuidadora que terá a senha redefinida.' })
+      }
+
+      if (newPassword.length < 6) {
+        return jsonResponse(400, { error: 'A nova senha deve ter pelo menos 6 caracteres.' })
+      }
+
+      const { data: caregiver, error: caregiverError } = await adminClient
+        .from('caregivers')
+        .select('*')
+        .eq('id', caregiverId)
+        .maybeSingle()
+
+      if (caregiverError) {
+        return jsonResponse(500, { error: caregiverError.message })
+      }
+
+      if (!caregiver?.auth_user_id) {
+        return jsonResponse(404, { error: 'Cuidadora sem vínculo válido no Auth.' })
+      }
+
+      const { error: updatePasswordError } = await adminClient.auth.admin.updateUserById(
+        caregiver.auth_user_id,
+        { password: newPassword }
+      )
+
+      if (updatePasswordError) {
+        return jsonResponse(500, { error: updatePasswordError.message })
+      }
+
+      return jsonResponse(200, { success: true, caregiverId })
+    }
+
     return jsonResponse(400, { error: 'AÃ§Ã£o administrativa invÃ¡lida.' })
   } catch (error) {
     return jsonResponse(500, {

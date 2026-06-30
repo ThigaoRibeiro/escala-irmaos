@@ -4,6 +4,7 @@ import {
   getCaregivers,
   addCaregiver,
   deleteCaregiver,
+  resetCaregiverPassword,
   getMedications,
   addMedication,
   deleteMedication
@@ -12,7 +13,8 @@ import {
   Users,
   Plus,
   Trash2,
-  Pill
+  Pill,
+  KeyRound
 } from 'lucide-react';
 
 export default function Config({ onConfigChanged }) {
@@ -41,6 +43,7 @@ export default function Config({ onConfigChanged }) {
         setCaregivers([]);
       }
     }
+
     loadCaregivers();
   }, [caregiverTrigger]);
 
@@ -54,6 +57,7 @@ export default function Config({ onConfigChanged }) {
         setMedications([]);
       }
     }
+
     loadMedications();
   }, [medicationTrigger]);
 
@@ -69,12 +73,34 @@ export default function Config({ onConfigChanged }) {
       setNewCaregiverName('');
       setNewCaregiverEmail('');
       setNewCaregiverPassword('');
-      setCaregiverTrigger(prev => prev + 1);
+      setCaregiverTrigger((prev) => prev + 1);
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao adicionar cuidadora:', e);
       setCaregiverSuccess('');
       setCaregiverError(e.message || 'Não foi possível adicionar a cuidadora.');
+    }
+  };
+
+  const handleResetCaregiverPassword = async (caregiver) => {
+    const newPassword = window.prompt(`Digite a nova senha temporária para ${caregiver.name}:`, '');
+    if (newPassword === null) return;
+
+    const trimmedPassword = newPassword.trim();
+    if (trimmedPassword.length < 6) {
+      setCaregiverSuccess('');
+      setCaregiverError('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    try {
+      setCaregiverError('');
+      await resetCaregiverPassword(caregiver.id, trimmedPassword);
+      setCaregiverSuccess(`Senha redefinida para ${caregiver.name}. Login: ${caregiver.email} | Nova senha: ${trimmedPassword}`);
+    } catch (e) {
+      console.error('Erro ao redefinir senha da cuidadora:', e);
+      setCaregiverSuccess('');
+      setCaregiverError(e.message || 'Não foi possível redefinir a senha da cuidadora.');
     }
   };
 
@@ -85,7 +111,7 @@ export default function Config({ onConfigChanged }) {
       setCaregiverError('');
       await deleteCaregiver(id);
       setCaregiverSuccess(`A cuidadora ${name} foi removida e perdeu o acesso ao app.`);
-      setCaregiverTrigger(prev => prev + 1);
+      setCaregiverTrigger((prev) => prev + 1);
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao remover cuidadora:', e);
@@ -97,13 +123,14 @@ export default function Config({ onConfigChanged }) {
   const handleAddMedication = async (e) => {
     e.preventDefault();
     if (!medTime || !medName.trim() || !medDose.trim()) return;
+
     try {
       await addMedication(medTime, medName.trim(), medDose.trim(), medNote.trim());
       setMedTime('');
       setMedName('');
       setMedDose('');
       setMedNote('');
-      setMedicationTrigger(prev => prev + 1);
+      setMedicationTrigger((prev) => prev + 1);
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao adicionar medicamento:', e);
@@ -113,9 +140,10 @@ export default function Config({ onConfigChanged }) {
 
   const handleDeleteMedication = async (id, name) => {
     if (!window.confirm(`Remover "${name}" da lista de medicamentos?`)) return;
+
     try {
       await deleteMedication(id);
-      setMedicationTrigger(prev => prev + 1);
+      setMedicationTrigger((prev) => prev + 1);
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao remover medicamento:', e);
@@ -125,7 +153,6 @@ export default function Config({ onConfigChanged }) {
 
   return (
     <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
       <div className="card">
         <h3 className="card-title">
           <Pill size={20} />
@@ -181,7 +208,7 @@ export default function Config({ onConfigChanged }) {
               Nenhum medicamento cadastrado.
             </p>
           ) : (
-            medications.map(med => (
+            medications.map((med) => (
               <div
                 key={med.id}
                 style={{
@@ -197,7 +224,9 @@ export default function Config({ onConfigChanged }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', minWidth: '42px' }}>{med.time}</span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{med.name} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({med.dose})</span></div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      {med.name} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>({med.dose})</span>
+                    </div>
                     {med.note && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{med.note}</div>}
                   </div>
                 </div>
@@ -235,7 +264,7 @@ export default function Config({ onConfigChanged }) {
 
         <form onSubmit={handleAddCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-            O login da cuidadora é criado no Supabase com o padrão `nome@lessacare.com`. A senha inicial só aparece aqui no momento do cadastro.
+            O login da cuidadora é criado no Supabase com o padrão `nome@lessacare.com`. A senha atual não pode ser exibida depois, mas os irmãos podem redefinir uma nova senha temporária a qualquer momento.
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <input
@@ -293,13 +322,14 @@ export default function Config({ onConfigChanged }) {
               Nenhuma cuidadora cadastrada.
             </p>
           ) : (
-            caregivers.map(item => (
+            caregivers.map((item) => (
               <div
                 key={item.id}
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: '12px',
                   padding: '10px 14px',
                   backgroundColor: 'var(--bg-subtle)',
                   borderRadius: '8px',
@@ -315,14 +345,28 @@ export default function Config({ onConfigChanged }) {
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteCaregiver(item.id, item.name)}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-                  title="Excluir cuidadora"
-                >
-                  <Trash2 size={16} />
-                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleResetCaregiverPassword(item)}
+                    className="btn btn-outline"
+                    style={{ padding: '8px 10px', borderColor: 'var(--border-color)' }}
+                    title="Redefinir senha"
+                  >
+                    <KeyRound size={16} />
+                    <span>Redefinir senha</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCaregiver(item.id, item.name)}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                    title="Excluir cuidadora"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))
           )}

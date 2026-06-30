@@ -575,6 +575,19 @@ export async function deleteCaregiver(id) {
   return true;
 }
 
+export async function resetCaregiverPassword(id, newPassword) {
+  const client = getSupabaseClient();
+  if (client) {
+    await callCaregiverAdminFunction('reset_caregiver_password', {
+      caregiverId: id,
+      newPassword: newPassword.trim()
+    });
+    return true;
+  }
+
+  return true;
+}
+
 // --- OPERAÇÕES DE MEDICAMENTOS ---
 
 export async function getMedications() {
