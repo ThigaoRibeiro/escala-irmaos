@@ -5,7 +5,9 @@ import { Heart, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -23,6 +25,10 @@ export default function Login({ onLoginSuccess }) {
         if (error) throw error;
         if (onLoginSuccess) onLoginSuccess();
       } else {
+        if (password !== confirmPassword) {
+          throw new Error('As senhas não coincidem. Tente novamente.');
+        }
+        
         const { error, data } = await signUp(email, password);
         if (error) throw error;
         
@@ -58,8 +64,11 @@ export default function Login({ onLoginSuccess }) {
             <Heart size={32} fill="currentColor" />
             <span>Lessa Care</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>
-            Faça login para acessar a escala e o diário de cuidados.
+          <h2 style={{ fontSize: '1.2rem', marginTop: '16px', marginBottom: '8px' }}>
+            {isLoginMode ? 'Acesse sua conta' : 'Crie sua conta'}
+          </h2>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {isLoginMode ? 'Faça login para acessar a escala e o diário de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
           </p>
         </div>
 
@@ -127,6 +136,45 @@ export default function Login({ onLoginSuccess }) {
             </div>
           </div>
 
+          {!isLoginMode && (
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Lock size={16} /> Confirmar Senha
+              </label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="form-control"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  style={{ width: '100%', paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  title={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn btn-primary" 
@@ -144,6 +192,8 @@ export default function Login({ onLoginSuccess }) {
               setIsLoginMode(!isLoginMode);
               setErrorMsg('');
               setSuccessMsg('');
+              setPassword('');
+              setConfirmPassword('');
             }}
             style={{ 
               background: 'none', 
