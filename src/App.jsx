@@ -9,6 +9,7 @@ import {
   getDailyLogs,
   saveDailyLog,
   getCaregivers,
+  getMedications,
   subscribeToRealtimeChanges
 } from './utils/db';
 import { CalendarDays, FileText, Users as UsersIcon } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function App() {
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
   const [caregivers, setCaregivers] = useState([]);
+  const [medications, setMedications] = useState([]);
   const [dbTrigger, setDbTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -63,6 +65,15 @@ export default function App() {
         console.error('Erro ao carregar cuidadoras:', e);
         setCaregivers([]);
         warnings.push('Cuidadoras indisponíveis');
+      }
+
+      try {
+        const fetchedMedications = await getMedications();
+        setMedications(fetchedMedications);
+      } catch (e) {
+        console.error('Erro ao carregar medicamentos:', e);
+        setMedications([]);
+        warnings.push('Medicamentos indisponíveis');
       }
 
       if (warnings.length > 0) {
@@ -137,6 +148,19 @@ export default function App() {
           return [...withoutCurrent, payload.new].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
         });
         showLiveNotice('Lista de cuidadoras atualizada.');
+      },
+      onMedicationChange: (payload) => {
+        setMedications(prev => {
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(item => item.id !== payload.old?.id);
+          }
+
+          if (!payload.new?.id) return prev;
+
+          const withoutCurrent = prev.filter(item => item.id !== payload.new.id);
+          return [...withoutCurrent, payload.new].sort((a, b) => a.time.localeCompare(b.time));
+        });
+        showLiveNotice('Lista de medicamentos atualizada.');
       },
       onStatusChange: (status) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -252,17 +276,17 @@ export default function App() {
             )}
             
             {activeTab === 'logs' && (
-              <DailyLogs 
+              <DailyLogs
                 shifts={shifts}
-                logs={logs} 
-                onSaveLog={handleSaveLog} 
-                caregivers={caregivers}
+                logs={logs}
+                onSaveLog={handleSaveLog}
+                medications={medications}
               />
             )}
             
             {activeTab === 'config' && (
-              <Config 
-                onConfigChanged={() => setDbTrigger(prev => prev + 1)} 
+              <Config
+                onConfigChanged={() => setDbTrigger(prev => prev + 1)}
               />
             )}
           </>

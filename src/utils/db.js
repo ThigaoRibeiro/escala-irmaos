@@ -21,6 +21,7 @@ const CONFIG_KEY = 'escala_supabase_config';
 const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
 const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
+const LOCAL_MEDICATIONS_KEY = 'escala_local_medications_v1';
 const REALTIME_CHANNEL = 'escala-familia-live';
 
 function normalizeSupabaseUrl(url) {
@@ -156,7 +157,7 @@ async function sendRealtimeBroadcast(event, payload) {
   }
 }
 
-export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCaregiverChange, onStatusChange } = {}) {
+export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCaregiverChange, onMedicationChange, onStatusChange } = {}) {
   const client = getSupabaseClient();
   if (!client) return () => {};
 
@@ -202,6 +203,14 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
         old: payload.old
       });
     })
+    .on('broadcast', { event: 'medication-change' }, (message) => {
+      const payload = message.payload || {};
+      if (onMedicationChange) onMedicationChange({
+        eventType: payload.eventType || 'UPSERT',
+        new: payload.row || payload.new,
+        old: payload.old
+      });
+    })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shifts' }, (payload) => {
       if (onShiftChange) onShiftChange(payload);
     })
@@ -236,6 +245,16 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
 }
 
 // --- MOCK DATA INICIAL ---
+
+function getInitialMedications() {
+  return [
+    { id: '1', time: '09:00', name: 'Desventafaxina', dose: '1 comp', note: 'macerado com iogurte' },
+    { id: '2', time: '09:00', name: 'Memantina', dose: '1 comp', note: 'macerado com iogurte' },
+    { id: '3', time: '11:30', name: 'Apevitin', dose: '1 copinho', note: 'antes do almoço' },
+    { id: '4', time: '21:00', name: 'Donepezila', dose: '1 comp', note: 'macerado com iogurte' },
+    { id: '5', time: '21:00', name: 'Memantina', dose: '1 comp', note: 'macerado com iogurte' }
+  ];
+}
 
 function getInitialMockCaregivers() {
   return [
@@ -395,6 +414,62 @@ export async function deleteCaregiver(id) {
   const list = await getCaregivers();
   const filtered = list.filter(item => item.id !== id);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(filtered));
+  return true;
+}
+
+// --- OPERAÇÕES DE MEDICAMENTOS ---
+
+export async function getMedications() {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from('medications')
+      .select('*')
+      .order('time');
+    if (error) throw error;
+    return data;
+  }
+
+  const local = localStorage.getItem(LOCAL_MEDICATIONS_KEY);
+  if (!local) {
+    const initial = getInitialMedications();
+    localStorage.setItem(LOCAL_MEDICATIONS_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  return JSON.parse(local);
+}
+
+export async function addMedication(time, name, dose, note) {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from('medications')
+      .insert({ time, name, dose, note })
+      .select();
+    if (error) throw error;
+    await sendRealtimeBroadcast('medication-change', { eventType: 'UPSERT', row: data[0] });
+    return data[0];
+  }
+
+  const list = await getMedications();
+  const newItem = { id: String(Date.now()), time, name, dose, note };
+  list.push(newItem);
+  list.sort((a, b) => a.time.localeCompare(b.time));
+  localStorage.setItem(LOCAL_MEDICATIONS_KEY, JSON.stringify(list));
+  return newItem;
+}
+
+export async function deleteMedication(id) {
+  const client = getSupabaseClient();
+  if (client) {
+    const { error } = await client.from('medications').delete().eq('id', id);
+    if (error) throw error;
+    await sendRealtimeBroadcast('medication-change', { eventType: 'DELETE', old: { id } });
+    return true;
+  }
+
+  const list = await getMedications();
+  localStorage.setItem(LOCAL_MEDICATIONS_KEY, JSON.stringify(list.filter(m => m.id !== id)));
   return true;
 }
 

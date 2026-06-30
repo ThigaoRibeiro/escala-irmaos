@@ -27,18 +27,13 @@ const EMPTY_FORM = {
   bathPlace: '',
   skinCare: '',
   mood: '',
-  medManha1: false,
-  medManha2: false,
-  medApevitin: false,
-  medNoite1: false,
-  medNoite2: false,
   activityLegs: false,
   activitySun: false,
   activityTv: false,
   notes: ''
 };
 
-export default function DailyLogs({ shifts, logs, onSaveLog }) {
+export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] }) {
   const currentPlantao = getCurrentPlantao();
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(currentPlantao.date);
@@ -46,6 +41,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
   const [entryTime, setEntryTime] = useState(getPeriodTimes(currentPlantao.period).entry);
   const [exitTime, setExitTime] = useState(getPeriodTimes(currentPlantao.period).exit);
   const [mealsOk, setMealsOk] = useState(false);
+  const [checkedMeds, setCheckedMeds] = useState({});
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [copiedLogId, setCopiedLogId] = useState(null);
 
@@ -78,13 +74,14 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
   const resetForm = () => {
     setFormData(EMPTY_FORM);
     setMealsOk(false);
+    setCheckedMeds({});
     setShowAddForm(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const author = responsibleName || 'Sem responsável';
-    const medsGiven = formData.medManha1 && formData.medManha2 && formData.medApevitin && formData.medNoite1 && formData.medNoite2;
+    const medsGiven = medications.length > 0 && medications.every(m => checkedMeds[m.id]);
     const dailyNotes = buildDailyNotes({
       responsibleName: author,
       date,
@@ -92,6 +89,8 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
       entryTime,
       exitTime,
       mealsOk,
+      medications,
+      checkedMeds,
       ...formData
     });
 
@@ -225,36 +224,34 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
           </div>
 
           <SectionTitle label="Medicamentos 💊" />
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: '-4px 0 12px' }}>
-            Devem ser macerados com iogurte
-          </p>
-          <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px' }}>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.medManha1} onChange={(e) => updateField('medManha1', e.target.checked)} className="checkbox-input" />
-              <span>09:00 — Desventafaxina (1 comp)</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.medManha2} onChange={(e) => updateField('medManha2', e.target.checked)} className="checkbox-input" />
-              <span>09:00 — Memantina (1 comp)</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.medApevitin} onChange={(e) => updateField('medApevitin', e.target.checked)} className="checkbox-input" />
-              <span>11:30 — Apevitin (1 copinho, antes do almoço)</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.medNoite1} onChange={(e) => updateField('medNoite1', e.target.checked)} className="checkbox-input" />
-              <span>21:00 — Donepezila (1 comp)</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.medNoite2} onChange={(e) => updateField('medNoite2', e.target.checked)} className="checkbox-input" />
-              <span>21:00 — Memantina (1 comp)</span>
-            </label>
-          </div>
+          {medications.length === 0 ? (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '12px' }}>
+              Nenhum medicamento cadastrado. Adicione na aba Configurações.
+            </p>
+          ) : (
+            <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px' }}>
+              {medications.map(med => (
+                <label key={med.id} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={!!checkedMeds[med.id]}
+                    onChange={(e) => setCheckedMeds(prev => ({ ...prev, [med.id]: e.target.checked }))}
+                    className="checkbox-input"
+                  />
+                  <span>
+                    <strong>{med.time}</strong> — {med.name} ({med.dose})
+                    {med.note && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> · {med.note}</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
 
-          <div className="checkbox-group" style={{ marginTop: '14px' }}>
+          <SectionTitle label="Refeições 🍽️" />
+          <div className="checkbox-group" style={{ marginBottom: '12px' }}>
             <label className="checkbox-label">
               <input type="checkbox" checked={mealsOk} onChange={(e) => setMealsOk(e.target.checked)} className="checkbox-input" />
-              <span>Alimentação OK 🍽️</span>
+              <span>Alimentação OK</span>
             </label>
           </div>
 
@@ -445,13 +442,11 @@ function buildDailyNotes(data) {
   const lines = [
     `Responsável do plantão: ${data.responsibleName}`,
     `Horário: ${data.entryTime || '--:--'} às ${data.exitTime || '--:--'}`,
-    formatGroup('Medicamentos', [
-      `09:00 Desventafaxina: ${data.medManha1 ? '✓' : '✗ pendente'}`,
-      `09:00 Memantina: ${data.medManha2 ? '✓' : '✗ pendente'}`,
-      `11:30 Apevitin: ${data.medApevitin ? '✓' : '✗ pendente'}`,
-      `21:00 Donepezila: ${data.medNoite1 ? '✓' : '✗ pendente'}`,
-      `21:00 Memantina: ${data.medNoite2 ? '✓' : '✗ pendente'}`,
-    ]),
+    data.medications?.length > 0
+      ? formatGroup('Medicamentos', data.medications.map(m =>
+          `${m.time} ${m.name}: ${data.checkedMeds[m.id] ? '✓' : '✗ pendente'}`
+        ))
+      : '',
     `Alimentação geral: ${data.mealsOk ? 'OK' : 'atenção'}`,
     formatGroup('Sinais', [
       formatItem('Pressão arterial', data.pressure),
