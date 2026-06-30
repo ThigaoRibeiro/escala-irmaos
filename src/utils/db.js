@@ -126,10 +126,31 @@ export async function signUp(email, password) {
   return client.auth.signUp({ email, password });
 }
 
-export async function updatePassword(newPassword) {
+export async function updatePassword(newPassword, userProfile) {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase não configurado');
-  return client.auth.updateUser({ password: newPassword });
+
+  if (userProfile?.role === 'CAREGIVER') {
+    // Para cuidadoras, a senha fica salva na tabela public.caregivers
+    const { error } = await client
+      .from('caregivers')
+      .update({ password: newPassword })
+      .eq('email', userProfile.email);
+    
+    if (error) throw error;
+
+    // Atualiza o cache local do perfil
+    const stored = localStorage.getItem('escala_caregiver_profile');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      parsed.password = newPassword;
+      localStorage.setItem('escala_caregiver_profile', JSON.stringify(parsed));
+    }
+    return { error: null };
+  } else {
+    // Para irmãos (ADMIN/SUPERADMIN), atualiza o Supabase Auth tradicional
+    return client.auth.updateUser({ password: newPassword });
+  }
 }
 
 export async function signOut() {

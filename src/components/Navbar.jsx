@@ -59,7 +59,7 @@ export default function Navbar({ userProfile }) {
 
     setIsUpdating(true);
     try {
-      const { error } = await updatePassword(newPassword);
+      const { error } = await updatePassword(newPassword, userProfile);
       if (error) throw error;
       setSuccessMsg('Senha alterada com sucesso!');
       setNewPassword('');
