@@ -2,12 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
 export const MEMBERS = [
-  { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '💙 👨' },
-  { name: 'Aldeyr', color: '#0369a1', lightColor: '#e0f2fe', avatar: '💙 👨' },
-  { name: 'Ana Nery', color: '#be185d', lightColor: '#fce7f3', avatar: '💗 👩' },
-  { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '💗 👩' },
-  { name: 'Haniel', color: '#15803d', lightColor: '#dcfce7', avatar: '💙 👨' },
-  { name: 'Ester', color: '#c2410c', lightColor: '#ffedd5', avatar: '💗 👩' }
+  { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '❤️‍🩹 👨' },
+  { name: 'Aldeyr', color: '#0369a1', lightColor: '#e0f2fe', avatar: '❤️‍🩹 👨' },
+  { name: 'Ana Nery', color: '#ca8a04', lightColor: '#fef9c3', avatar: '❤️‍🩹 👩' },
+  { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '❤️‍🩹 👩' },
+  { name: 'Haniel', color: '#2563eb', lightColor: '#eff6ff', avatar: '❤️‍🩹 👨' },
+  { name: 'Ester', color: '#db2777', lightColor: '#fdf2f8', avatar: '❤️‍🩹 👩' }
 ];
 
 // Ícone padrão e cor para as Cuidadoras Contratadas

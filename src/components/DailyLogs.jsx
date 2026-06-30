@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MEMBERS, CAREGIVER_STYLE } from '../utils/db';
+import { MEMBERS } from '../utils/db';
 import {
   Plus,
   Share2,
@@ -33,31 +33,26 @@ const EMPTY_FORM = {
   notes: ''
 };
 
-export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
+export default function DailyLogs({ shifts, logs, onSaveLog }) {
   const currentPlantao = getCurrentPlantao();
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(currentPlantao.date);
   const [period, setPeriod] = useState(currentPlantao.period);
   const [entryTime, setEntryTime] = useState(getPeriodTimes(currentPlantao.period).entry);
   const [exitTime, setExitTime] = useState(getPeriodTimes(currentPlantao.period).exit);
-  const [caregiver, setCaregiver] = useState('');
   const [medsGiven, setMedsGiven] = useState(false);
   const [mealsOk, setMealsOk] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [copiedLogId, setCopiedLogId] = useState(null);
 
   const selectedShift = shifts?.[`${date}_${period}`];
-  const responsibleName = selectedShift?.assigned_to || '';
+  const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
 
   useEffect(() => {
     const times = getPeriodTimes(period);
     setEntryTime(times.entry);
     setExitTime(times.exit);
   }, [period]);
-
-  useEffect(() => {
-    setCaregiver(selectedShift?.caregiver_assigned || '');
-  }, [selectedShift?.caregiver_assigned, date, period]);
 
   const updateField = (field, value) => {
     setFormData(prev => ({
@@ -78,7 +73,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
 
   const resetForm = () => {
     setFormData(EMPTY_FORM);
-    setCaregiver('');
     setMedsGiven(false);
     setMealsOk(false);
     setShowAddForm(false);
@@ -89,7 +83,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
     const author = responsibleName || 'Sem responsável';
     const dailyNotes = buildDailyNotes({
       responsibleName: author,
-      caregiver,
       date,
       period,
       entryTime,
@@ -99,7 +92,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
       ...formData
     });
 
-    onSaveLog(date, period, author, caregiver || null, medsGiven, mealsOk, dailyNotes);
+    onSaveLog(date, period, author, null, medsGiven, mealsOk, dailyNotes);
     resetForm();
   };
 
@@ -131,10 +124,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
     text += `📅 Data: ${formatLogDate(log.date)}\n`;
     text += `⏰ Turno: ${periodLabel}\n`;
     text += `👤 Responsável do Plantão: ${log.author} ${authorAvatar}\n`;
-
-    if (log.caregiver) {
-      text += `${CAREGIVER_STYLE.avatar} Cuidadora: ${log.caregiver}\n`;
-    }
 
     text += `\n💊 Medicações: ${log.meds_given ? '✅ Ministradas' : '❌ Pendentes / Não ministradas'}\n`;
     text += `🍽️ Alimentação: ${log.meals_ok ? '✅ OK' : '❌ Atenção'}\n\n`;
@@ -212,41 +201,23 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
             </div>
           </div>
 
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-            <div>
-              <label className="form-label">Responsável do plantão:</label>
-              <div
-                style={{
-                  padding: '10px',
-                  backgroundColor: responsibleName ? getMemberLightColor(responsibleName) : 'var(--bg-subtle)',
-                  borderRadius: '8px',
-                  border: `1px solid ${responsibleName ? getMemberColor(responsibleName) : 'var(--border-color)'}`,
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  minHeight: '42px'
-                }}
-              >
-                <span>{responsibleName ? getMemberAvatar(responsibleName) : '👤'}</span>
-                <span>{responsibleName || 'Sem responsável escalado'}</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label">Cuidadora no plantão:</label>
-              <select
-                value={caregiver}
-                onChange={(e) => setCaregiver(e.target.value)}
-                className="form-control"
-              >
-                <option value="">Nenhuma / Sem cuidadora</option>
-                {caregivers.map(c => (
-                  <option key={c.id} value={c.name}>
-                    {CAREGIVER_STYLE.avatar} {c.name}
-                  </option>
-                ))}
-              </select>
+          <div className="form-group">
+            <label className="form-label">Responsável do plantão:</label>
+            <div
+              style={{
+                padding: '10px',
+                backgroundColor: responsibleName ? getMemberLightColor(responsibleName) : 'var(--bg-subtle)',
+                borderRadius: '8px',
+                border: `1px solid ${responsibleName ? getMemberColor(responsibleName) : 'var(--border-color)'}`,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                minHeight: '42px'
+              }}
+            >
+              <span>{responsibleName ? getMemberAvatar(responsibleName) : '👤'}</span>
+              <span>{responsibleName || 'Sem responsável escalado'}</span>
             </div>
           </div>
 
@@ -303,7 +274,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
           <div className="checkbox-group" style={{ flexWrap: 'wrap' }}>
             <label className="checkbox-label">
               <input type="checkbox" checked={formData.activityLegs} onChange={(e) => updateField('activityLegs', e.target.checked)} className="checkbox-input" />
-              <span>Sentou / moveu as pernas</span>
+              <span>Sentou / Andou</span>
             </label>
             <label className="checkbox-label">
               <input type="checkbox" checked={formData.activitySun} onChange={(e) => updateField('activitySun', e.target.checked)} className="checkbox-input" />
@@ -360,22 +331,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, caregivers }) {
               <div className="log-meta">
                 <span className="log-author" style={{ color: authorColor }}>
                   {authorAvatar} {log.author}
-                  {log.caregiver && (
-                    <span
-                      style={{
-                        color: CAREGIVER_STYLE.color,
-                        backgroundColor: CAREGIVER_STYLE.lightColor,
-                        padding: '2px 8px',
-                        borderRadius: '10px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        marginLeft: '8px',
-                        border: `1px solid ${CAREGIVER_STYLE.color}`
-                      }}
-                    >
-                      {CAREGIVER_STYLE.avatar} {log.caregiver}
-                    </span>
-                  )}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Calendar size={12} />
@@ -458,7 +413,7 @@ function SelectInput({ label, value, onChange, options }) {
 
 function buildDailyNotes(data) {
   const activities = [
-    data.activityLegs ? 'Sentou / moveu as pernas' : '',
+    data.activityLegs ? 'Sentou / Andou' : '',
     data.activitySun ? 'Tomou sol' : '',
     data.activityTv ? 'Assistiu TV' : ''
   ].filter(Boolean);
@@ -466,7 +421,6 @@ function buildDailyNotes(data) {
   const lines = [
     `Responsável do plantão: ${data.responsibleName}`,
     `Horário: ${data.entryTime || '--:--'} às ${data.exitTime || '--:--'}`,
-    data.caregiver ? `Cuidadora: ${data.caregiver}` : '',
     `Medicações: ${data.medsGiven ? 'ministradas' : 'pendentes / não ministradas'}`,
     `Alimentação geral: ${data.mealsOk ? 'OK' : 'atenção'}`,
     formatGroup('Sinais', [

@@ -253,33 +253,10 @@ function ShiftRow({ timeLabel, shift, onClick }) {
         <span className="shift-time">{timeLabel}</span>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          {/* Slot de Filho(a) */}
-          {assignedMember ? (
-            <div 
-              style={{ 
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: assignedMember.color,
-                backgroundColor: assignedMember.lightColor,
-                padding: '4px 10px',
-                borderRadius: '20px',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                border: `1px solid ${assignedMember.color}`
-              }}
-            >
-              <span>{assignedMember.avatar}</span>
-              <span>{assignedName}</span>
-              {status === 'needs_swap' && (
-                <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 'bold', marginLeft: '4px' }}>
-                  ⚠️ Troca
-                </span>
-              )}
-            </div>
-          ) : (
-            <div 
-              style={{ 
+          {!assignedMember && !caregiverName ? (
+            /* Turno completamente vago — um único badge */
+            <div
+              style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
@@ -293,47 +270,57 @@ function ShiftRow({ timeLabel, shift, onClick }) {
               }}
             >
               <span>👤</span>
-              <span>Família: Vago</span>
-            </div>
-          )}
-
-          {/* Slot de Cuidadora */}
-          {caregiverName ? (
-            <div 
-              style={{ 
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: CAREGIVER_STYLE.color,
-                backgroundColor: CAREGIVER_STYLE.lightColor,
-                padding: '4px 10px',
-                borderRadius: '20px',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                border: `1px solid ${CAREGIVER_STYLE.color}`
-              }}
-            >
-              <span>{CAREGIVER_STYLE.avatar}</span>
-              <span>{caregiverName}</span>
+              <span>Vago</span>
             </div>
           ) : (
-            <div 
-              style={{ 
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: 'var(--text-muted)',
-                backgroundColor: 'var(--bg-subtle)',
-                padding: '4px 10px',
-                borderRadius: '20px',
-                fontSize: '0.85rem',
-                fontStyle: 'italic',
-                border: '1px dashed var(--border-color)'
-              }}
-            >
-              <span>🩺</span>
-              <span>Cuidadora: Vaga</span>
-            </div>
+            <>
+              {/* Slot de Filho(a) */}
+              {assignedMember && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: assignedMember.color,
+                    backgroundColor: assignedMember.lightColor,
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    border: `1px solid ${assignedMember.color}`
+                  }}
+                >
+                  <span>{assignedMember.avatar}</span>
+                  <span>{assignedName}</span>
+                  {status === 'needs_swap' && (
+                    <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 'bold', marginLeft: '4px' }}>
+                      ⚠️ Troca
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Slot de Cuidadora */}
+              {caregiverName && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: CAREGIVER_STYLE.color,
+                    backgroundColor: CAREGIVER_STYLE.lightColor,
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    border: `1px solid ${CAREGIVER_STYLE.color}`
+                  }}
+                >
+                  <span>{CAREGIVER_STYLE.avatar}</span>
+                  <span>{caregiverName}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
