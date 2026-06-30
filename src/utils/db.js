@@ -490,11 +490,36 @@ export async function addCaregiver(name, email, password) {
 export async function deleteCaregiver(id) {
   const client = getSupabaseClient();
   if (client) {
+    // 1. Busca o nome da cuidadora antes de deletar
+    const { data: caregiver } = await client
+      .from('caregivers')
+      .select('name')
+      .eq('id', id)
+      .maybeSingle();
+
+    const name = caregiver?.name;
+
+    // 2. Deleta a cuidadora
     const { error } = await client
       .from('caregivers')
       .delete()
       .eq('id', id);
     if (error) throw error;
+
+    // 3. Limpa escalas futuras (hoje em diante) associadas a ela
+    if (name) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { error: shiftError } = await client
+        .from('shifts')
+        .update({ caregiver_assigned: null })
+        .eq('caregiver_assigned', name)
+        .gte('date', todayStr);
+      
+      if (shiftError) {
+        console.error('Erro ao desescalar cuidadora das agendas futuras:', shiftError);
+      }
+    }
+
     await sendRealtimeBroadcast('caregiver-change', {
       eventType: 'DELETE',
       old: { id }
@@ -503,8 +528,29 @@ export async function deleteCaregiver(id) {
   }
   
   const list = await getCaregivers();
+  const deletedCaregiver = list.find(item => item.id === id);
+  const name = deletedCaregiver?.name;
+
   const filtered = list.filter(item => item.id !== id);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(filtered));
+
+  if (name) {
+    // Limpa escalas locais futuras
+    let localShifts = localStorage.getItem(LOCAL_SHIFTS_KEY);
+    if (localShifts) {
+      const shifts = JSON.parse(localShifts);
+      const todayStr = new Date().toISOString().split('T')[0];
+      Object.keys(shifts).forEach(key => {
+        const shift = shifts[key];
+        if (shift.caregiver_assigned === name && shift.date >= todayStr) {
+          shift.caregiver_assigned = null;
+          shift.updated_at = new Date().toISOString();
+        }
+      });
+      localStorage.setItem(LOCAL_SHIFTS_KEY, JSON.stringify(shifts));
+    }
+  }
+
   return true;
 }
 
