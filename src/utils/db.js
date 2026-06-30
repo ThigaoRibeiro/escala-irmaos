@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 export const MEMBERS = [
   { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '❤️‍🩹 👨' },
   { name: 'Aldeyr', color: '#7c3aed', lightColor: '#ede9fe', avatar: '❤️‍🩹 👨' },
-  { name: 'Ana Nery', color: '#ca8a04', lightColor: '#fef9c3', avatar: '❤️‍🩹 👩' },
+  { name: 'Ana Neri', color: '#ca8a04', lightColor: '#fef9c3', avatar: '❤️‍🩹 👩' },
   { name: 'Jeane', color: '#0f766e', lightColor: '#ccfbf1', avatar: '❤️‍🩹 👩' },
   { name: 'Haniel', color: '#c2410c', lightColor: '#ffedd5', avatar: '❤️‍🩹 👨' },
   { name: 'Ester', color: '#db2777', lightColor: '#fdf2f8', avatar: '❤️‍🩹 👩' }
@@ -271,7 +271,7 @@ function getInitialMockShifts() {
         id: `${dateStr}_diurno`,
         date: dateStr,
         period: 'diurno',
-        assigned_to: 'Ana Nery',
+        assigned_to: 'Ana Neri',
         caregiver_assigned: 'Viviane',
         status: 'confirmed',
         updated_at: new Date().toISOString()
@@ -322,7 +322,7 @@ function getInitialMockLogs() {
     id: `${yestStr}_diurno`,
     date: yestStr,
     period: 'diurno',
-    author: 'Ana Nery',
+    author: 'Ana Neri',
     caregiver: 'Viviane',
     meds_given: true,
     meals_ok: true,
