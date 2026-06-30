@@ -372,7 +372,7 @@ function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onCl
         {/* 1. SELEÇÃO DE FAMILIAR */}
         <div className="form-group">
           <label className="form-label" style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Filho(a):</span>
+            <span>Filhos:</span>
             <button 
               type="button" 
               onClick={selectMyself} 
