@@ -18,6 +18,12 @@ import {
 import { CalendarDays, FileText, Settings } from 'lucide-react';
 
 export default function App() {
+  // ATENÇÃO: Adicione os e-mails dos irmãos aqui para dar acesso à aba de Configurações
+  const ADMIN_EMAILS = [
+    'thiagor21@gmail.com',
+    'esterlessa13@gmail.com'
+  ];
+
   const [activeTab, setActiveTab] = useState('calendar'); // calendar, logs, config
   const [activeMember, setActiveMember] = useState(() => {
     return localStorage.getItem('escala_active_member') || 'David';
@@ -282,6 +288,8 @@ export default function App() {
     return <Login onLoginSuccess={() => {}} />;
   }
 
+  const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase());
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar
@@ -339,7 +347,7 @@ export default function App() {
               />
             )}
             
-            {activeTab === 'config' && (
+            {isAdmin && activeTab === 'config' && (
               <Config
                 onConfigChanged={() => setDbTrigger(prev => prev + 1)}
               />
@@ -366,13 +374,15 @@ export default function App() {
           <span>Diário</span>
         </button>
         
-        <button 
-          className={`nav-item ${activeTab === 'config' ? 'nav-item-active' : ''}`}
-          onClick={() => setActiveTab('config')}
-        >
-          <Settings />
-          <span>Configurações</span>
-        </button>
+        {isAdmin && (
+          <button 
+            className={`nav-item ${activeTab === 'config' ? 'nav-item-active' : ''}`}
+            onClick={() => setActiveTab('config')}
+          >
+            <Settings />
+            <span>Configurações</span>
+          </button>
+        )}
       </nav>
     </div>
   );
