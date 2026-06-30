@@ -296,9 +296,9 @@ function getInitialMedications() {
 
 function getInitialMockCaregivers() {
   return [
-    { id: '1', name: 'Nathália' },
-    { id: '2', name: 'Viviane' },
-    { id: '3', name: 'Paula' }
+    { id: '1', name: 'Nathália', email: 'nathalia@lessacare.com' },
+    { id: '2', name: 'Viviane', email: 'viviane@lessacare.com' },
+    { id: '3', name: 'Paula', email: 'paula@lessacare.com' }
   ];
 }
 
@@ -412,12 +412,12 @@ export async function getCaregivers() {
   return JSON.parse(local);
 }
 
-export async function addCaregiver(name) {
+export async function addCaregiver(name, email) {
   const client = getSupabaseClient();
   if (client) {
     const { data, error } = await client
       .from('caregivers')
-      .insert({ name })
+      .insert({ name, email })
       .select();
     if (error) throw error;
     await sendRealtimeBroadcast('caregiver-change', {
@@ -428,7 +428,7 @@ export async function addCaregiver(name) {
   }
   
   const list = await getCaregivers();
-  const newItem = { id: String(Date.now()), name };
+  const newItem = { id: String(Date.now()), name, email };
   list.push(newItem);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(list));
   return newItem;
@@ -640,11 +640,14 @@ export const SUPABASE_SQL_SETUP = `-- Script para criar/atualizar as tabelas no 
 CREATE TABLE IF NOT EXISTS public.caregivers (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     name text NOT NULL,
+    email text,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-INSERT INTO public.caregivers (name)
-VALUES ('Nathália'), ('Viviane'), ('Paula')
+ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS email text;
+
+INSERT INTO public.caregivers (name, email)
+VALUES ('Nathália', 'nathalia@lessacare.com'), ('Viviane', 'viviane@lessacare.com'), ('Paula', 'paula@lessacare.com')
 ON CONFLICT DO NOTHING;
 
 -- 2. Tabela de Escalas (shifts)

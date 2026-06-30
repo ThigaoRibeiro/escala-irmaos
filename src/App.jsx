@@ -25,6 +25,20 @@ export default function App() {
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
   const [caregivers, setCaregivers] = useState([]);
+  
+  // Active member for admins to impersonate
+  const [activeMember, setActiveMember] = useState(() => {
+    return localStorage.getItem('escala_active_member') || 'David';
+  });
+
+  useEffect(() => {
+    const handleMemberChange = (e) => {
+      setActiveMember(e.detail);
+    };
+    window.addEventListener('activeMemberChanged', handleMemberChange);
+    return () => window.removeEventListener('activeMemberChanged', handleMemberChange);
+  }, []);
+
   const [medications, setMedications] = useState([]);
   const [dbTrigger, setDbTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,46 +92,20 @@ export default function App() {
       setLoadWarning('');
 
       try {
-        const fetchedShifts = await getShifts();
+        const [fetchedShifts, fetchedLogs, fetchedCaregivers, fetchedMedications] = await Promise.all([
+          getShifts(),
+          getDailyLogs(),
+          getCaregivers(),
+          getMedications()
+        ]);
+        
         setShifts(fetchedShifts);
-      } catch (e) {
-        console.error('Erro ao carregar escalas:', e);
-        setLoadError(`Não foi possível carregar a escala do Supabase. ${e?.message || 'Confira a configuração do banco.'}`);
-        setIsLoading(false);
-        return;
-      }
-
-      const warnings = [];
-
-      try {
-        const fetchedLogs = await getDailyLogs();
         setLogs(fetchedLogs);
-      } catch (e) {
-        console.error('Erro ao carregar diário:', e);
-        setLogs({});
-        warnings.push('Diário indisponível');
-      }
-
-      try {
-        const fetchedCaregivers = await getCaregivers();
         setCaregivers(fetchedCaregivers);
-      } catch (e) {
-        console.error('Erro ao carregar cuidadoras:', e);
-        setCaregivers([]);
-        warnings.push('Cuidadoras indisponíveis');
-      }
-
-      try {
-        const fetchedMedications = await getMedications();
         setMedications(fetchedMedications);
       } catch (e) {
-        console.error('Erro ao carregar medicamentos:', e);
-        setMedications([]);
-        warnings.push('Medicamentos indisponíveis');
-      }
-
-      if (warnings.length > 0) {
-        setLoadWarning(warnings.join(' · '));
+        console.error('Erro ao carregar dados:', e);
+        setLoadError(`Não foi possível carregar os dados do Supabase. ${e?.message || 'Confira a configuração do banco.'}`);
       }
 
       setIsLoading(false);
@@ -178,17 +166,8 @@ export default function App() {
         });
         showLiveNotice('Diário atualizado por outra pessoa.');
       },
-      onCaregiverChange: (payload) => {
-        setCaregivers(prev => {
-          if (payload.eventType === 'DELETE') {
-            return prev.filter(item => item.id !== payload.old?.id);
-          }
-
-          if (!payload.new?.id) return prev;
-
-          const withoutCurrent = prev.filter(item => item.id !== payload.new.id);
-          return [...withoutCurrent, payload.new].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-        });
+      onCaregiverChange: () => {
+        getCaregivers().then(setCaregivers);
         showLiveNotice('Lista de cuidadoras atualizada.');
       },
       onMedicationChange: (payload) => {
@@ -282,9 +261,21 @@ export default function App() {
   }
 
   const userEmail = session?.user?.email?.toLowerCase() || '';
-  const userProfile = USER_MAPPING[userEmail] || null;
+  let userProfile = USER_MAPPING[userEmail] || null;
   const isAdmin = userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'ADMIN';
-  const activeMember = userProfile?.name || 'Cuidadora';
+
+  if (!userProfile) {
+    // Look up in caregivers table by email
+    const matchedCaregiver = caregivers.find(c => c.email && c.email.toLowerCase() === userEmail);
+    if (matchedCaregiver) {
+      userProfile = {
+        name: matchedCaregiver.name,
+        role: 'CAREGIVER'
+      };
+    }
+  }
+
+  const effectiveActiveMember = isAdmin ? activeMember : (userProfile?.name || 'Cuidadora');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
