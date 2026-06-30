@@ -298,7 +298,8 @@ export default function App() {
     }
   }
 
-  const isAdmin = userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'ADMIN';
+  const isSuperAdmin = userProfile?.role === 'SUPERADMIN';
+  const isAdmin = isSuperAdmin || userProfile?.role === 'ADMIN';
 
   if (!userProfile) {
     // Se ainda assim não achou perfil (ex: local mode, ou falha de cache)
@@ -308,7 +309,7 @@ export default function App() {
     };
   }
 
-  const effectiveActiveMember = isAdmin ? activeMember : (userProfile?.name || 'Cuidadora');
+  const effectiveActiveMember = isSuperAdmin ? activeMember : (userProfile?.name || 'Cuidadora');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

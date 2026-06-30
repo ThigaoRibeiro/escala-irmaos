@@ -3,10 +3,9 @@ import { signOut, CAREGIVER_STYLE, MEMBERS, updatePassword } from '../utils/db';
 import { Heart, LogOut, Key, X, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function Navbar({ userProfile }) {
-  // Check if it's an admin (SUPERADMIN or ADMIN)
-  const isAdmin = userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'ADMIN';
+  const isSuperAdmin = userProfile?.role === 'SUPERADMIN';
 
-  // If not admin, fallback to caregiver static profile
+  // Fallback to caregiver static profile
   const profile = userProfile || {
     name: 'Cuidadora',
     role: 'CAREGIVER',
@@ -85,7 +84,7 @@ export default function Navbar({ userProfile }) {
         </h1>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isAdmin ? (
+          {isSuperAdmin ? (
             <div className="user-selector">
               <div 
                 className="avatar-badge" 
