@@ -14,6 +14,7 @@ import {
   subscribeToRealtimeChanges,
   getSession,
   onAuthStateChange,
+  signOut,
   USER_MAPPING
 } from './utils/db';
 import { CalendarDays, FileText, Settings } from 'lucide-react';
@@ -113,6 +114,29 @@ export default function App() {
 
     loadData();
   }, [dbTrigger, session]);
+
+  // Se for cuidadora, valida em tempo real se o cadastro dela ainda existe no banco
+  useEffect(() => {
+    if (!session || caregivers.length === 0) return;
+
+    if (session.user?.email?.toLowerCase() === 'equipe@lessacare.com') {
+      try {
+        const stored = localStorage.getItem('escala_caregiver_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const exists = caregivers.some(c => c.email && c.email.toLowerCase() === parsed.email?.toLowerCase());
+          if (!exists) {
+            // Cuidadora excluída pelo Admin! Força deslogar.
+            signOut().then(() => {
+              window.location.reload();
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao verificar validade da cuidadora:', e);
+      }
+    }
+  }, [caregivers, session]);
 
   useEffect(() => {
     if (!session) return; // Only subscribe if authenticated
@@ -262,17 +286,26 @@ export default function App() {
 
   const userEmail = session?.user?.email?.toLowerCase() || '';
   let userProfile = USER_MAPPING[userEmail] || null;
+
+  if (userEmail === 'equipe@lessacare.com') {
+    try {
+      const stored = localStorage.getItem('escala_caregiver_profile');
+      if (stored) {
+        userProfile = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Falha ao parsear perfil local da cuidadora:', e);
+    }
+  }
+
   const isAdmin = userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'ADMIN';
 
   if (!userProfile) {
-    // Look up in caregivers table by email
-    const matchedCaregiver = caregivers.find(c => c.email && c.email.toLowerCase() === userEmail);
-    if (matchedCaregiver) {
-      userProfile = {
-        name: matchedCaregiver.name,
-        role: 'CAREGIVER'
-      };
-    }
+    // Se ainda assim não achou perfil (ex: local mode, ou falha de cache)
+    userProfile = {
+      name: 'Cuidadora',
+      role: 'CAREGIVER'
+    };
   }
 
   const effectiveActiveMember = isAdmin ? activeMember : (userProfile?.name || 'Cuidadora');

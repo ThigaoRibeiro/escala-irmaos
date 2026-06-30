@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signUp } from '../utils/db';
+import { signIn, signUp, verifyCaregiverLogin } from '../utils/db';
 import { Heart, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onLoginSuccess }) {
@@ -21,12 +21,28 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       if (isLoginMode) {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-        if (onLoginSuccess) onLoginSuccess();
+        // Verifica se o login inserido é de cuidadora (não contém @ ou termina com @lessacare.com)
+        const lowerEmail = email.trim().toLowerCase();
+        const isCaregiver = !lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com');
+
+        if (isCaregiver) {
+          const { caregiver, error } = await verifyCaregiverLogin(email, password);
+          if (error) throw error;
+          if (onLoginSuccess) onLoginSuccess();
+        } else {
+          // Login de irmão (admin)
+          const { error } = await signIn(email, password);
+          if (error) throw error;
+          if (onLoginSuccess) onLoginSuccess();
+        }
       } else {
         if (password !== confirmPassword) {
           throw new Error('As senhas não coincidem. Tente novamente.');
+        }
+
+        const lowerEmail = email.trim().toLowerCase();
+        if (!lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com')) {
+          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de Configurações.');
         }
         
         const { error, data } = await signUp(email, password);
@@ -87,14 +103,14 @@ export default function Login({ onLoginSuccess }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mail size={16} /> E-mail
+              <Mail size={16} /> {isLoginMode ? 'E-mail ou Usuário' : 'E-mail'}
             </label>
             <input
-              type="email"
+              type={isLoginMode ? "text" : "email"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-control"
-              placeholder="seu@email.com"
+              placeholder={isLoginMode ? "usuario ou email" : "seu@email.com"}
               required
             />
           </div>

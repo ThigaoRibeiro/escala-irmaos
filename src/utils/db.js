@@ -131,6 +131,8 @@ export async function updatePassword(newPassword) {
 }
 
 export async function signOut() {
+  localStorage.removeItem('escala_caregiver_profile');
+  localStorage.removeItem('escala_active_member');
   const client = getSupabaseClient();
   if (!client) return { error: null };
   return client.auth.signOut();
@@ -304,9 +306,9 @@ function getInitialMedications() {
 
 function getInitialMockCaregivers() {
   return [
-    { id: '1', name: 'Nathália', email: 'nathalia@lessacare.com' },
-    { id: '2', name: 'Viviane', email: 'viviane@lessacare.com' },
-    { id: '3', name: 'Paula', email: 'paula@lessacare.com' }
+    { id: '1', name: 'Nathália', email: 'nathalia@lessacare.com', password: '123' },
+    { id: '2', name: 'Viviane', email: 'viviane@lessacare.com', password: '123' },
+    { id: '3', name: 'Paula', email: 'paula@lessacare.com', password: '123' }
   ];
 }
 
@@ -420,12 +422,12 @@ export async function getCaregivers() {
   return JSON.parse(local);
 }
 
-export async function addCaregiver(name, email) {
+export async function addCaregiver(name, email, password) {
   const client = getSupabaseClient();
   if (client) {
     const { data, error } = await client
       .from('caregivers')
-      .insert({ name, email })
+      .insert({ name, email, password })
       .select();
     if (error) throw error;
     await sendRealtimeBroadcast('caregiver-change', {
@@ -436,7 +438,7 @@ export async function addCaregiver(name, email) {
   }
   
   const list = await getCaregivers();
-  const newItem = { id: String(Date.now()), name, email };
+  const newItem = { id: String(Date.now()), name, email, password };
   list.push(newItem);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(list));
   return newItem;
@@ -461,6 +463,58 @@ export async function deleteCaregiver(id) {
   const filtered = list.filter(item => item.id !== id);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(filtered));
   return true;
+}
+
+export async function verifyCaregiverLogin(emailOrUsername, password) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase não configurado');
+
+  let loginEmail = emailOrUsername.trim().toLowerCase();
+  if (!loginEmail.includes('@')) {
+    loginEmail += '@lessacare.com';
+  }
+
+  // 1. Faz login com o usuário ponte equipe@lessacare.com
+  const { data: authData, error: authError } = await client.auth.signInWithPassword({
+    email: 'equipe@lessacare.com',
+    password: 'lessacare123'
+  });
+
+  if (authError) {
+    throw new Error('Falha técnica de conexão. O Admin precisa criar o usuário equipe@lessacare.com no Supabase.');
+  }
+
+  // 2. Busca a cuidadora correspondente na tabela caregivers
+  const { data: caregiverData, error: dbError } = await client
+    .from('caregivers')
+    .select('*')
+    .or(`email.eq.${loginEmail},name.eq.${emailOrUsername}`)
+    .eq('password', password.trim())
+    .maybeSingle();
+
+  if (dbError) {
+    await client.auth.signOut();
+    throw dbError;
+  }
+
+  if (!caregiverData) {
+    await client.auth.signOut();
+    throw new Error('Usuário ou senha incorretos.');
+  }
+
+  // 3. Salva o perfil no localStorage
+  const profile = {
+    role: 'CAREGIVER',
+    name: caregiverData.name,
+    email: caregiverData.email,
+    id: caregiverData.id,
+    color: '#6d28d9',
+    lightColor: '#f3e8ff',
+    avatar: '👩‍⚕️'
+  };
+  localStorage.setItem('escala_caregiver_profile', JSON.stringify(profile));
+
+  return { caregiver: profile, error: null };
 }
 
 // --- OPERAÇÕES DE MEDICAMENTOS ---
@@ -649,13 +703,15 @@ CREATE TABLE IF NOT EXISTS public.caregivers (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     name text NOT NULL,
     email text,
+    password text,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS password text;
 
-INSERT INTO public.caregivers (name, email)
-VALUES ('Nathália', 'nathalia@lessacare.com'), ('Viviane', 'viviane@lessacare.com'), ('Paula', 'paula@lessacare.com')
+INSERT INTO public.caregivers (name, email, password)
+VALUES ('Nathália', 'nathalia@lessacare.com', '123'), ('Viviane', 'viviane@lessacare.com', '123'), ('Paula', 'paula@lessacare.com', '123')
 ON CONFLICT DO NOTHING;
 
 -- 2. Tabela de Escalas (shifts)

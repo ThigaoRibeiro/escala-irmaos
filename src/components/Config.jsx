@@ -19,6 +19,7 @@ export default function Config({ onConfigChanged }) {
   const [caregivers, setCaregivers] = useState([]);
   const [newCaregiverName, setNewCaregiverName] = useState('');
   const [newCaregiverEmail, setNewCaregiverEmail] = useState('');
+  const [newCaregiverPassword, setNewCaregiverPassword] = useState('');
   const [caregiverTrigger, setCaregiverTrigger] = useState(0);
 
   const [medications, setMedications] = useState([]);
@@ -56,11 +57,12 @@ export default function Config({ onConfigChanged }) {
 
   const handleAddCaregiver = async (e) => {
     e.preventDefault();
-    if (!newCaregiverName.trim()) return;
+    if (!newCaregiverName.trim() || !newCaregiverPassword.trim()) return;
     try {
-      await addCaregiver(newCaregiverName.trim(), newCaregiverEmail.trim());
+      await addCaregiver(newCaregiverName.trim(), newCaregiverEmail.trim(), newCaregiverPassword.trim());
       setNewCaregiverName('');
       setNewCaregiverEmail('');
+      setNewCaregiverPassword('');
       setCaregiverTrigger(prev => prev + 1);
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
@@ -211,7 +213,7 @@ export default function Config({ onConfigChanged }) {
         </h3>
 
         <form onSubmit={handleAddCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <input
               type="text"
               value={newCaregiverName}
@@ -232,18 +234,29 @@ export default function Config({ onConfigChanged }) {
               }}
               placeholder="Nome da cuidadora"
               className="form-control"
-              style={{ flex: 1 }}
+              style={{ flex: '1 1 150px' }}
               required
             />
             <input
-              type="email"
+              type="text"
               value={newCaregiverEmail}
               onChange={(e) => setNewCaregiverEmail(e.target.value)}
-              placeholder="E-mail de acesso"
+              placeholder="Usuário / E-mail de acesso"
               className="form-control"
-              style={{ flex: 1 }}
+              style={{ flex: '1 1 180px' }}
+              required
             />
-            <button type="submit" className="btn btn-primary" style={{ padding: '10px 14px' }}>
+            <input
+              type="text"
+              value={newCaregiverPassword}
+              onChange={(e) => setNewCaregiverPassword(e.target.value)}
+              placeholder="Senha de acesso"
+              className="form-control"
+              style={{ flex: '1 1 120px' }}
+              required
+              minLength={4}
+            />
+            <button type="submit" className="btn btn-primary" style={{ padding: '10px 14px', flex: '0 0 auto' }}>
               <Plus size={18} />
               <span>Adicionar</span>
             </button>
@@ -273,7 +286,9 @@ export default function Config({ onConfigChanged }) {
                   <span style={{ fontSize: '1.2rem' }}>{CAREGIVER_STYLE.avatar}</span>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{item.name}</span>
-                    {item.email && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.email}</span>}
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Login: <strong style={{ color: 'var(--text-primary)' }}>{item.email || '—'}</strong> | Senha: <strong style={{ color: 'var(--text-primary)' }}>{item.password || '—'}</strong>
+                    </span>
                   </div>
                 </div>
                 <button
