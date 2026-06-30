@@ -821,7 +821,8 @@ ALTER TABLE public.daily_logs REPLICA IDENTITY FULL;
 
 GRANT SELECT ON TABLE public.caregivers TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO authenticated;
+GRANT SELECT, INSERT ON TABLE public.daily_logs TO authenticated;
+REVOKE UPDATE, DELETE ON TABLE public.daily_logs FROM authenticated;
 
 -- Remove policies antigas, inclusive a versão com login/allowlist se ela tiver sido aplicada.
 DROP POLICY IF EXISTS "Acesso público total caregivers" ON public.caregivers;
@@ -898,18 +899,6 @@ FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
-CREATE POLICY "App publico pode atualizar daily_logs"
-ON public.daily_logs
-FOR UPDATE
-TO authenticated
-USING (true)
-WITH CHECK (true);
-
-CREATE POLICY "App publico pode remover daily_logs"
-ON public.daily_logs
-FOR DELETE
-TO authenticated
-USING (true);
 
 -- Habilitar Supabase Realtime para atualizações ao vivo entre navegadores.
 DO $$

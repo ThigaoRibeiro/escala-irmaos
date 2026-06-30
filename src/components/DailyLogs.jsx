@@ -6,55 +6,56 @@ import {
   Calendar,
   Check,
   X,
-  FileSpreadsheet,
-  ClipboardList
+  ClipboardList,
+  Clock3,
+  Activity
 } from 'lucide-react';
 
 const EMPTY_FORM = {
+  eventType: 'Evolução geral',
+  entryTime: getCurrentTimeValue(),
   pressure: '',
   temperature: '',
-  alertSigns: '',
-  sleepStatus: '',
-  breakfast: '',
-  lunch: '',
-  snack: '',
-  dinner: '',
-  hydration: '',
-  urine: '',
-  stool: '',
-  diaperChanges: '',
-  bath: '',
-  bathPlace: '',
-  skinCare: '',
-  mood: '',
-  activityLegs: false,
-  activitySun: false,
-  activityTv: false,
+  glucose: '',
+  medicationNote: '',
   notes: ''
 };
 
-export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] }) {
+const ENTRY_TYPES = [
+  'Evolução geral',
+  'Pressão arterial',
+  'Medicação',
+  'Alimentação',
+  'Sono',
+  'Intercorrência'
+];
+
+export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '' }) {
   const currentPlantao = getCurrentPlantao();
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(currentPlantao.date);
   const [period, setPeriod] = useState(currentPlantao.period);
-  const [entryTime, setEntryTime] = useState(getPeriodTimes(currentPlantao.period).entry);
-  const [exitTime, setExitTime] = useState(getPeriodTimes(currentPlantao.period).exit);
-  const [checkedMeds, setCheckedMeds] = useState({});
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [copiedLogId, setCopiedLogId] = useState(null);
 
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
+  const authorName = currentUserName || responsibleName || 'Sem identificação';
 
   useEffect(() => {
-    const times = getPeriodTimes(period);
-    setEntryTime(times.entry);
-    setExitTime(times.exit);
-  }, [period]);
+    if (!showAddForm) return;
+
+    const nextPlantao = getCurrentPlantao();
+    setDate(nextPlantao.date);
+    setPeriod(nextPlantao.period);
+    setFormData((prev) => ({
+      ...prev,
+      entryTime: getCurrentTimeValue()
+    }));
+  }, [showAddForm]);
 
   const updateField = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value
     }));
@@ -62,52 +63,51 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
 
   const openForm = () => {
     const nextPlantao = getCurrentPlantao();
-    const times = getPeriodTimes(nextPlantao.period);
     setDate(nextPlantao.date);
     setPeriod(nextPlantao.period);
-    setEntryTime(times.entry);
-    setExitTime(times.exit);
+    setFormData({
+      ...EMPTY_FORM,
+      entryTime: getCurrentTimeValue()
+    });
     setShowAddForm(true);
   };
 
   const resetForm = () => {
-    setFormData(EMPTY_FORM);
-    setCheckedMeds({});
+    setFormData({
+      ...EMPTY_FORM,
+      entryTime: getCurrentTimeValue()
+    });
     setShowAddForm(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const author = responsibleName || 'Sem responsável';
-    const medsGiven = medications.length > 0 && medications.every(m => checkedMeds[m.id]);
-    const dailyNotes = buildDailyNotes({
-      responsibleName: author,
-      date,
+
+    if (!formData.notes.trim() && !formData.pressure.trim() && !formData.temperature.trim() && !formData.glucose.trim() && !formData.medicationNote.trim()) {
+      window.alert('Adicione pelo menos uma observação, sinal vital ou medicação para registrar a evolução.');
+      return;
+    }
+
+    const notes = buildEvolutionNotes({
+      authorName,
+      responsibleName,
       period,
-      entryTime,
-      exitTime,
-      medications,
-      checkedMeds,
       ...formData
     });
 
-    onSaveLog(date, period, author, null, medsGiven, true, dailyNotes);
+    const medsGiven = formData.eventType === 'Medicação' || !!formData.medicationNote.trim();
+    onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
     resetForm();
   };
 
   const getMemberAvatar = (name) => {
-    const member = MEMBERS.find(m => m.name === name);
+    const member = MEMBERS.find((memberItem) => memberItem.name === name);
     return member ? member.avatar : '👤';
   };
 
   const getMemberColor = (name) => {
-    const member = MEMBERS.find(m => m.name === name);
+    const member = MEMBERS.find((memberItem) => memberItem.name === name);
     return member ? member.color : 'var(--text-primary)';
-  };
-
-  const getMemberLightColor = (name) => {
-    const member = MEMBERS.find(m => m.name === name);
-    return member ? member.lightColor : 'var(--bg-subtle)';
   };
 
   const formatLogDate = (dateStr) => {
@@ -115,17 +115,31 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
     return `${day}/${month}/${year}`;
   };
 
+  const formatLogTime = (log) => {
+    const source = log.created_at || `${log.date}T00:00:00`;
+    const dateObj = new Date(source);
+    if (Number.isNaN(dateObj.getTime())) return '--:--';
+
+    return dateObj.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const shareLogToWhatsapp = (log) => {
     const authorAvatar = getMemberAvatar(log.author);
-    const periodLabel = log.period === 'diurno' ? '☀️ Diurno (07h-19h)' : '🌙 Noturno (19h-07h)';
+    const periodLabel = log.period === 'diurno' ? '☀️ Diurno' : '🌙 Noturno';
+    const timeLabel = formatLogTime(log);
 
-    let text = `📝 *PASSAGEM DE PLANTÃO DA MÃE*\n`;
+    let text = `📝 *EVOLUÇÃO DO DIÁRIO*\n`;
     text += `📅 Data: ${formatLogDate(log.date)}\n`;
     text += `⏰ Turno: ${periodLabel}\n`;
-    text += `👤 Responsável do Plantão: ${log.author} ${authorAvatar}\n`;
-
-    text += `\n💊 Medicações: ${log.meds_given ? '✅ Todas ministradas' : '❌ Pendentes / Não ministradas'}\n\n`;
-    text += `✍️ *Registro do Plantão:*\n${log.notes}\n`;
+    text += `🕒 Registro: ${timeLabel}\n`;
+    text += `👤 Registrado por: ${log.author} ${authorAvatar}\n`;
+    if (log.caregiver) {
+      text += `🩺 Em plantão: ${log.caregiver}\n`;
+    }
+    text += `\n${log.notes}\n`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopiedLogId(log.id);
@@ -134,13 +148,23 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
   };
 
   const logsList = Object.values(logs).sort((a, b) => {
-    const dateA = new Date(a.created_at || `${a.date}T${a.period === 'diurno' ? '19:00' : '07:00'}`);
-    const dateB = new Date(b.created_at || `${b.date}T${b.period === 'diurno' ? '19:00' : '07:00'}`);
+    const dateA = new Date(a.created_at || `${a.date}T00:00:00`);
+    const dateB = new Date(b.created_at || `${b.date}T00:00:00`);
     return dateB - dateA;
   });
 
   return (
     <div className="animate-fade">
+      <div className="card" style={{ marginBottom: '16px' }}>
+        <h3 className="card-title">
+          <Activity size={20} />
+          <span>Diário de Evolução</span>
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
+          Cada registro entra com autor e horário. O histórico é cumulativo ao longo do dia e não pode ser removido.
+        </p>
+      </div>
+
       {!showAddForm ? (
         <button
           className="btn btn-primary"
@@ -148,16 +172,16 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
           style={{ width: '100%', marginBottom: '20px', justifyContent: 'center' }}
         >
           <Plus size={20} />
-          <span>Registrar Plantão</span>
+          <span>Adicionar evolução</span>
         </button>
       ) : (
-        <form onSubmit={handleSubmit} className="card animate-scale" style={{ border: '2px solid var(--primary)' }}>
+        <form onSubmit={handleSubmit} className="card animate-scale" style={{ border: '2px solid var(--primary)', marginBottom: '20px' }}>
           <h3 className="card-title" style={{ color: 'var(--primary)', justifyContent: 'space-between' }}>
-            <span>Novo Registro de Plantão</span>
+            <span>Nova evolução</span>
             <button
               type="button"
               className="btn btn-secondary btn-icon"
-              onClick={() => setShowAddForm(false)}
+              onClick={resetForm}
               style={{ width: '28px', height: '28px' }}
             >
               <X size={16} />
@@ -166,7 +190,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
 
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <div>
-              <label className="form-label">Data:</label>
+              <label className="form-label">Data</label>
               <input
                 type="date"
                 value={date}
@@ -177,140 +201,73 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
             </div>
 
             <div>
-              <label className="form-label">Turno:</label>
+              <label className="form-label">Turno</label>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
                 className="form-control"
               >
-                <option value="diurno">☀️ Diurno (07h-19h)</option>
-                <option value="noturno">🌙 Noturno (19h-07h)</option>
+                <option value="diurno">☀️ Diurno</option>
+                <option value="noturno">🌙 Noturno</option>
               </select>
             </div>
 
             <div>
-              <label className="form-label">Entrada:</label>
-              <input type="time" value={entryTime} onChange={(e) => setEntryTime(e.target.value)} className="form-control" />
+              <label className="form-label">Hora do registro</label>
+              <input
+                type="time"
+                value={formData.entryTime}
+                onChange={(e) => updateField('entryTime', e.target.value)}
+                className="form-control"
+                required
+              />
             </div>
 
             <div>
-              <label className="form-label">Saída:</label>
-              <input type="time" value={exitTime} onChange={(e) => setExitTime(e.target.value)} className="form-control" />
+              <label className="form-label">Tipo</label>
+              <select
+                value={formData.eventType}
+                onChange={(e) => updateField('eventType', e.target.value)}
+                className="form-control"
+              >
+                {ENTRY_TYPES.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+            <ReadOnlyField label="Registrado por" value={authorName} />
+            <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
+          </div>
+
+          <SectionTitle label="Sinais e medicações" />
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
+            <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
+            <TextInput label="Glicemia" value={formData.glucose} onChange={(value) => updateField('glucose', value)} placeholder="Opcional" />
+            <TextInput label="Medicação / ação feita" value={formData.medicationNote} onChange={(value) => updateField('medicationNote', value)} placeholder="Ex: captopril 25mg" />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Responsável do plantão:</label>
-            <div
-              style={{
-                padding: '10px',
-                backgroundColor: responsibleName ? getMemberLightColor(responsibleName) : 'var(--bg-subtle)',
-                borderRadius: '8px',
-                border: `1px solid ${responsibleName ? getMemberColor(responsibleName) : 'var(--border-color)'}`,
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                minHeight: '42px'
-              }}
-            >
-              <span>{responsibleName ? getMemberAvatar(responsibleName) : '👤'}</span>
-              <span>{responsibleName || 'Sem responsável escalado'}</span>
-            </div>
-          </div>
-
-          <SectionTitle label="Medicamentos 💊" />
-          {medications.length === 0 ? (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '12px' }}>
-              Nenhum medicamento cadastrado. Adicione na aba Configurações.
-            </p>
-          ) : (
-            <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px' }}>
-              {medications.map(med => (
-                <label key={med.id} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={!!checkedMeds[med.id]}
-                    onChange={(e) => setCheckedMeds(prev => ({ ...prev, [med.id]: e.target.checked }))}
-                    className="checkbox-input"
-                  />
-                  <span>
-                    <strong>{med.time}</strong> — {med.name} ({med.dose})
-                    {med.note && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> · {med.note}</span>}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-
-          <SectionTitle label="Sinais e sono" />
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Pressão arterial:" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 12x8" />
-            <TextInput label="Temperatura:" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 36,5" />
-            <TextInput label="Sinais de alerta:" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, engasgo, febre..." />
-            <SelectInput
-              label="Noite / Sono:"
-              value={formData.sleepStatus}
-              onChange={(value) => updateField('sleepStatus', value)}
-              options={['Dormiu bem', 'Acordou', 'Insônia', 'Demorou dormir']}
-            />
-          </div>
-
-          <SectionTitle label="Alimentação" />
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Café da manhã:" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Almoço:" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Lanche:" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Jantar / ceia:" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horário / aceitação" />
-          </div>
-
-          <SectionTitle label="Hidratação e fisiologia" />
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Hidratação:" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Água / sucos / quantidade" />
-            <SelectInput label="Urina:" value={formData.urine} onChange={(value) => updateField('urine', value)} options={['Normal', 'Pouca', 'Escura / odor forte']} />
-            <TextInput label="Fezes:" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/não, aspecto" />
-            <TextInput label="Trocas de fraldas:" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horários" />
-          </div>
-
-          <SectionTitle label="Higiene, bem estar e atividades" />
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <SelectInput label="Banho:" value={formData.bath} onChange={(value) => updateField('bath', value)} options={['Sim', 'Não']} />
-            <SelectInput label="Local do banho:" value={formData.bathPlace} onChange={(value) => updateField('bathPlace', value)} options={['Leito', 'Chuveiro']} />
-            <SelectInput label="Pele / hidratação:" value={formData.skinCare} onChange={(value) => updateField('skinCare', value)} options={['Sim', 'Não']} />
-            <SelectInput label="Humor:" value={formData.mood} onChange={(value) => updateField('mood', value)} options={['Calma', 'Agitada', 'Alegre', 'Triste', 'Confusa']} />
-          </div>
-
-          <div className="checkbox-group" style={{ flexWrap: 'wrap' }}>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.activityLegs} onChange={(e) => updateField('activityLegs', e.target.checked)} className="checkbox-input" />
-              <span>Sentou / Andou</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.activitySun} onChange={(e) => updateField('activitySun', e.target.checked)} className="checkbox-input" />
-              <span>Tomou sol</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={formData.activityTv} onChange={(e) => updateField('activityTv', e.target.checked)} className="checkbox-input" />
-              <span>Assistiu TV</span>
-            </label>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Intercorrências / observações:</label>
+            <label className="form-label">Evolução / observação</label>
             <textarea
               value={formData.notes}
               onChange={(e) => updateField('notes', e.target.value)}
               className="form-control"
-              rows={4}
-              placeholder="Quedas, dor, febre, recusa alimentar, comportamento, recomendações..."
+              rows={5}
+              placeholder="Descreva o que aconteceu. Ex: pressão subiu para 15x10 às 14:20, repouso orientado, nova aferição às 14:50..."
             />
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-              Gravar Plantão
+              Salvar evolução
             </button>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowAddForm(false)}>
+            <button type="button" className="btn btn-secondary" onClick={resetForm}>
               Cancelar
             </button>
           </div>
@@ -318,18 +275,19 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
       )}
 
       <h3 className="card-title" style={{ marginBottom: '12px' }}>
-        <FileSpreadsheet size={20} />
-        <span>Histórico de Plantões</span>
+        <ClipboardList size={20} />
+        <span>Histórico de evoluções</span>
       </h3>
 
       {logsList.length === 0 ? (
         <div className="card empty-state">
-          Nenhum plantão registrado ainda.
+          Nenhuma evolução registrada ainda.
         </div>
       ) : (
-        logsList.map(log => {
+        logsList.map((log) => {
           const authorAvatar = getMemberAvatar(log.author);
           const authorColor = getMemberColor(log.author);
+          const periodLabel = log.period === 'diurno' ? '☀️ Dia' : '🌙 Noite';
 
           return (
             <div
@@ -337,20 +295,30 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
               className="log-item animate-fade"
               style={{ borderLeftColor: authorColor }}
             >
-              <div className="log-meta">
+              <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
                 <span className="log-author" style={{ color: authorColor }}>
                   {authorAvatar} {log.author}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Calendar size={12} />
-                  {formatLogDate(log.date)} - {log.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
+                  {formatLogDate(log.date)} - {periodLabel}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Clock3 size={12} />
+                  {formatLogTime(log)}
                 </span>
               </div>
 
+              {log.caregiver && (
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Em plantão: <strong style={{ color: 'var(--text-primary)' }}>{log.caregiver}</strong>
+                </div>
+              )}
+
               <div className="log-checklists">
                 <span className={`log-badge ${log.meds_given ? 'log-badge-done' : 'log-badge-pending'}`}>
-                  {log.meds_given ? <Check size={12} /> : <X size={12} />}
-                  Medicações 💊
+                  {log.meds_given ? <Check size={12} /> : <Clock3 size={12} />}
+                  {log.meds_given ? 'Com medicação/ação registrada' : 'Evolução registrada'}
                 </span>
               </div>
 
@@ -401,79 +369,39 @@ function TextInput({ label, value, onChange, placeholder }) {
   );
 }
 
-function SelectInput({ label, value, onChange, options }) {
+function ReadOnlyField({ label, value }) {
   return (
     <div>
       <label className="form-label">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="form-control">
-        <option value="">Selecionar</option>
-        {options.map(option => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-      </select>
+      <div
+        style={{
+          minHeight: '42px',
+          padding: '10px 12px',
+          backgroundColor: 'var(--bg-subtle)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          color: 'var(--text-primary)',
+          fontWeight: 600
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }
 
-function buildDailyNotes(data) {
-  const activities = [
-    data.activityLegs ? 'Sentou / Andou' : '',
-    data.activitySun ? 'Tomou sol' : '',
-    data.activityTv ? 'Assistiu TV' : ''
-  ].filter(Boolean);
-
+function buildEvolutionNotes(data) {
   const lines = [
-    `Responsável do plantão: ${data.responsibleName}`,
-    `Horário: ${data.entryTime || '--:--'} às ${data.exitTime || '--:--'}`,
-    data.medications?.length > 0
-      ? formatGroup('Medicamentos', data.medications.map(m =>
-          `${m.time} ${m.name}: ${data.checkedMeds[m.id] ? '✓' : '✗ pendente'}`
-        ))
-      : '',
-    formatGroup('Sinais', [
-      formatItem('Pressão arterial', data.pressure),
-      formatItem('Temperatura', data.temperature),
-      formatItem('Sinais de alerta', data.alertSigns),
-      formatItem('Noite / sono', data.sleepStatus)
-    ]),
-    formatGroup('Alimentação', [
-      formatItem('Café da manhã', data.breakfast),
-      formatItem('Almoço', data.lunch),
-      formatItem('Lanche', data.snack),
-      formatItem('Jantar / ceia', data.dinner)
-    ]),
-    formatGroup('Hidratação e fisiologia', [
-      formatItem('Hidratação', data.hydration),
-      formatItem('Urina', data.urine),
-      formatItem('Fezes', data.stool),
-      formatItem('Trocas de fraldas', data.diaperChanges)
-    ]),
-    formatGroup('Higiene e bem estar', [
-      formatItem('Banho', data.bath),
-      formatItem('Local do banho', data.bathPlace),
-      formatItem('Pele / hidratação', data.skinCare),
-      formatItem('Humor', data.mood)
-    ]),
-    activities.length > 0 ? `Atividades: ${activities.join(', ')}` : '',
-    data.notes ? `Intercorrências / observações: ${data.notes}` : ''
+    `Tipo: ${data.eventType}`,
+    `Horário do registro: ${data.entryTime}`,
+    data.pressure ? `Pressão arterial: ${data.pressure}` : '',
+    data.temperature ? `Temperatura: ${data.temperature}` : '',
+    data.glucose ? `Glicemia: ${data.glucose}` : '',
+    data.medicationNote ? `Medicação / ação feita: ${data.medicationNote}` : '',
+    data.notes ? `Evolução: ${data.notes}` : ''
   ].filter(Boolean);
 
   return lines.join('\n');
-}
-
-function formatGroup(title, items) {
-  const content = items.filter(Boolean);
-  return content.length > 0 ? `${title}: ${content.join(' | ')}` : '';
-}
-
-function formatItem(label, value) {
-  return value ? `${label}: ${value}` : '';
-}
-
-function getPeriodTimes(period) {
-  return period === 'noturno'
-    ? { entry: '19:00', exit: '07:00' }
-    : { entry: '07:00', exit: '19:00' };
 }
 
 function getCurrentPlantao() {
@@ -498,4 +426,11 @@ function toDateInputValue(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function getCurrentTimeValue() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }

@@ -355,6 +355,7 @@ export default function App() {
                 logs={logs}
                 onSaveLog={handleSaveLog}
                 medications={medications}
+                currentUserName={userProfile?.name || ''}
               />
             )}
             
