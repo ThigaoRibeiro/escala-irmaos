@@ -124,6 +124,12 @@ export async function signUp(email, password) {
   return client.auth.signUp({ email, password });
 }
 
+export async function updatePassword(newPassword) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase não configurado');
+  return client.auth.updateUser({ password: newPassword });
+}
+
 export async function signOut() {
   const client = getSupabaseClient();
   if (!client) return { error: null };
