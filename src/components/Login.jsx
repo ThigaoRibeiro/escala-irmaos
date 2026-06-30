@@ -26,21 +26,21 @@ export default function Login({ onLoginSuccess }) {
         if (onLoginSuccess) onLoginSuccess();
       } else {
         if (password !== confirmPassword) {
-          throw new Error('As senhas nÃ£o coincidem. Tente novamente.');
+          throw new Error('As senhas não coincidem. Tente novamente.');
         }
 
         const lowerEmail = email.trim().toLowerCase();
         if (!lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com')) {
-          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de ConfiguraÃ§Ãµes.');
+          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de Configurações.');
         }
 
         const { error, data } = await signUp(email, password);
         if (error) throw error;
 
         if (data?.user?.identities?.length === 0) {
-          setErrorMsg('Este e-mail jÃ¡ estÃ¡ em uso.');
+          setErrorMsg('Este e-mail já está em uso.');
         } else {
-          setSuccessMsg('Conta criada! Verifique seu e-mail ou faÃ§a login agora.');
+          setSuccessMsg('Conta criada! Verifique seu e-mail ou faça login agora.');
           setIsLoginMode(true);
         }
       }
@@ -52,15 +52,17 @@ export default function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      backgroundColor: 'var(--bg-default)'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        backgroundColor: 'var(--bg-default)'
+      }}
+    >
       <div className="card animate-fade" style={{ maxWidth: '400px', width: '100%', padding: '30px' }}>
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h1 className="app-title" style={{ justifyContent: 'center', color: 'var(--primary)', fontSize: '2rem' }}>
@@ -71,7 +73,7 @@ export default function Login({ onLoginSuccess }) {
             {isLoginMode ? 'Acesse sua conta' : 'Crie sua conta'}
           </h2>
           <p style={{ color: 'var(--text-muted)' }}>
-            {isLoginMode ? 'FaÃ§a login para acessar a escala e o diÃ¡rio de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
+            {isLoginMode ? 'Faça login para acessar a escala e o diário de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
           </p>
         </div>
 
@@ -90,7 +92,7 @@ export default function Login({ onLoginSuccess }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mail size={16} /> {isLoginMode ? 'E-mail ou UsuÃ¡rio' : 'E-mail'}
+              <Mail size={16} /> {isLoginMode ? 'E-mail ou Usuário' : 'E-mail'}
             </label>
             <input
               type={isLoginMode ? 'text' : 'email'}
@@ -102,7 +104,7 @@ export default function Login({ onLoginSuccess }) {
             />
             {isLoginMode && (
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
-                Cuidadoras podem entrar com o usuÃ¡rio curto, como `maria`, ou com o login completo `maria@lessacare.com`.
+                Cuidadoras podem entrar com o usuário curto, como `maria`, ou com o login completo `maria@lessacare.com`.
               </span>
             )}
           </div>
@@ -117,7 +119,7 @@ export default function Login({ onLoginSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-control"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 required
                 minLength={6}
                 style={{ width: '100%', paddingRight: '40px' }}
@@ -155,7 +157,7 @@ export default function Login({ onLoginSuccess }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="form-control"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   required
                   minLength={6}
                   style={{ width: '100%', paddingRight: '40px' }}
@@ -212,7 +214,7 @@ export default function Login({ onLoginSuccess }) {
               textDecoration: 'underline'
             }}
           >
-            {isLoginMode ? 'Ainda nÃ£o tem conta? Cadastre-se' : 'JÃ¡ tem uma conta? FaÃ§a login'}
+            {isLoginMode ? 'Ainda não tem conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
           </button>
         </div>
       </div>

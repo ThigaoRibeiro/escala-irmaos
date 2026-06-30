@@ -74,7 +74,7 @@ export default function Config({ onConfigChanged }) {
     } catch (e) {
       console.error('Erro ao adicionar cuidadora:', e);
       setCaregiverSuccess('');
-      setCaregiverError(e.message || 'NÃ£o foi possÃ­vel adicionar a cuidadora.');
+      setCaregiverError(e.message || 'Não foi possível adicionar a cuidadora.');
     }
   };
 
@@ -90,7 +90,7 @@ export default function Config({ onConfigChanged }) {
     } catch (e) {
       console.error('Erro ao remover cuidadora:', e);
       setCaregiverSuccess('');
-      setCaregiverError(e.message || 'NÃ£o foi possÃ­vel remover a cuidadora.');
+      setCaregiverError(e.message || 'Não foi possível remover a cuidadora.');
     }
   };
 
@@ -107,7 +107,7 @@ export default function Config({ onConfigChanged }) {
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao adicionar medicamento:', e);
-      alert('NÃ£o foi possÃ­vel adicionar o medicamento.');
+      alert('Não foi possível adicionar o medicamento.');
     }
   };
 
@@ -119,7 +119,7 @@ export default function Config({ onConfigChanged }) {
       if (onConfigChanged) onConfigChanged();
     } catch (e) {
       console.error('Erro ao remover medicamento:', e);
-      alert('NÃ£o foi possÃ­vel remover o medicamento.');
+      alert('Não foi possível remover o medicamento.');
     }
   };
 
@@ -140,7 +140,7 @@ export default function Config({ onConfigChanged }) {
               onChange={(e) => setMedTime(e.target.value)}
               className="form-control"
               required
-              placeholder="HorÃ¡rio"
+              placeholder="Horário"
             />
             <input
               type="text"
@@ -164,7 +164,7 @@ export default function Config({ onConfigChanged }) {
               type="text"
               value={medNote}
               onChange={(e) => setMedNote(e.target.value)}
-              placeholder="ObservaÃ§Ã£o (ex: macerado com iogurte)"
+              placeholder="Observação (ex: macerado com iogurte)"
               className="form-control"
               style={{ flex: 1 }}
             />
@@ -235,7 +235,7 @@ export default function Config({ onConfigChanged }) {
 
         <form onSubmit={handleAddCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-            O login da cuidadora Ã© criado no Supabase com o padrÃ£o `nome@lessacare.com`. A senha inicial sÃ³ aparece aqui no momento do cadastro.
+            O login da cuidadora é criado no Supabase com o padrão `nome@lessacare.com`. A senha inicial só aparece aqui no momento do cadastro.
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <input
@@ -265,7 +265,7 @@ export default function Config({ onConfigChanged }) {
               type="text"
               value={newCaregiverEmail}
               onChange={(e) => setNewCaregiverEmail(e.target.value)}
-              placeholder="UsuÃ¡rio / E-mail de acesso"
+              placeholder="Usuário / E-mail de acesso"
               className="form-control"
               style={{ flex: '1 1 180px' }}
               required
@@ -311,7 +311,7 @@ export default function Config({ onConfigChanged }) {
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{item.name}</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      Login: <strong style={{ color: 'var(--text-primary)' }}>{item.email || 'â€”'}</strong>
+                      Login: <strong style={{ color: 'var(--text-primary)' }}>{item.email || '—'}</strong>
                     </span>
                   </div>
                 </div>
