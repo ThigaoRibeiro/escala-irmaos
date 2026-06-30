@@ -372,7 +372,7 @@ function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onCl
         {/* 1. SELEÇÃO DE FAMILIAR */}
         <div className="form-group">
           <label className="form-label" style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Familiar Responsável:</span>
+            <span>Filho(a):</span>
             <button 
               type="button" 
               onClick={selectMyself} 
@@ -460,7 +460,7 @@ function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onCl
 
         {/* 2. SELEÇÃO DE CUIDADORA */}
         <div className="form-group" style={{ marginTop: '16px' }}>
-          <label className="form-label" style={{ fontWeight: 600 }}>Cuidadora Escala:</label>
+          <label className="form-label" style={{ fontWeight: 600 }}>Cuidadora:</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px' }}>
             {caregivers.map(c => {
               const isSelected = caregiverAssigned === c.name;
