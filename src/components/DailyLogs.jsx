@@ -30,12 +30,13 @@ const ENTRY_TYPES = [
   'Intercorrência'
 ];
 
-export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '' }) {
+export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], currentUserName = '' }) {
   const currentPlantao = getCurrentPlantao();
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(currentPlantao.date);
   const [period, setPeriod] = useState(currentPlantao.period);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [checkedMeds, setCheckedMeds] = useState({});
   const [copiedLogId, setCopiedLogId] = useState(null);
 
   const selectedShift = shifts?.[`${date}_${period}`];
@@ -52,6 +53,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '
       ...prev,
       entryTime: getCurrentTimeValue()
     }));
+    setCheckedMeds({});
   }, [showAddForm]);
 
   const updateField = (field, value) => {
@@ -69,6 +71,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '
       ...EMPTY_FORM,
       entryTime: getCurrentTimeValue()
     });
+    setCheckedMeds({});
     setShowAddForm(true);
   };
 
@@ -77,13 +80,16 @@ export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '
       ...EMPTY_FORM,
       entryTime: getCurrentTimeValue()
     });
+    setCheckedMeds({});
     setShowAddForm(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.notes.trim() && !formData.pressure.trim() && !formData.temperature.trim() && !formData.glucose.trim() && !formData.medicationNote.trim()) {
+    const hasCheckedMedication = Object.values(checkedMeds).some(Boolean);
+
+    if (!formData.notes.trim() && !formData.pressure.trim() && !formData.temperature.trim() && !formData.glucose.trim() && !formData.medicationNote.trim() && !hasCheckedMedication) {
       window.alert('Adicione pelo menos uma observação, sinal vital ou medicação para registrar a evolução.');
       return;
     }
@@ -92,10 +98,12 @@ export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '
       authorName,
       responsibleName,
       period,
+      medications,
+      checkedMeds,
       ...formData
     });
 
-    const medsGiven = formData.eventType === 'Medicação' || !!formData.medicationNote.trim();
+    const medsGiven = formData.eventType === 'Medicação' || !!formData.medicationNote.trim() || hasCheckedMedication;
     onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
     resetForm();
   };
@@ -243,6 +251,35 @@ export default function DailyLogs({ shifts, logs, onSaveLog, currentUserName = '
             <ReadOnlyField label="Registrado por" value={authorName} />
             <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
           </div>
+
+          <SectionTitle label="Medicamentos" />
+          {medications.length === 0 ? (
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '12px' }}>
+              Nenhum medicamento cadastrado. Adicione na aba Configurações.
+            </p>
+          ) : (
+            <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
+              {medications.map((med) => (
+                <label key={med.id} className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={!!checkedMeds[med.id]}
+                    onChange={(e) =>
+                      setCheckedMeds((prev) => ({
+                        ...prev,
+                        [med.id]: e.target.checked
+                      }))
+                    }
+                    className="checkbox-input"
+                  />
+                  <span>
+                    <strong>{med.time}</strong> - {med.name} ({med.dose})
+                    {med.note && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> - {med.note}</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
 
           <SectionTitle label="Sinais e medicações" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
@@ -394,6 +431,7 @@ function buildEvolutionNotes(data) {
   const lines = [
     `Tipo: ${data.eventType}`,
     `Horário do registro: ${data.entryTime}`,
+    formatMedicationGroup(data.medications, data.checkedMeds),
     data.pressure ? `Pressão arterial: ${data.pressure}` : '',
     data.temperature ? `Temperatura: ${data.temperature}` : '',
     data.glucose ? `Glicemia: ${data.glucose}` : '',
@@ -402,6 +440,14 @@ function buildEvolutionNotes(data) {
   ].filter(Boolean);
 
   return lines.join('\n');
+}
+
+function formatMedicationGroup(medications = [], checkedMeds = {}) {
+  const selected = medications
+    .filter((med) => checkedMeds[med.id])
+    .map((med) => `${med.time} ${med.name} (${med.dose})`);
+
+  return selected.length > 0 ? `Medicamentos administrados: ${selected.join(' | ')}` : '';
 }
 
 function getCurrentPlantao() {
