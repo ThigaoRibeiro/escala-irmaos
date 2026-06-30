@@ -130,16 +130,36 @@ export async function updatePassword(newPassword, userProfile) {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase não configurado');
 
-  if (userProfile?.role === 'CAREGIVER') {
-    // Para cuidadoras, a senha fica salva na tabela public.caregivers
+  const { data: { session } } = await client.auth.getSession();
+  const currentAuthEmail = session?.user?.email?.toLowerCase();
+
+  // Se a sessão do Supabase está conectada como equipe@lessacare.com, é uma cuidadora, mesmo se o frontend estiver desatualizado/em cache.
+  if (currentAuthEmail === 'equipe@lessacare.com' || userProfile?.role === 'CAREGIVER') {
+    let caregiverEmail = userProfile?.email;
+    if (!caregiverEmail) {
+      try {
+        const stored = localStorage.getItem('escala_caregiver_profile');
+        if (stored) {
+          caregiverEmail = JSON.parse(stored).email;
+        }
+      } catch (e) {
+        console.error('Erro ao ler perfil no updatePassword:', e);
+      }
+    }
+
+    if (!caregiverEmail) {
+      throw new Error('Não foi possível identificar o e-mail da cuidadora ativa.');
+    }
+
+    // Atualiza a senha na tabela public.caregivers
     const { error } = await client
       .from('caregivers')
       .update({ password: newPassword })
-      .eq('email', userProfile.email);
+      .eq('email', caregiverEmail);
     
     if (error) throw error;
 
-    // Atualiza o cache local do perfil
+    // Atualiza o cache local
     const stored = localStorage.getItem('escala_caregiver_profile');
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -148,7 +168,7 @@ export async function updatePassword(newPassword, userProfile) {
     }
     return { error: null };
   } else {
-    // Para irmãos (ADMIN/SUPERADMIN), atualiza o Supabase Auth tradicional
+    // Para irmãos (ADMIN/SUPERADMIN)
     return client.auth.updateUser({ password: newPassword });
   }
 }
