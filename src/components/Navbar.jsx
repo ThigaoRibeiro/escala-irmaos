@@ -16,7 +16,7 @@ export default function Navbar({ activeMember, setActiveMember }) {
       <div className="header-container">
         <h1 className="app-title">
           <Heart size={24} fill="currentColor" />
-          <span>Escala Família</span>
+          <span>Lessa Care</span>
         </h1>
         
         <div className="user-selector">
