@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Calendar from './components/Calendar';
 import DailyLogs from './components/DailyLogs';
 import Config from './components/Config';
+import Login from './components/Login';
 import {
   getShifts,
   updateShift,
@@ -10,7 +11,9 @@ import {
   saveDailyLog,
   getCaregivers,
   getMedications,
-  subscribeToRealtimeChanges
+  subscribeToRealtimeChanges,
+  getSession,
+  onAuthStateChange
 } from './utils/db';
 import { CalendarDays, FileText, Settings } from 'lucide-react';
 
@@ -30,8 +33,46 @@ export default function App() {
   const [loadWarning, setLoadWarning] = useState('');
   const [liveNotice, setLiveNotice] = useState('');
 
+  // Authentication states
+  const [session, setSession] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // Monitor auth state
+  useEffect(() => {
+    let authListener = null;
+
+    const checkSession = async () => {
+      try {
+        const { data } = await getSession();
+        setSession(data.session);
+      } catch (e) {
+        console.error('Error checking session:', e);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    checkSession();
+
+    try {
+      const { data } = onAuthStateChange((_event, session) => {
+        setSession(session);
+        setIsAuthLoading(false);
+      });
+      authListener = data.subscription;
+    } catch (e) {
+      console.warn('Cannot attach auth listener. Maybe local mode or config is missing.', e);
+    }
+
+    return () => {
+      if (authListener) authListener.unsubscribe();
+    };
+  }, []);
+
   // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
+    if (!session) return; // Only load data if authenticated
+
     async function loadData() {
       setIsLoading(true);
       setLoadError('');
@@ -84,9 +125,11 @@ export default function App() {
     }
 
     loadData();
-  }, [dbTrigger]);
+  }, [dbTrigger, session]);
 
   useEffect(() => {
+    if (!session) return; // Only subscribe if authenticated
+
     const getPayloadId = (row) => {
       if (!row) return null;
       return row.id || (row.date && row.period ? `${row.date}_${row.period}` : null);
@@ -173,7 +216,7 @@ export default function App() {
       if (noticeTimer) clearTimeout(noticeTimer);
       unsubscribe();
     };
-  }, [dbTrigger]);
+  }, [dbTrigger, session]);
 
   const handleResetConnection = () => {
     try {
@@ -226,6 +269,18 @@ export default function App() {
       console.error('Falha ao salvar diário de bordo:', e);
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+        Verificando sessão...
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login onLoginSuccess={() => {}} />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

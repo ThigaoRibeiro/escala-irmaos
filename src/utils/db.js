@@ -102,6 +102,38 @@ export function resetSupabaseClient() {
   broadcastReadyPromise = null;
 }
 
+// --- AUTENTICAÇÃO ---
+
+export async function signIn(email, password) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase não configurado');
+  return client.auth.signInWithPassword({ email, password });
+}
+
+export async function signUp(email, password) {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase não configurado');
+  return client.auth.signUp({ email, password });
+}
+
+export async function signOut() {
+  const client = getSupabaseClient();
+  if (!client) return { error: null };
+  return client.auth.signOut();
+}
+
+export async function getSession() {
+  const client = getSupabaseClient();
+  if (!client) return { data: { session: null }, error: null };
+  return client.auth.getSession();
+}
+
+export function onAuthStateChange(callback) {
+  const client = getSupabaseClient();
+  if (!client) return { data: { subscription: { unsubscribe: () => {} } } };
+  return client.auth.onAuthStateChange(callback);
+}
+
 let broadcastChannel = null;
 let broadcastReadyPromise = null;
 
@@ -641,9 +673,9 @@ ALTER TABLE public.caregivers REPLICA IDENTITY FULL;
 ALTER TABLE public.shifts REPLICA IDENTITY FULL;
 ALTER TABLE public.daily_logs REPLICA IDENTITY FULL;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.caregivers TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.caregivers TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO authenticated;
 
 -- Remove policies antigas, inclusive a versão com login/allowlist se ela tiver sido aplicada.
 DROP POLICY IF EXISTS "Acesso público total caregivers" ON public.caregivers;
@@ -680,76 +712,76 @@ DROP POLICY IF EXISTS "App publico pode remover daily_logs" ON public.daily_logs
 CREATE POLICY "App publico pode ler caregivers"
 ON public.caregivers
 FOR SELECT
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 CREATE POLICY "App publico pode inserir caregivers"
 ON public.caregivers
 FOR INSERT
-TO anon, authenticated
+TO authenticated
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode atualizar caregivers"
 ON public.caregivers
 FOR UPDATE
-TO anon, authenticated
+TO authenticated
 USING (true)
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode remover caregivers"
 ON public.caregivers
 FOR DELETE
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 CREATE POLICY "App publico pode ler shifts"
 ON public.shifts
 FOR SELECT
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 CREATE POLICY "App publico pode inserir shifts"
 ON public.shifts
 FOR INSERT
-TO anon, authenticated
+TO authenticated
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode atualizar shifts"
 ON public.shifts
 FOR UPDATE
-TO anon, authenticated
+TO authenticated
 USING (true)
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode remover shifts"
 ON public.shifts
 FOR DELETE
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 CREATE POLICY "App publico pode ler daily_logs"
 ON public.daily_logs
 FOR SELECT
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 CREATE POLICY "App publico pode inserir daily_logs"
 ON public.daily_logs
 FOR INSERT
-TO anon, authenticated
+TO authenticated
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode atualizar daily_logs"
 ON public.daily_logs
 FOR UPDATE
-TO anon, authenticated
+TO authenticated
 USING (true)
 WITH CHECK (true);
 
 CREATE POLICY "App publico pode remover daily_logs"
 ON public.daily_logs
 FOR DELETE
-TO anon, authenticated
+TO authenticated
 USING (true);
 
 -- Habilitar Supabase Realtime para atualizações ao vivo entre navegadores.
