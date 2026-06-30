@@ -5,6 +5,8 @@ export const USER_MAPPING = {
   'esterlessa13@gmail.com': { role: 'ADMIN', name: 'Ester', avatar: '❤️‍🩹', color: '#10b981', lightColor: '#d1fae5' },
   'professorajeanelessa@gmail.com': { role: 'ADMIN', name: 'Jeane', avatar: '👩', color: '#f59e0b', lightColor: '#fef3c7' },
   'ananerianlv@gmail.com': { role: 'ADMIN', name: 'Ana Neri', avatar: '👩', color: '#8b5cf6', lightColor: '#ede9fe' },
+  'deividylan@gmail.com': { role: 'ADMIN', name: 'David', avatar: '❤️‍🩹 👨', color: '#1e40af', lightColor: '#dbeafe' },
+  'haniellessa@hotmail.com': { role: 'ADMIN', name: 'Haniel', avatar: '❤️‍🩹 👨', color: '#c2410c', lightColor: '#ffedd5' },
 };
 
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
