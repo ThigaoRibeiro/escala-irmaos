@@ -460,7 +460,7 @@ function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onCl
 
         {/* 2. SELEÇÃO DE CUIDADORA */}
         <div className="form-group" style={{ marginTop: '16px' }}>
-          <label className="form-label" style={{ fontWeight: 600 }}>Cuidadora:</label>
+          <label className="form-label" style={{ fontWeight: 600 }}>Cuidadoras:</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '6px' }}>
             {caregivers.map(c => {
               const isSelected = caregiverAssigned === c.name;
