@@ -40,7 +40,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
   const [period, setPeriod] = useState(currentPlantao.period);
   const [entryTime, setEntryTime] = useState(getPeriodTimes(currentPlantao.period).entry);
   const [exitTime, setExitTime] = useState(getPeriodTimes(currentPlantao.period).exit);
-  const [mealsOk, setMealsOk] = useState(false);
   const [checkedMeds, setCheckedMeds] = useState({});
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [copiedLogId, setCopiedLogId] = useState(null);
@@ -73,7 +72,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
 
   const resetForm = () => {
     setFormData(EMPTY_FORM);
-    setMealsOk(false);
     setCheckedMeds({});
     setShowAddForm(false);
   };
@@ -88,13 +86,12 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
       period,
       entryTime,
       exitTime,
-      mealsOk,
       medications,
       checkedMeds,
       ...formData
     });
 
-    onSaveLog(date, period, author, null, medsGiven, mealsOk, dailyNotes);
+    onSaveLog(date, period, author, null, medsGiven, true, dailyNotes);
     resetForm();
   };
 
@@ -127,8 +124,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
     text += `⏰ Turno: ${periodLabel}\n`;
     text += `👤 Responsável do Plantão: ${log.author} ${authorAvatar}\n`;
 
-    text += `\n💊 Medicações: ${log.meds_given ? '✅ Ministradas' : '❌ Pendentes / Não ministradas'}\n`;
-    text += `🍽️ Alimentação: ${log.meals_ok ? '✅ OK' : '❌ Atenção'}\n\n`;
+    text += `\n💊 Medicações: ${log.meds_given ? '✅ Todas ministradas' : '❌ Pendentes / Não ministradas'}\n\n`;
     text += `✍️ *Registro do Plantão:*\n${log.notes}\n`;
 
     navigator.clipboard.writeText(text).then(() => {
@@ -247,14 +243,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
             </div>
           )}
 
-          <SectionTitle label="Refeições 🍽️" />
-          <div className="checkbox-group" style={{ marginBottom: '12px' }}>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={mealsOk} onChange={(e) => setMealsOk(e.target.checked)} className="checkbox-input" />
-              <span>Alimentação OK</span>
-            </label>
-          </div>
-
           <SectionTitle label="Sinais e sono" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <TextInput label="Pressão arterial:" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 12x8" />
@@ -364,11 +352,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [] })
                   {log.meds_given ? <Check size={12} /> : <X size={12} />}
                   Medicações 💊
                 </span>
-
-                <span className={`log-badge ${log.meals_ok ? 'log-badge-done' : 'log-badge-pending'}`}>
-                  {log.meals_ok ? <Check size={12} /> : <X size={12} />}
-                  Alimentação 🍽️
-                </span>
               </div>
 
               <div className="log-text">{log.notes}</div>
@@ -447,7 +430,6 @@ function buildDailyNotes(data) {
           `${m.time} ${m.name}: ${data.checkedMeds[m.id] ? '✓' : '✗ pendente'}`
         ))
       : '',
-    `Alimentação geral: ${data.mealsOk ? 'OK' : 'atenção'}`,
     formatGroup('Sinais', [
       formatItem('Pressão arterial', data.pressure),
       formatItem('Temperatura', data.temperature),
