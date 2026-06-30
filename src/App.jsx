@@ -15,7 +15,8 @@ import {
   getSession,
   onAuthStateChange,
   signOut,
-  USER_MAPPING
+  USER_MAPPING,
+  buildCaregiverProfile
 } from './utils/db';
 import { CalendarDays, FileText, Settings } from 'lucide-react';
 
@@ -117,24 +118,16 @@ export default function App() {
 
   // Se for cuidadora, valida em tempo real se o cadastro dela ainda existe no banco
   useEffect(() => {
-    if (!session || caregivers.length === 0) return;
+    if (!session) return;
 
-    if (session.user?.email?.toLowerCase() === 'equipe@lessacare.com') {
-      try {
-        const stored = localStorage.getItem('escala_caregiver_profile');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          const exists = caregivers.some(c => c.email && c.email.toLowerCase() === parsed.email?.toLowerCase());
-          if (!exists) {
-            // Cuidadora excluída pelo Admin! Força deslogar.
-            signOut().then(() => {
-              window.location.reload();
-            });
-          }
-        }
-      } catch (e) {
-        console.error('Erro ao verificar validade da cuidadora:', e);
-      }
+    const currentEmail = session.user?.email?.toLowerCase();
+    if (!currentEmail || USER_MAPPING[currentEmail]) return;
+
+    const exists = caregivers.some(c => c.email && c.email.toLowerCase() === currentEmail);
+    if (!exists) {
+      signOut().then(() => {
+        window.location.reload();
+      });
     }
   }, [caregivers, session]);
 
@@ -285,28 +278,28 @@ export default function App() {
   }
 
   const userEmail = session?.user?.email?.toLowerCase() || '';
-  let userProfile = USER_MAPPING[userEmail] || null;
-
-  if (userEmail === 'equipe@lessacare.com') {
-    try {
-      const stored = localStorage.getItem('escala_caregiver_profile');
-      if (stored) {
-        userProfile = JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error('Falha ao parsear perfil local da cuidadora:', e);
-    }
-  }
+  const caregiverRecord = caregivers.find(c => c.email && c.email.toLowerCase() === userEmail);
+  const userProfile = USER_MAPPING[userEmail] || buildCaregiverProfile(caregiverRecord);
 
   const isSuperAdmin = userProfile?.role === 'SUPERADMIN';
   const isAdmin = isSuperAdmin || userProfile?.role === 'ADMIN';
 
-  if (!userProfile) {
-    // Se ainda assim não achou perfil (ex: local mode, ou falha de cache)
-    userProfile = {
-      name: 'Cuidadora',
-      role: 'CAREGIVER'
-    };
+  if (!isLoading && !userProfile) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div className="card" style={{ maxWidth: '420px', width: '100%' }}>
+          <h3 className="card-title" style={{ color: 'var(--color-danger)' }}>Acesso não liberado</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+            Este usuário autenticado ainda não está vinculado a nenhum irmão administrador nem a uma cuidadora ativa.
+          </p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" onClick={() => signOut()}>
+              Sair
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const effectiveActiveMember = isSuperAdmin ? activeMember : (userProfile?.name || 'Cuidadora');
@@ -351,7 +344,7 @@ export default function App() {
               <Calendar 
                 shifts={shifts} 
                 onUpdateShift={handleUpdateShift} 
-                activeMember={activeMember} 
+                activeMember={effectiveActiveMember} 
                 caregivers={caregivers}
               />
             )}

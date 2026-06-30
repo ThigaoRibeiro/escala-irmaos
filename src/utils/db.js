@@ -33,6 +33,7 @@ const LOCAL_LOGS_KEY = 'escala_local_logs_v3';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 const LOCAL_MEDICATIONS_KEY = 'escala_local_medications_v1';
 const REALTIME_CHANNEL = 'escala-familia-live';
+const CAREGIVER_FUNCTION_PATH = '/functions/v1/caregiver-admin';
 
 function normalizeSupabaseUrl(url) {
   const trimmed = (url || '').trim();
@@ -48,6 +49,36 @@ function normalizeSupabaseUrl(url) {
 // Credenciais do Supabase carregadas EXCLUSIVAMENTE via variáveis de ambiente (.env ou GitHub Secrets)
 const DEFAULT_URL = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL || '');
 const DEFAULT_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+function normalizeEmail(value) {
+  return (value || '').trim().toLowerCase();
+}
+
+export function normalizeCaregiverEmail(value) {
+  const normalized = normalizeEmail(value);
+  if (!normalized) return '';
+  return normalized.includes('@') ? normalized : `${normalized}@lessacare.com`;
+}
+
+function buildFunctionsUrl() {
+  const { url } = getSupabaseConfig();
+  return url ? `${url}${CAREGIVER_FUNCTION_PATH}` : '';
+}
+
+export function buildCaregiverProfile(caregiver) {
+  if (!caregiver) return null;
+
+  return {
+    role: 'CAREGIVER',
+    name: caregiver.name,
+    email: caregiver.email,
+    id: caregiver.id,
+    authUserId: caregiver.auth_user_id || null,
+    color: CAREGIVER_STYLE.color,
+    lightColor: CAREGIVER_STYLE.lightColor,
+    avatar: CAREGIVER_STYLE.avatar
+  };
+}
 
 // --- CONFIGURAÇÕES DO SUPABASE ---
 
@@ -117,64 +148,28 @@ export function resetSupabaseClient() {
 export async function signIn(email, password) {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase não configurado');
-  return client.auth.signInWithPassword({ email, password });
+  return client.auth.signInWithPassword({
+    email: normalizeCaregiverEmail(email),
+    password
+  });
 }
 
 export async function signUp(email, password) {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase não configurado');
-  return client.auth.signUp({ email, password });
+  return client.auth.signUp({
+    email: normalizeEmail(email),
+    password
+  });
 }
 
-export async function updatePassword(newPassword, userProfile) {
+export async function updatePassword(newPassword) {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase não configurado');
-
-  const { data: { session } } = await client.auth.getSession();
-  const currentAuthEmail = session?.user?.email?.toLowerCase();
-
-  // Se a sessão do Supabase está conectada como equipe@lessacare.com, é uma cuidadora, mesmo se o frontend estiver desatualizado/em cache.
-  if (currentAuthEmail === 'equipe@lessacare.com' || userProfile?.role === 'CAREGIVER') {
-    let caregiverEmail = userProfile?.email;
-    if (!caregiverEmail) {
-      try {
-        const stored = localStorage.getItem('escala_caregiver_profile');
-        if (stored) {
-          caregiverEmail = JSON.parse(stored).email;
-        }
-      } catch (e) {
-        console.error('Erro ao ler perfil no updatePassword:', e);
-      }
-    }
-
-    if (!caregiverEmail) {
-      throw new Error('Não foi possível identificar o e-mail da cuidadora ativa.');
-    }
-
-    // Atualiza a senha na tabela public.caregivers
-    const { error } = await client
-      .from('caregivers')
-      .update({ password: newPassword })
-      .eq('email', caregiverEmail);
-    
-    if (error) throw error;
-
-    // Atualiza o cache local
-    const stored = localStorage.getItem('escala_caregiver_profile');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      parsed.password = newPassword;
-      localStorage.setItem('escala_caregiver_profile', JSON.stringify(parsed));
-    }
-    return { error: null };
-  } else {
-    // Para irmãos (ADMIN/SUPERADMIN)
-    return client.auth.updateUser({ password: newPassword });
-  }
+  return client.auth.updateUser({ password: newPassword });
 }
 
 export async function signOut() {
-  localStorage.removeItem('escala_caregiver_profile');
   localStorage.removeItem('escala_active_member');
   const client = getSupabaseClient();
   if (!client) return { error: null };
@@ -191,6 +186,49 @@ export function onAuthStateChange(callback) {
   const client = getSupabaseClient();
   if (!client) return { data: { subscription: { unsubscribe: () => {} } } };
   return client.auth.onAuthStateChange(callback);
+}
+
+async function callCaregiverAdminFunction(action, payload = {}) {
+  const client = getSupabaseClient();
+  const { key } = getSupabaseConfig();
+  if (!client) throw new Error('Supabase não configurado');
+
+  const { data: { session } } = await client.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Sessão inválida. Faça login novamente.');
+  }
+
+  const endpoint = buildFunctionsUrl();
+  if (!endpoint) {
+    throw new Error('Função administrativa das cuidadoras não configurada.');
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: key
+    },
+    body: JSON.stringify({ action, ...payload })
+  });
+
+  const rawText = await response.text();
+  let parsed = {};
+
+  if (rawText) {
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      parsed = { error: rawText };
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(parsed.error || 'Falha ao executar a ação administrativa da cuidadora.');
+  }
+
+  return parsed;
 }
 
 let broadcastChannel = null;
@@ -349,9 +387,9 @@ function getInitialMedications() {
 
 function getInitialMockCaregivers() {
   return [
-    { id: '1', name: 'Nathália', email: 'nathalia@lessacare.com', password: '123' },
-    { id: '2', name: 'Viviane', email: 'viviane@lessacare.com', password: '123' },
-    { id: '3', name: 'Paula', email: 'paula@lessacare.com', password: '123' }
+    { id: '1', name: 'Nathália', email: 'nathalia@lessacare.com', auth_user_id: null, active: true },
+    { id: '2', name: 'Viviane', email: 'viviane@lessacare.com', auth_user_id: null, active: true },
+    { id: '3', name: 'Paula', email: 'paula@lessacare.com', auth_user_id: null, active: true }
   ];
 }
 
@@ -451,6 +489,7 @@ export async function getCaregivers() {
     const { data, error } = await client
       .from('caregivers')
       .select('*')
+      .eq('active', true)
       .order('name');
     if (error) throw error;
     return data;
@@ -468,20 +507,31 @@ export async function getCaregivers() {
 export async function addCaregiver(name, email, password) {
   const client = getSupabaseClient();
   if (client) {
-    const { data, error } = await client
-      .from('caregivers')
-      .insert({ name, email, password })
-      .select();
-    if (error) throw error;
-    await sendRealtimeBroadcast('caregiver-change', {
-      eventType: 'UPSERT',
-      row: data[0]
+    const normalizedEmail = normalizeCaregiverEmail(email);
+    const result = await callCaregiverAdminFunction('create_caregiver', {
+      name: name.trim(),
+      email: normalizedEmail,
+      initialPassword: password.trim()
     });
-    return data[0];
+
+    if (result.caregiver) {
+      await sendRealtimeBroadcast('caregiver-change', {
+        eventType: 'UPSERT',
+        row: result.caregiver
+      });
+    }
+
+    return result.caregiver;
   }
   
   const list = await getCaregivers();
-  const newItem = { id: String(Date.now()), name, email, password };
+  const newItem = {
+    id: String(Date.now()),
+    name,
+    email: normalizeCaregiverEmail(email),
+    auth_user_id: null,
+    active: true
+  };
   list.push(newItem);
   localStorage.setItem(LOCAL_CAREGIVERS_KEY, JSON.stringify(list));
   return newItem;
@@ -490,36 +540,7 @@ export async function addCaregiver(name, email, password) {
 export async function deleteCaregiver(id) {
   const client = getSupabaseClient();
   if (client) {
-    // 1. Busca o nome da cuidadora antes de deletar
-    const { data: caregiver } = await client
-      .from('caregivers')
-      .select('name')
-      .eq('id', id)
-      .maybeSingle();
-
-    const name = caregiver?.name;
-
-    // 2. Deleta a cuidadora
-    const { error } = await client
-      .from('caregivers')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
-
-    // 3. Limpa escalas futuras (hoje em diante) associadas a ela
-    if (name) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const { error: shiftError } = await client
-        .from('shifts')
-        .update({ caregiver_assigned: null })
-        .eq('caregiver_assigned', name)
-        .gte('date', todayStr);
-      
-      if (shiftError) {
-        console.error('Erro ao desescalar cuidadora das agendas futuras:', shiftError);
-      }
-    }
-
+    await callCaregiverAdminFunction('delete_caregiver', { caregiverId: id });
     await sendRealtimeBroadcast('caregiver-change', {
       eventType: 'DELETE',
       old: { id }
@@ -552,58 +573,6 @@ export async function deleteCaregiver(id) {
   }
 
   return true;
-}
-
-export async function verifyCaregiverLogin(emailOrUsername, password) {
-  const client = getSupabaseClient();
-  if (!client) throw new Error('Supabase não configurado');
-
-  let loginEmail = emailOrUsername.trim().toLowerCase();
-  if (!loginEmail.includes('@')) {
-    loginEmail += '@lessacare.com';
-  }
-
-  // 1. Faz login com o usuário ponte equipe@lessacare.com
-  const { data: authData, error: authError } = await client.auth.signInWithPassword({
-    email: 'equipe@lessacare.com',
-    password: 'lessacare123'
-  });
-
-  if (authError) {
-    throw new Error(`Erro na conexão técnica (equipe@lessacare.com): ${authError.message}`);
-  }
-
-  // 2. Busca a cuidadora correspondente na tabela caregivers
-  const { data: caregiverData, error: dbError } = await client
-    .from('caregivers')
-    .select('*')
-    .or(`email.eq.${loginEmail},name.eq.${emailOrUsername}`)
-    .eq('password', password.trim())
-    .maybeSingle();
-
-  if (dbError) {
-    await client.auth.signOut();
-    throw dbError;
-  }
-
-  if (!caregiverData) {
-    await client.auth.signOut();
-    throw new Error('Usuário ou senha incorretos.');
-  }
-
-  // 3. Salva o perfil no localStorage
-  const profile = {
-    role: 'CAREGIVER',
-    name: caregiverData.name,
-    email: caregiverData.email,
-    id: caregiverData.id,
-    color: '#6d28d9',
-    lightColor: '#f3e8ff',
-    avatar: '👩‍⚕️'
-  };
-  localStorage.setItem('escala_caregiver_profile', JSON.stringify(profile));
-
-  return { caregiver: profile, error: null };
 }
 
 // --- OPERAÇÕES DE MEDICAMENTOS ---
@@ -784,24 +753,26 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
 // --- SCRIPT SQL DO SUPABASE ---
 
 export const SUPABASE_SQL_SETUP = `-- Script para criar/atualizar as tabelas no Supabase SQL Editor
--- Modelo simples: sem login no app. Todos que acessarem o link usam a chave publishable/anon.
--- Atenção: isso é funcional e simples, mas não impede que alguém com o link/chave pública acesse a API.
+-- Modelo com login real no Supabase Auth para irmãos e cuidadoras.
+-- As cuidadoras devem ser criadas por uma função administrativa segura usando service_role.
 
 -- 1. Tabela de Cuidadoras (caregivers)
 CREATE TABLE IF NOT EXISTS public.caregivers (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     name text NOT NULL,
-    email text,
-    password text,
+    email text NOT NULL UNIQUE,
+    auth_user_id uuid UNIQUE,
+    active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS email text;
-ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS password text;
+ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS auth_user_id uuid;
+ALTER TABLE public.caregivers ADD COLUMN IF NOT EXISTS active boolean DEFAULT true NOT NULL;
+ALTER TABLE public.caregivers DROP COLUMN IF EXISTS password;
 
-INSERT INTO public.caregivers (name, email, password)
-VALUES ('Nathália', 'nathalia@lessacare.com', '123'), ('Viviane', 'viviane@lessacare.com', '123'), ('Paula', 'paula@lessacare.com', '123')
-ON CONFLICT DO NOTHING;
+CREATE UNIQUE INDEX IF NOT EXISTS caregivers_email_key ON public.caregivers (lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS caregivers_auth_user_id_key ON public.caregivers (auth_user_id);
 
 -- 2. Tabela de Escalas (shifts)
 CREATE TABLE IF NOT EXISTS public.shifts (
@@ -835,7 +806,7 @@ ALTER TABLE public.caregivers REPLICA IDENTITY FULL;
 ALTER TABLE public.shifts REPLICA IDENTITY FULL;
 ALTER TABLE public.daily_logs REPLICA IDENTITY FULL;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.caregivers TO authenticated;
+GRANT SELECT ON TABLE public.caregivers TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO authenticated;
 
@@ -874,25 +845,6 @@ DROP POLICY IF EXISTS "App publico pode remover daily_logs" ON public.daily_logs
 CREATE POLICY "App publico pode ler caregivers"
 ON public.caregivers
 FOR SELECT
-TO authenticated
-USING (true);
-
-CREATE POLICY "App publico pode inserir caregivers"
-ON public.caregivers
-FOR INSERT
-TO authenticated
-WITH CHECK (true);
-
-CREATE POLICY "App publico pode atualizar caregivers"
-ON public.caregivers
-FOR UPDATE
-TO authenticated
-USING (true)
-WITH CHECK (true);
-
-CREATE POLICY "App publico pode remover caregivers"
-ON public.caregivers
-FOR DELETE
 TO authenticated
 USING (true);
 
@@ -970,4 +922,11 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
     WHEN undefined_object THEN NULL;
 END $$;
+
+-- IMPORTANTE:
+-- 1. Cadastre as cuidadoras criando usuários reais no Supabase Auth.
+-- 2. A função "caregiver-admin" deve usar service_role para:
+--    - criar usuário com email_confirm = true
+--    - salvar name/email/auth_user_id/active na tabela caregivers
+--    - excluir o usuário Auth e limpar a cuidadora quando ela sair
 `;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signUp, verifyCaregiverLogin } from '../utils/db';
+import { signIn, signUp } from '../utils/db';
 import { Heart, Lock, Mail, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function Login({ onLoginSuccess }) {
@@ -21,40 +21,27 @@ export default function Login({ onLoginSuccess }) {
 
     try {
       if (isLoginMode) {
-        // Verifica se o login inserido é de cuidadora (não contém @ ou termina com @lessacare.com)
-        const lowerEmail = email.trim().toLowerCase();
-        const isCaregiver = !lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com');
-
-        if (isCaregiver) {
-          const { caregiver, error } = await verifyCaregiverLogin(email, password);
-          if (error) throw error;
-          if (onLoginSuccess) onLoginSuccess();
-        } else {
-          // Login de irmão (admin)
-          const { error } = await signIn(email, password);
-          if (error) throw error;
-          if (onLoginSuccess) onLoginSuccess();
-        }
+        const { error } = await signIn(email, password);
+        if (error) throw error;
+        if (onLoginSuccess) onLoginSuccess();
       } else {
         if (password !== confirmPassword) {
-          throw new Error('As senhas não coincidem. Tente novamente.');
+          throw new Error('As senhas nÃ£o coincidem. Tente novamente.');
         }
 
         const lowerEmail = email.trim().toLowerCase();
         if (!lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com')) {
-          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de Configurações.');
+          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de ConfiguraÃ§Ãµes.');
         }
-        
+
         const { error, data } = await signUp(email, password);
         if (error) throw error;
-        
-        // Em muitos casos o Supabase exige confirmação de email,
-        // dependendo da configuração. Vamos avisar o usuário.
+
         if (data?.user?.identities?.length === 0) {
-           setErrorMsg('Este e-mail já está em uso.');
+          setErrorMsg('Este e-mail jÃ¡ estÃ¡ em uso.');
         } else {
-           setSuccessMsg('Conta criada! Verifique seu e-mail ou faça login agora.');
-           setIsLoginMode(true);
+          setSuccessMsg('Conta criada! Verifique seu e-mail ou faÃ§a login agora.');
+          setIsLoginMode(true);
         }
       }
     } catch (err) {
@@ -84,7 +71,7 @@ export default function Login({ onLoginSuccess }) {
             {isLoginMode ? 'Acesse sua conta' : 'Crie sua conta'}
           </h2>
           <p style={{ color: 'var(--text-muted)' }}>
-            {isLoginMode ? 'Faça login para acessar a escala e o diário de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
+            {isLoginMode ? 'FaÃ§a login para acessar a escala e o diÃ¡rio de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
           </p>
         </div>
 
@@ -93,7 +80,7 @@ export default function Login({ onLoginSuccess }) {
             {errorMsg}
           </div>
         )}
-        
+
         {successMsg && (
           <div className="info-banner" style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)', marginBottom: '20px' }}>
             {successMsg}
@@ -103,16 +90,21 @@ export default function Login({ onLoginSuccess }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mail size={16} /> {isLoginMode ? 'E-mail ou Usuário' : 'E-mail'}
+              <Mail size={16} /> {isLoginMode ? 'E-mail ou UsuÃ¡rio' : 'E-mail'}
             </label>
             <input
-              type={isLoginMode ? "text" : "email"}
+              type={isLoginMode ? 'text' : 'email'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="form-control"
-              placeholder={isLoginMode ? "usuario ou email" : "seu@email.com"}
+              placeholder={isLoginMode ? 'usuario ou email' : 'seu@email.com'}
               required
             />
+            {isLoginMode && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+                Cuidadoras podem entrar com o usuÃ¡rio curto, como `maria`, ou com o login completo `maria@lessacare.com`.
+              </span>
+            )}
           </div>
 
           <div className="form-group">
@@ -121,11 +113,11 @@ export default function Login({ onLoginSuccess }) {
             </label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-control"
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 required
                 minLength={6}
                 style={{ width: '100%', paddingRight: '40px' }}
@@ -145,7 +137,7 @@ export default function Login({ onLoginSuccess }) {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -159,11 +151,11 @@ export default function Login({ onLoginSuccess }) {
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="form-control"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   required
                   minLength={6}
                   style={{ width: '100%', paddingRight: '40px' }}
@@ -183,7 +175,7 @@ export default function Login({ onLoginSuccess }) {
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
-                  title={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                  title={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -191,9 +183,9 @@ export default function Login({ onLoginSuccess }) {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
+          <button
+            type="submit"
+            className="btn btn-primary"
             style={{ padding: '12px', marginTop: '8px', justifyContent: 'center' }}
             disabled={isLoading}
           >
@@ -202,8 +194,8 @@ export default function Login({ onLoginSuccess }) {
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => {
               setIsLoginMode(!isLoginMode);
               setErrorMsg('');
@@ -211,21 +203,20 @@ export default function Login({ onLoginSuccess }) {
               setPassword('');
               setConfirmPassword('');
             }}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'var(--text-muted)', 
-              fontSize: '0.9rem', 
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '0.9rem',
               cursor: 'pointer',
               textDecoration: 'underline'
             }}
           >
-            {isLoginMode ? 'Ainda não tem conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
+            {isLoginMode ? 'Ainda nÃ£o tem conta? Cadastre-se' : 'JÃ¡ tem uma conta? FaÃ§a login'}
           </button>
         </div>
       </div>
-      
-      {/* Inline styles for spinner */}
+
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
