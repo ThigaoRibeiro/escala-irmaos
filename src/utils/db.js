@@ -19,7 +19,7 @@ export const CAREGIVER_STYLE = {
 
 const CONFIG_KEY = 'escala_supabase_config';
 const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
-const LOCAL_LOGS_KEY = 'escala_local_logs_v2';
+const LOCAL_LOGS_KEY = 'escala_local_logs_v3';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 const LOCAL_MEDICATIONS_KEY = 'escala_local_medications_v1';
 const REALTIME_CHANNEL = 'escala-familia-live';
@@ -544,7 +544,7 @@ export async function getDailyLogs() {
 
     const logsObj = {};
     data.forEach(log => {
-      logsObj[`${log.date}_${log.period}`] = log;
+      logsObj[log.id] = log;
     });
     return logsObj;
   }
@@ -559,7 +559,7 @@ export async function getDailyLogs() {
 }
 
 export async function saveDailyLog(date, period, author, caregiver, meds_given, meals_ok, notes) {
-  const id = `${date}_${period}`;
+  const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const createdAt = new Date().toISOString();
   const row = {
     id,
@@ -572,12 +572,12 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
     notes,
     created_at: createdAt
   };
-  
+
   const client = getSupabaseClient();
   if (client) {
     const { error } = await client
       .from('daily_logs')
-      .upsert(row);
+      .insert(row);
     if (error) throw error;
     await sendRealtimeBroadcast('log-change', {
       eventType: 'UPSERT',
@@ -585,7 +585,7 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
     });
     return true;
   }
-  
+
   const logs = await getDailyLogs();
   logs[id] = row;
   localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
