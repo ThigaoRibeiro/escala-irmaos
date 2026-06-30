@@ -483,7 +483,7 @@ export async function verifyCaregiverLogin(emailOrUsername, password) {
   });
 
   if (authError) {
-    throw new Error('Falha técnica de conexão. O Admin precisa criar o usuário equipe@lessacare.com no Supabase.');
+    throw new Error(`Erro na conexão técnica (equipe@lessacare.com): ${authError.message}`);
   }
 
   // 2. Busca a cuidadora correspondente na tabela caregivers
