@@ -13,21 +13,14 @@ import {
   getMedications,
   subscribeToRealtimeChanges,
   getSession,
-  onAuthStateChange
+  onAuthStateChange,
+  USER_MAPPING
 } from './utils/db';
 import { CalendarDays, FileText, Settings } from 'lucide-react';
 
 export default function App() {
-  // ATENÇÃO: Adicione os e-mails dos irmãos aqui para dar acesso à aba de Configurações
-  const ADMIN_EMAILS = [
-    'thiagor21@gmail.com',
-    'esterlessa13@gmail.com'
-  ];
-
   const [activeTab, setActiveTab] = useState('calendar'); // calendar, logs, config
-  const [activeMember, setActiveMember] = useState(() => {
-    return localStorage.getItem('escala_active_member') || 'David';
-  });
+
   
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
@@ -288,14 +281,14 @@ export default function App() {
     return <Login onLoginSuccess={() => {}} />;
   }
 
-  const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase());
+  const userEmail = session?.user?.email?.toLowerCase() || '';
+  const userProfile = USER_MAPPING[userEmail] || null;
+  const isAdmin = userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'ADMIN';
+  const activeMember = userProfile?.name || 'Cuidadora';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar
-        activeMember={activeMember}
-        setActiveMember={setActiveMember}
-      />
+      <Navbar userProfile={userProfile} />
 
       <main className="container" style={{ flex: 1 }}>
         {isLoading ? (

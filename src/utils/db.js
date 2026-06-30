@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
+export const USER_MAPPING = {
+  'thiagor21@gmail.com': { role: 'SUPERADMIN', name: 'Thiago', avatar: '👨', color: '#475569', lightColor: '#f1f5f9' },
+  'esterlessa13@gmail.com': { role: 'ADMIN', name: 'Ester', avatar: '❤️‍🩹 👩', color: '#db2777', lightColor: '#fdf2f8' }
+};
+
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
+// SUPERADMIN (Thiago) não entra nesta lista para não aparecer na escala.
 export const MEMBERS = [
   { name: 'David', color: '#1e40af', lightColor: '#dbeafe', avatar: '❤️‍🩹 👨' },
   { name: 'Aldeyr', color: '#7c3aed', lightColor: '#ede9fe', avatar: '❤️‍🩹 👨' },

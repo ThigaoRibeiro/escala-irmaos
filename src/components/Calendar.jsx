@@ -373,13 +373,15 @@ function EditShiftModal({ dateStr, period, shift, caregivers, activeMember, onCl
         <div className="form-group">
           <label className="form-label" style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Filhos:</span>
-            <button 
-              type="button" 
-              onClick={selectMyself} 
-              style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-            >
-              Me Escalar
-            </button>
+            {MEMBERS.some(m => m.name === activeMember) && (
+              <button 
+                type="button" 
+                onClick={selectMyself} 
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+              >
+                Me Escalar
+              </button>
+            )}
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '6px' }}>
             {MEMBERS.map(m => {

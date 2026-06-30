@@ -1,14 +1,15 @@
 import React from 'react';
-import { MEMBERS, signOut } from '../utils/db';
+import { signOut, CAREGIVER_STYLE } from '../utils/db';
 import { Heart, LogOut } from 'lucide-react';
 
-export default function Navbar({ activeMember, setActiveMember }) {
-  const currentMember = MEMBERS.find(m => m.name === activeMember) || MEMBERS[0];
-
-  const handleMemberChange = (e) => {
-    const name = e.target.value;
-    setActiveMember(name);
-    localStorage.setItem('escala_active_member', name);
+export default function Navbar({ userProfile }) {
+  // Se não tem userProfile, é uma cuidadora
+  const profile = userProfile || {
+    name: 'Cuidadora',
+    role: 'CAREGIVER',
+    color: CAREGIVER_STYLE.color,
+    lightColor: CAREGIVER_STYLE.lightColor,
+    avatar: CAREGIVER_STYLE.avatar
   };
 
   const handleLogout = async () => {
@@ -24,28 +25,20 @@ export default function Navbar({ activeMember, setActiveMember }) {
         </h1>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="user-selector">
-            <div 
-              className="avatar-badge" 
-              style={{ 
-                borderColor: currentMember.color,
-                backgroundColor: currentMember.lightColor 
-              }}
-            >
-              {currentMember.avatar}
-            </div>
-            <select 
-              value={activeMember} 
-              onChange={handleMemberChange} 
-              className="select-member"
-              style={{ borderLeft: `3px solid ${currentMember.color}` }}
-            >
-              {MEMBERS.map(member => (
-                <option key={member.name} value={member.name}>
-                  {member.name} {member.avatar}
-                </option>
-              ))}
-            </select>
+          <div 
+            className="user-selector" 
+            style={{ 
+              background: profile.lightColor || 'var(--bg-subtle)', 
+              padding: '6px 16px', 
+              borderRadius: '20px', 
+              border: `1px solid ${profile.color || 'var(--border-color)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>{profile.avatar}</span>
+            <span style={{ fontWeight: 'bold', color: profile.color || 'var(--text-primary)' }}>{profile.name}</span>
           </div>
           
           <button 
