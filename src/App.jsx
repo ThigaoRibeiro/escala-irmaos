@@ -12,7 +12,7 @@ import {
   getMedications,
   subscribeToRealtimeChanges
 } from './utils/db';
-import { CalendarDays, FileText, Users as UsersIcon } from 'lucide-react';
+import { CalendarDays, FileText, Settings } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('calendar'); // calendar, logs, config
@@ -315,8 +315,8 @@ export default function App() {
           className={`nav-item ${activeTab === 'config' ? 'nav-item-active' : ''}`}
           onClick={() => setActiveTab('config')}
         >
-          <UsersIcon />
-          <span>Cuidadoras</span>
+          <Settings />
+          <span>Configurações</span>
         </button>
       </nav>
     </div>
