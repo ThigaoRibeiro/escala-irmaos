@@ -27,6 +27,11 @@ const EMPTY_FORM = {
   bathPlace: '',
   skinCare: '',
   mood: '',
+  medManha1: false,
+  medManha2: false,
+  medApevitin: false,
+  medNoite1: false,
+  medNoite2: false,
   activityLegs: false,
   activitySun: false,
   activityTv: false,
@@ -40,7 +45,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
   const [period, setPeriod] = useState(currentPlantao.period);
   const [entryTime, setEntryTime] = useState(getPeriodTimes(currentPlantao.period).entry);
   const [exitTime, setExitTime] = useState(getPeriodTimes(currentPlantao.period).exit);
-  const [medsGiven, setMedsGiven] = useState(false);
   const [mealsOk, setMealsOk] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [copiedLogId, setCopiedLogId] = useState(null);
@@ -73,7 +77,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
 
   const resetForm = () => {
     setFormData(EMPTY_FORM);
-    setMedsGiven(false);
     setMealsOk(false);
     setShowAddForm(false);
   };
@@ -81,13 +84,13 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const author = responsibleName || 'Sem responsável';
+    const medsGiven = formData.medManha1 && formData.medManha2 && formData.medApevitin && formData.medNoite1 && formData.medNoite2;
     const dailyNotes = buildDailyNotes({
       responsibleName: author,
       date,
       period,
       entryTime,
       exitTime,
-      medsGiven,
       mealsOk,
       ...formData
     });
@@ -221,13 +224,34 @@ export default function DailyLogs({ shifts, logs, onSaveLog }) {
             </div>
           </div>
 
-          <SectionTitle label="Cuidados principais" />
-          <div className="checkbox-group" style={{ flexWrap: 'wrap' }}>
+          <SectionTitle label="Medicamentos 💊" />
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: '-4px 0 12px' }}>
+            Devem ser macerados com iogurte
+          </p>
+          <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px' }}>
             <label className="checkbox-label">
-              <input type="checkbox" checked={medsGiven} onChange={(e) => setMedsGiven(e.target.checked)} className="checkbox-input" />
-              <span>Medicações ministradas 💊</span>
+              <input type="checkbox" checked={formData.medManha1} onChange={(e) => updateField('medManha1', e.target.checked)} className="checkbox-input" />
+              <span>09:00 — Desventafaxina (1 comp)</span>
             </label>
+            <label className="checkbox-label">
+              <input type="checkbox" checked={formData.medManha2} onChange={(e) => updateField('medManha2', e.target.checked)} className="checkbox-input" />
+              <span>09:00 — Memantina (1 comp)</span>
+            </label>
+            <label className="checkbox-label">
+              <input type="checkbox" checked={formData.medApevitin} onChange={(e) => updateField('medApevitin', e.target.checked)} className="checkbox-input" />
+              <span>11:30 — Apevitin (1 copinho, antes do almoço)</span>
+            </label>
+            <label className="checkbox-label">
+              <input type="checkbox" checked={formData.medNoite1} onChange={(e) => updateField('medNoite1', e.target.checked)} className="checkbox-input" />
+              <span>21:00 — Donepezila (1 comp)</span>
+            </label>
+            <label className="checkbox-label">
+              <input type="checkbox" checked={formData.medNoite2} onChange={(e) => updateField('medNoite2', e.target.checked)} className="checkbox-input" />
+              <span>21:00 — Memantina (1 comp)</span>
+            </label>
+          </div>
 
+          <div className="checkbox-group" style={{ marginTop: '14px' }}>
             <label className="checkbox-label">
               <input type="checkbox" checked={mealsOk} onChange={(e) => setMealsOk(e.target.checked)} className="checkbox-input" />
               <span>Alimentação OK 🍽️</span>
@@ -421,7 +445,13 @@ function buildDailyNotes(data) {
   const lines = [
     `Responsável do plantão: ${data.responsibleName}`,
     `Horário: ${data.entryTime || '--:--'} às ${data.exitTime || '--:--'}`,
-    `Medicações: ${data.medsGiven ? 'ministradas' : 'pendentes / não ministradas'}`,
+    formatGroup('Medicamentos', [
+      `09:00 Desventafaxina: ${data.medManha1 ? '✓' : '✗ pendente'}`,
+      `09:00 Memantina: ${data.medManha2 ? '✓' : '✗ pendente'}`,
+      `11:30 Apevitin: ${data.medApevitin ? '✓' : '✗ pendente'}`,
+      `21:00 Donepezila: ${data.medNoite1 ? '✓' : '✗ pendente'}`,
+      `21:00 Memantina: ${data.medNoite2 ? '✓' : '✗ pendente'}`,
+    ]),
     `Alimentação geral: ${data.mealsOk ? 'OK' : 'atenção'}`,
     formatGroup('Sinais', [
       formatItem('Pressão arterial', data.pressure),
