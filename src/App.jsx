@@ -118,7 +118,7 @@ export default function App() {
 
   // Se for cuidadora, valida em tempo real se o cadastro dela ainda existe no banco
   useEffect(() => {
-    if (!session) return;
+    if (!session || isLoading || loadError) return;
 
     const currentEmail = session.user?.email?.toLowerCase();
     if (!currentEmail || USER_MAPPING[currentEmail]) return;
@@ -129,7 +129,7 @@ export default function App() {
         window.location.reload();
       });
     }
-  }, [caregivers, session]);
+  }, [caregivers, session, isLoading, loadError]);
 
   useEffect(() => {
     if (!session) return; // Only subscribe if authenticated
