@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 
 const EMPTY_FORM = {
-  eventType: 'Evolução geral',
   entryTime: getCurrentTimeValue(),
   pressure: '',
   temperature: '',
@@ -35,15 +34,6 @@ const EMPTY_FORM = {
   activityTv: false,
   notes: ''
 };
-
-const ENTRY_TYPES = [
-  'Evolução geral',
-  'Pressão arterial',
-  'Medicação',
-  'Alimentação',
-  'Sono',
-  'Intercorrência'
-];
 
 export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], currentUserName = '' }) {
   const currentPlantao = getCurrentPlantao();
@@ -139,7 +129,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       ...formData
     });
 
-    const medsGiven = formData.eventType === 'Medicação' || hasCheckedMedication;
+    const medsGiven = hasCheckedMedication;
     onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
     resetForm();
   };
@@ -258,20 +248,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
               />
             </div>
 
-            <div>
-              <label className="form-label">Tipo</label>
-              <select
-                value={formData.eventType}
-                onChange={(e) => updateField('eventType', e.target.value)}
-                className="form-control"
-              >
-                {ENTRY_TYPES.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
@@ -578,7 +554,6 @@ function buildEvolutionNotes(data) {
   ].filter(Boolean);
 
   const lines = [
-    `Tipo: ${data.eventType}`,
     `Horário do registro: ${data.entryTime}`,
     formatMedicationGroup(data.medications, data.checkedMeds),
     data.pressure ? `Pressão arterial: ${data.pressure}` : '',
