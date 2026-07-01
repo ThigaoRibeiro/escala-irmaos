@@ -16,7 +16,6 @@ const EMPTY_FORM = {
   entryTime: getCurrentTimeValue(),
   pressure: '',
   temperature: '',
-  glucose: '',
   alertSigns: '',
   sleepStatus: '',
   breakfast: '',
@@ -112,7 +111,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       !formData.notes.trim() &&
       !formData.pressure.trim() &&
       !formData.temperature.trim() &&
-      !formData.glucose.trim() &&
       !formData.alertSigns.trim() &&
       !formData.sleepStatus.trim() &&
       !formData.breakfast.trim() &&
@@ -316,7 +314,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
-            <TextInput label="Glicemia" value={formData.glucose} onChange={(value) => updateField('glucose', value)} placeholder="Opcional" />
             <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
             <TextInput label="Medicação / ação feita" value={formData.medicationNote} onChange={(value) => updateField('medicationNote', value)} placeholder="Ex: captopril 25mg" />
           </div>
@@ -589,7 +586,6 @@ function buildEvolutionNotes(data) {
     formatMedicationGroup(data.medications, data.checkedMeds),
     data.pressure ? `Pressão arterial: ${data.pressure}` : '',
     data.temperature ? `Temperatura: ${data.temperature}` : '',
-    data.glucose ? `Glicemia: ${data.glucose}` : '',
     data.alertSigns ? `Sinais de alerta: ${data.alertSigns}` : '',
     data.sleepStatus ? `Sono: ${data.sleepStatus}` : '',
     formatGroup('Alimentação', [
