@@ -33,7 +33,6 @@ const EMPTY_FORM = {
   activityLegs: false,
   activitySun: false,
   activityTv: false,
-  medicationNote: '',
   notes: ''
 };
 
@@ -125,7 +124,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       !formData.bathPlace.trim() &&
       !formData.skinCare.trim() &&
       !formData.mood.trim() &&
-      !formData.medicationNote.trim() &&
       !formData.activityLegs &&
       !formData.activitySun &&
       !formData.activityTv &&
@@ -141,7 +139,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       ...formData
     });
 
-    const medsGiven = formData.eventType === 'Medicação' || !!formData.medicationNote.trim() || hasCheckedMedication;
+    const medsGiven = formData.eventType === 'Medicação' || hasCheckedMedication;
     onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
     resetForm();
   };
@@ -315,7 +313,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
             <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
             <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
-            <TextInput label="Medicação / ação feita" value={formData.medicationNote} onChange={(value) => updateField('medicationNote', value)} placeholder="Ex: captopril 25mg" />
           </div>
 
           <SectionTitle label="Sono e alimentação" />
@@ -607,7 +604,6 @@ function buildEvolutionNotes(data) {
       formatItem('Humor', data.mood)
     ]),
     activities.length > 0 ? `Atividades: ${activities.join(' | ')}` : '',
-    data.medicationNote ? `Medicação / ação feita: ${data.medicationNote}` : '',
     data.notes ? `Evolução: ${data.notes}` : ''
   ].filter(Boolean);
 
