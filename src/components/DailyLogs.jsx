@@ -17,6 +17,23 @@ const EMPTY_FORM = {
   pressure: '',
   temperature: '',
   glucose: '',
+  alertSigns: '',
+  sleepStatus: '',
+  breakfast: '',
+  lunch: '',
+  snack: '',
+  dinner: '',
+  hydration: '',
+  urine: '',
+  stool: '',
+  diaperChanges: '',
+  bath: '',
+  bathPlace: '',
+  skinCare: '',
+  mood: '',
+  activityLegs: false,
+  activitySun: false,
+  activityTv: false,
   medicationNote: '',
   notes: ''
 };
@@ -91,7 +108,31 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
 
     const hasCheckedMedication = Object.values(checkedMeds).some(Boolean);
 
-    if (!formData.notes.trim() && !formData.pressure.trim() && !formData.temperature.trim() && !formData.glucose.trim() && !formData.medicationNote.trim() && !hasCheckedMedication) {
+    if (
+      !formData.notes.trim() &&
+      !formData.pressure.trim() &&
+      !formData.temperature.trim() &&
+      !formData.glucose.trim() &&
+      !formData.alertSigns.trim() &&
+      !formData.sleepStatus.trim() &&
+      !formData.breakfast.trim() &&
+      !formData.lunch.trim() &&
+      !formData.snack.trim() &&
+      !formData.dinner.trim() &&
+      !formData.hydration.trim() &&
+      !formData.urine.trim() &&
+      !formData.stool.trim() &&
+      !formData.diaperChanges.trim() &&
+      !formData.bath.trim() &&
+      !formData.bathPlace.trim() &&
+      !formData.skinCare.trim() &&
+      !formData.mood.trim() &&
+      !formData.medicationNote.trim() &&
+      !formData.activityLegs &&
+      !formData.activitySun &&
+      !formData.activityTv &&
+      !hasCheckedMedication
+    ) {
       window.alert('Adicione pelo menos uma observação, sinal vital ou medicação para registrar a evolução.');
       return;
     }
@@ -276,7 +317,93 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
             <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
             <TextInput label="Glicemia" value={formData.glucose} onChange={(value) => updateField('glucose', value)} placeholder="Opcional" />
+            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
             <TextInput label="Medicação / ação feita" value={formData.medicationNote} onChange={(value) => updateField('medicationNote', value)} placeholder="Ex: captopril 25mg" />
+          </div>
+
+          <SectionTitle label="Sono e alimentação" />
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <SelectInput
+              label="Sono"
+              value={formData.sleepStatus}
+              onChange={(value) => updateField('sleepStatus', value)}
+              options={['Dormiu bem', 'Acordou algumas vezes', 'Insônia', 'Sonolenta']}
+            />
+            <TextInput label="Café da manhã" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Almoço" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Lanche" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Jantar / ceia" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horário / aceitação" />
+          </div>
+
+          <SectionTitle label="Hidratação e fisiologia" />
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <TextInput label="Hidratação" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Água, suco, quantidade..." />
+            <SelectInput
+              label="Urina"
+              value={formData.urine}
+              onChange={(value) => updateField('urine', value)}
+              options={['Normal', 'Pouca', 'Escura / odor forte']}
+            />
+            <TextInput label="Fezes" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/não, aspecto" />
+            <TextInput label="Trocas de fralda" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horários" />
+          </div>
+
+          <SectionTitle label="Higiene e bem-estar" />
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <SelectInput
+              label="Banho"
+              value={formData.bath}
+              onChange={(value) => updateField('bath', value)}
+              options={['Sim', 'Não']}
+            />
+            <SelectInput
+              label="Local do banho"
+              value={formData.bathPlace}
+              onChange={(value) => updateField('bathPlace', value)}
+              options={['Leito', 'Chuveiro']}
+            />
+            <SelectInput
+              label="Pele / hidratação"
+              value={formData.skinCare}
+              onChange={(value) => updateField('skinCare', value)}
+              options={['Sim', 'Não']}
+            />
+            <SelectInput
+              label="Humor"
+              value={formData.mood}
+              onChange={(value) => updateField('mood', value)}
+              options={['Calma', 'Agitada', 'Alegre', 'Triste', 'Confusa']}
+            />
+          </div>
+
+          <div className="checkbox-group" style={{ flexWrap: 'wrap', marginBottom: '12px' }}>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.activityLegs}
+                onChange={(e) => updateField('activityLegs', e.target.checked)}
+                className="checkbox-input"
+              />
+              <span>Sentou / Andou</span>
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.activitySun}
+                onChange={(e) => updateField('activitySun', e.target.checked)}
+                className="checkbox-input"
+              />
+              <span>Tomou sol</span>
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={formData.activityTv}
+                onChange={(e) => updateField('activityTv', e.target.checked)}
+                className="checkbox-input"
+              />
+              <span>Assistiu TV</span>
+            </label>
           </div>
 
           <div className="form-group">
@@ -412,6 +539,22 @@ function TextInput({ label, value, onChange, placeholder }) {
   );
 }
 
+function SelectInput({ label, value, onChange, options }) {
+  return (
+    <div>
+      <label className="form-label">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="form-control">
+        <option value="">Selecionar</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function ReadOnlyField({ label, value }) {
   return (
     <div>
@@ -434,6 +577,12 @@ function ReadOnlyField({ label, value }) {
 }
 
 function buildEvolutionNotes(data) {
+  const activities = [
+    data.activityLegs ? 'Sentou / Andou' : '',
+    data.activitySun ? 'Tomou sol' : '',
+    data.activityTv ? 'Assistiu TV' : ''
+  ].filter(Boolean);
+
   const lines = [
     `Tipo: ${data.eventType}`,
     `Horário do registro: ${data.entryTime}`,
@@ -441,6 +590,27 @@ function buildEvolutionNotes(data) {
     data.pressure ? `Pressão arterial: ${data.pressure}` : '',
     data.temperature ? `Temperatura: ${data.temperature}` : '',
     data.glucose ? `Glicemia: ${data.glucose}` : '',
+    data.alertSigns ? `Sinais de alerta: ${data.alertSigns}` : '',
+    data.sleepStatus ? `Sono: ${data.sleepStatus}` : '',
+    formatGroup('Alimentação', [
+      formatItem('Café da manhã', data.breakfast),
+      formatItem('Almoço', data.lunch),
+      formatItem('Lanche', data.snack),
+      formatItem('Jantar / ceia', data.dinner)
+    ]),
+    formatGroup('Hidratação e fisiologia', [
+      formatItem('Hidratação', data.hydration),
+      formatItem('Urina', data.urine),
+      formatItem('Fezes', data.stool),
+      formatItem('Trocas de fralda', data.diaperChanges)
+    ]),
+    formatGroup('Higiene e bem-estar', [
+      formatItem('Banho', data.bath),
+      formatItem('Local do banho', data.bathPlace),
+      formatItem('Pele / hidratação', data.skinCare),
+      formatItem('Humor', data.mood)
+    ]),
+    activities.length > 0 ? `Atividades: ${activities.join(' | ')}` : '',
     data.medicationNote ? `Medicação / ação feita: ${data.medicationNote}` : '',
     data.notes ? `Evolução: ${data.notes}` : ''
   ].filter(Boolean);
@@ -454,6 +624,15 @@ function formatMedicationGroup(medications = [], checkedMeds = {}) {
     .map((med) => `${med.time} ${med.name} (${med.dose})`);
 
   return selected.length > 0 ? `Medicamentos administrados: ${selected.join(' | ')}` : '';
+}
+
+function formatGroup(title, items) {
+  const content = items.filter(Boolean);
+  return content.length > 0 ? `${title}: ${content.join(' | ')}` : '';
+}
+
+function formatItem(label, value) {
+  return value ? `${label}: ${value}` : '';
 }
 
 function buildGroupedLogs(logs) {
