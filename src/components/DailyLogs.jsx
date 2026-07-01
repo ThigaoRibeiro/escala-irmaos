@@ -43,6 +43,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [checkedMeds, setCheckedMeds] = useState({});
   const [copiedGroupKey, setCopiedGroupKey] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
@@ -91,8 +92,10 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     setShowAddForm(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSaving) return;
 
     const hasCheckedMedication = Object.values(checkedMeds).some(Boolean);
 
@@ -130,8 +133,19 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     });
 
     const medsGiven = hasCheckedMedication;
-    onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
-    resetForm();
+    setIsSaving(true);
+
+    try {
+      const saved = await onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
+      if (!saved) {
+        window.alert('Não foi possível salvar a evolução. Tente novamente.');
+        return;
+      }
+
+      resetForm();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getMemberAvatar = (name) => {
@@ -169,7 +183,11 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     text += `🩺 Em plantão: ${group.responsibleName}\n\n`;
 
     group.entries.forEach((entry) => {
-      text += `🕒 ${formatLogTime(entry)} - ${entry.author}: ${buildEntrySummary(entry)}\n`;
+      text += `🕒 ${formatLogTime(entry)} - ${entry.author}\n`;
+      getEntrySummaryItems(entry).forEach((item) => {
+        text += `• ${item}\n`;
+      });
+      text += '\n';
     });
 
     navigator.clipboard.writeText(text).then(() => {
@@ -207,6 +225,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
               type="button"
               className="btn btn-secondary btn-icon"
               onClick={resetForm}
+              disabled={isSaving}
               style={{ width: '28px', height: '28px' }}
             >
               <X size={16} />
@@ -388,10 +407,10 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-              Salvar evolução
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar evolução'}
             </button>
-            <button type="button" className="btn btn-secondary" onClick={resetForm}>
+            <button type="button" className="btn btn-secondary" onClick={resetForm} disabled={isSaving}>
               Cancelar
             </button>
           </div>
@@ -454,9 +473,13 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                      {buildEntrySummary(entry)}
-                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
+                      {getEntrySummaryItems(entry).map((item, index, items) => (
+                        <li key={`${entry.id}_${index}`} style={{ marginBottom: index === items.length - 1 ? 0 : '4px' }}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
                     </div>
@@ -582,7 +605,7 @@ function buildEvolutionNotes(data) {
     data.notes ? `Evolução: ${data.notes}` : ''
   ].filter(Boolean);
 
-  return lines.join('\n');
+  return lines.map((line) => `• ${line}`).join('\n');
 }
 
 function formatMedicationGroup(medications = [], checkedMeds = {}) {
@@ -636,20 +659,23 @@ function buildGroupedLogs(logs) {
   });
 }
 
-function buildEntrySummary(log) {
+function getEntrySummaryItems(log) {
   const lines = String(log.notes || '')
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => line.replace(/^(•|â€¢)\s*/, '').trim())
     .filter(Boolean)
-    .filter((line) => !line.startsWith('Horário do registro:'));
+    .filter((line) => !line.startsWith('Horário do registro:') && !line.startsWith('HorÃ¡rio do registro:'));
 
-  const normalized = lines.map((line) => {
-    if (line === 'Tipo: Evolução geral') return '';
+  return lines.map((line) => {
+    if (line === 'Tipo: Evolução geral' || line === 'Tipo: EvoluÃ§Ã£o geral') return '';
     if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
+    if (line.startsWith('EvoluÃ§Ã£o: ')) return line.replace('EvoluÃ§Ã£o: ', '');
     return line;
   }).filter(Boolean);
+}
 
-  return normalized.join(' • ');
+function buildEntrySummary(log) {
+  return getEntrySummaryItems(log).join(' • ');
 }
 
 function getCurrentPlantao() {

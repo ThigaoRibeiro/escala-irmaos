@@ -260,8 +260,10 @@ export default function App() {
     try {
       await saveDailyLog(date, period, author, caregiver, medsGiven, mealsOk, notes);
       setDbTrigger(prev => prev + 1);
+      return true;
     } catch (e) {
       console.error('Falha ao salvar diário de bordo:', e);
+      return false;
     }
   };
 
