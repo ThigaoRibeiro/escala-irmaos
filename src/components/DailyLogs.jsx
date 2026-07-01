@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MEMBERS } from '../utils/db';
 import {
   Plus,
@@ -37,7 +37,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
   const [period, setPeriod] = useState(currentPlantao.period);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [checkedMeds, setCheckedMeds] = useState({});
-  const [copiedLogId, setCopiedLogId] = useState(null);
+  const [copiedGroupKey, setCopiedGroupKey] = useState(null);
 
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
@@ -55,6 +55,8 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     }));
     setCheckedMeds({});
   }, [showAddForm]);
+
+  const groupedLogs = useMemo(() => buildGroupedLogs(logs), [logs]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({
@@ -95,9 +97,6 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     }
 
     const notes = buildEvolutionNotes({
-      authorName,
-      responsibleName,
-      period,
       medications,
       checkedMeds,
       ...formData
@@ -134,32 +133,23 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     });
   };
 
-  const shareLogToWhatsapp = (log) => {
-    const authorAvatar = getMemberAvatar(log.author);
-    const periodLabel = log.period === 'diurno' ? '☀️ Diurno' : '🌙 Noturno';
-    const timeLabel = formatLogTime(log);
+  const shareGroupToWhatsapp = (group) => {
+    const periodLabel = group.period === 'diurno' ? '☀️ Diurno' : '🌙 Noturno';
 
     let text = `📝 *EVOLUÇÃO DO DIÁRIO*\n`;
-    text += `📅 Data: ${formatLogDate(log.date)}\n`;
+    text += `📅 Data: ${formatLogDate(group.date)}\n`;
     text += `⏰ Turno: ${periodLabel}\n`;
-    text += `🕒 Registro: ${timeLabel}\n`;
-    text += `👤 Registrado por: ${log.author} ${authorAvatar}\n`;
-    if (log.caregiver) {
-      text += `🩺 Em plantão: ${log.caregiver}\n`;
-    }
-    text += `\n${log.notes}\n`;
+    text += `🩺 Em plantão: ${group.responsibleName}\n\n`;
+
+    group.entries.forEach((entry) => {
+      text += `🕒 ${formatLogTime(entry)} - ${entry.author}: ${buildEntrySummary(entry)}\n`;
+    });
 
     navigator.clipboard.writeText(text).then(() => {
-      setCopiedLogId(log.id);
-      setTimeout(() => setCopiedLogId(null), 3000);
+      setCopiedGroupKey(group.key);
+      setTimeout(() => setCopiedGroupKey(null), 3000);
     });
   };
-
-  const logsList = Object.values(logs).sort((a, b) => {
-    const dateA = new Date(a.created_at || `${a.date}T00:00:00`);
-    const dateB = new Date(b.created_at || `${b.date}T00:00:00`);
-    return dateB - dateA;
-  });
 
   return (
     <div className="animate-fade">
@@ -169,7 +159,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
           <span>Diário de Evolução</span>
         </h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
-          Cada registro entra com autor e horário. O histórico é cumulativo ao longo do dia e não pode ser removido.
+          Cada plantão reúne as evoluções em um único card. Dentro dele, as mensagens aparecem em ordem cronológica, da mais antiga para a mais recente.
         </p>
       </div>
 
@@ -313,76 +303,92 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
 
       <h3 className="card-title" style={{ marginBottom: '12px' }}>
         <ClipboardList size={20} />
-        <span>Histórico de evoluções</span>
+        <span>Histórico de plantões</span>
       </h3>
 
-      {logsList.length === 0 ? (
+      {groupedLogs.length === 0 ? (
         <div className="card empty-state">
           Nenhuma evolução registrada ainda.
         </div>
       ) : (
-        logsList.map((log) => {
-          const authorAvatar = getMemberAvatar(log.author);
-          const authorColor = getMemberColor(log.author);
-          const periodLabel = log.period === 'diurno' ? '☀️ Dia' : '🌙 Noite';
-
-          return (
-            <div
-              key={log.id}
-              className="log-item animate-fade"
-              style={{ borderLeftColor: authorColor }}
-            >
-              <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
-                <span className="log-author" style={{ color: authorColor }}>
-                  {authorAvatar} {log.author}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Calendar size={12} />
-                  {formatLogDate(log.date)} - {periodLabel}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock3 size={12} />
-                  {formatLogTime(log)}
-                </span>
-              </div>
-
-              {log.caregiver && (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  Em plantão: <strong style={{ color: 'var(--text-primary)' }}>{log.caregiver}</strong>
-                </div>
-              )}
-
-              <div className="log-checklists">
-                <span className={`log-badge ${log.meds_given ? 'log-badge-done' : 'log-badge-pending'}`}>
-                  {log.meds_given ? <Check size={12} /> : <Clock3 size={12} />}
-                  {log.meds_given ? 'Com medicação/ação registrada' : 'Evolução registrada'}
-                </span>
-              </div>
-
-              <div className="log-text">{log.notes}</div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => shareLogToWhatsapp(log)}
-                  style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', gap: '6px', alignItems: 'center' }}
-                >
-                  {copiedLogId === log.id ? (
-                    <>
-                      <Check size={14} style={{ color: 'var(--color-success)' }} />
-                      <span style={{ color: 'var(--color-success)' }}>Copiado!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 size={14} />
-                      <span>Copiar p/ WhatsApp</span>
-                    </>
-                  )}
-                </button>
-              </div>
+        groupedLogs.map((group) => (
+          <div
+            key={group.key}
+            className="log-item animate-fade"
+            style={{ borderLeftColor: getMemberColor(group.responsibleName) }}
+          >
+            <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
+              <span className="log-author" style={{ color: getMemberColor(group.responsibleName) }}>
+                {getMemberAvatar(group.responsibleName)} {group.responsibleName}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Calendar size={12} />
+                {formatLogDate(group.date)} - {group.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
+              </span>
             </div>
-          );
-        })
+
+            <div style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
+              Em plantão: <strong>{group.responsibleName}</strong>
+            </div>
+
+            <div className="log-checklists">
+              <span className={`log-badge ${group.entries.some((entry) => entry.meds_given) ? 'log-badge-done' : 'log-badge-pending'}`}>
+                {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
+                {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+              {group.entries.map((entry) => (
+                <div
+                  key={entry.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '72px 1fr',
+                    gap: '10px',
+                    alignItems: 'start',
+                    backgroundColor: 'var(--bg-subtle)',
+                    borderRadius: '8px',
+                    padding: '10px'
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
+                    {formatLogTime(entry)}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                      {buildEntrySummary(entry)}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => shareGroupToWhatsapp(group)}
+                style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', gap: '6px', alignItems: 'center' }}
+              >
+                {copiedGroupKey === group.key ? (
+                  <>
+                    <Check size={14} style={{ color: 'var(--color-success)' }} />
+                    <span style={{ color: 'var(--color-success)' }}>Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={14} />
+                    <span>Copiar p/ WhatsApp</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ))
       )}
     </div>
   );
@@ -448,6 +454,56 @@ function formatMedicationGroup(medications = [], checkedMeds = {}) {
     .map((med) => `${med.time} ${med.name} (${med.dose})`);
 
   return selected.length > 0 ? `Medicamentos administrados: ${selected.join(' | ')}` : '';
+}
+
+function buildGroupedLogs(logs) {
+  const sortedEntries = Object.values(logs).sort((a, b) => {
+    const dateA = new Date(a.created_at || `${a.date}T00:00:00`);
+    const dateB = new Date(b.created_at || `${b.date}T00:00:00`);
+    return dateA - dateB;
+  });
+
+  const grouped = sortedEntries.reduce((acc, entry) => {
+    const responsibleName = entry.caregiver || entry.author || 'Sem responsável';
+    const key = `${entry.date}_${entry.period}_${responsibleName}`;
+
+    if (!acc[key]) {
+      acc[key] = {
+        key,
+        date: entry.date,
+        period: entry.period,
+        responsibleName,
+        entries: []
+      };
+    }
+
+    acc[key].entries.push(entry);
+    return acc;
+  }, {});
+
+  return Object.values(grouped).sort((a, b) => {
+    const lastEntryA = a.entries[a.entries.length - 1];
+    const lastEntryB = b.entries[b.entries.length - 1];
+    const dateA = new Date(lastEntryA.created_at || `${lastEntryA.date}T00:00:00`);
+    const dateB = new Date(lastEntryB.created_at || `${lastEntryB.date}T00:00:00`);
+    return dateB - dateA;
+  });
+}
+
+function buildEntrySummary(log) {
+  const lines = String(log.notes || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith('Horário do registro:'));
+
+  const normalized = lines.map((line) => {
+    if (line === 'Tipo: Evolução geral') return '';
+    if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
+    return line;
+  }).filter(Boolean);
+
+  return normalized.join(' • ');
 }
 
 function getCurrentPlantao() {
