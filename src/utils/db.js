@@ -9,6 +9,11 @@ export const USER_MAPPING = {
   'haniellessa@hotmail.com': { role: 'ADMIN', name: 'Haniel', avatar: '❤️‍🩹 👨', color: '#c2410c', lightColor: '#ffedd5' },
 };
 
+export const FAMILY_ACCOUNTS = Object.entries(USER_MAPPING).map(([email, profile]) => ({
+  email,
+  ...profile
+}));
+
 // Lista pré-cadastrada de membros da família (com avatares por gênero)
 // SUPERADMIN (Thiago) não entra nesta lista para não aparecer na escala.
 export const MEMBERS = [
@@ -589,6 +594,32 @@ export async function resetCaregiverPassword(id, newPassword) {
 }
 
 // --- OPERAÇÕES DE MEDICAMENTOS ---
+
+export async function resetFamilyPassword(email, newPassword) {
+  const client = getSupabaseClient();
+  if (client) {
+    await callCaregiverAdminFunction('upsert_family_password', {
+      email: normalizeEmail(email),
+      newPassword: newPassword.trim()
+    });
+    return true;
+  }
+
+  return true;
+}
+
+export async function resetAllFamilyPasswords(newPassword, emails = []) {
+  const client = getSupabaseClient();
+  if (client) {
+    await callCaregiverAdminFunction('reset_all_family_passwords', {
+      newPassword: newPassword.trim(),
+      emails: emails.map((email) => normalizeEmail(email)).filter(Boolean)
+    });
+    return true;
+  }
+
+  return true;
+}
 
 export async function getMedications() {
   const client = getSupabaseClient();

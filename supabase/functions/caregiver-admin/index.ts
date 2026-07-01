@@ -18,6 +18,8 @@ const defaultAdminEmails = [
   'haniellessa@hotmail.com'
 ]
 
+const defaultFamilyEmails = [...defaultAdminEmails]
+
 function jsonResponse(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status,
@@ -47,6 +49,15 @@ function getAllowedAdminEmails() {
   return new Set(fromEnv.length > 0 ? fromEnv : defaultAdminEmails)
 }
 
+function getAllowedFamilyEmails() {
+  const fromEnv = (Deno.env.get('FAMILY_EMAILS') ?? '')
+    .split(',')
+    .map((value) => normalizeEmail(value))
+    .filter(Boolean)
+
+  return new Set(fromEnv.length > 0 ? fromEnv : defaultFamilyEmails)
+}
+
 const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -54,13 +65,91 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   }
 })
 
+async function findAuthUserByEmail(email: string) {
+  const targetEmail = normalizeEmail(email)
+  let page = 1
+  const perPage = 200
+
+  while (true) {
+    const { data, error } = await adminClient.auth.admin.listUsers({
+      page,
+      perPage
+    })
+
+    if (error) {
+      throw error
+    }
+
+    const users = data?.users ?? []
+    const foundUser = users.find((user) => normalizeEmail(user.email) === targetEmail)
+    if (foundUser) {
+      return foundUser
+    }
+
+    if (users.length < perPage) {
+      return null
+    }
+
+    page += 1
+  }
+}
+
+async function upsertFamilyPassword(email: string, password: string) {
+  const normalizedEmail = normalizeEmail(email)
+
+  if (!normalizedEmail || !getAllowedFamilyEmails().has(normalizedEmail)) {
+    throw new Error('Este e-mail não está liberado como irmão administrador.')
+  }
+
+  if (password.length < 6) {
+    throw new Error('A senha deve ter pelo menos 6 caracteres.')
+  }
+
+  const existingUser = await findAuthUserByEmail(normalizedEmail)
+  if (existingUser) {
+    const { error: updatePasswordError } = await adminClient.auth.admin.updateUserById(
+      existingUser.id,
+      { password }
+    )
+
+    if (updatePasswordError) {
+      throw updatePasswordError
+    }
+
+    return {
+      email: normalizedEmail,
+      userId: existingUser.id,
+      action: 'updated'
+    }
+  }
+
+  const { data: createdUserData, error: createUserError } = await adminClient.auth.admin.createUser({
+    email: normalizedEmail,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      role: 'ADMIN'
+    }
+  })
+
+  if (createUserError || !createdUserData.user) {
+    throw createUserError ?? new Error('Não foi possível criar o usuário da família.')
+  }
+
+  return {
+    email: normalizedEmail,
+    userId: createdUserData.user.id,
+    action: 'created'
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return jsonResponse(500, { error: 'SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY nÃ£o configurados.' })
+    return jsonResponse(500, { error: 'SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configurados.' })
   }
 
   try {
@@ -68,17 +157,17 @@ Deno.serve(async (req) => {
     const token = authHeader.replace(/^Bearer\s+/i, '').trim()
 
     if (!token) {
-      return jsonResponse(401, { error: 'Token de autenticaÃ§Ã£o ausente.' })
+      return jsonResponse(401, { error: 'Token de autenticação ausente.' })
     }
 
     const { data: authData, error: authError } = await adminClient.auth.getUser(token)
     if (authError || !authData.user) {
-      return jsonResponse(401, { error: 'UsuÃ¡rio nÃ£o autenticado.' })
+      return jsonResponse(401, { error: 'Usuário não autenticado.' })
     }
 
     const callerEmail = normalizeEmail(authData.user.email)
     if (!getAllowedAdminEmails().has(callerEmail)) {
-      return jsonResponse(403, { error: 'Somente administradores podem gerenciar cuidadoras.' })
+      return jsonResponse(403, { error: 'Somente administradores podem gerenciar acessos.' })
     }
 
     const body = await req.json()
@@ -94,7 +183,7 @@ Deno.serve(async (req) => {
       }
 
       if (!email || !email.endsWith('@lessacare.com')) {
-        return jsonResponse(400, { error: 'O login da cuidadora deve usar o padrÃ£o @lessacare.com.' })
+        return jsonResponse(400, { error: 'O login da cuidadora deve usar o padrão @lessacare.com.' })
       }
 
       if (initialPassword.length < 6) {
@@ -112,7 +201,7 @@ Deno.serve(async (req) => {
       }
 
       if (existingCaregiver) {
-        return jsonResponse(409, { error: 'JÃ¡ existe uma cuidadora cadastrada com esse login.' })
+        return jsonResponse(409, { error: 'Já existe uma cuidadora cadastrada com esse login.' })
       }
 
       const { data: createdUserData, error: createUserError } = await adminClient.auth.admin.createUser({
@@ -126,7 +215,7 @@ Deno.serve(async (req) => {
       })
 
       if (createUserError || !createdUserData.user) {
-        return jsonResponse(400, { error: createUserError?.message || 'NÃ£o foi possÃ­vel criar o usuÃ¡rio da cuidadora.' })
+        return jsonResponse(400, { error: createUserError?.message || 'Não foi possível criar o usuário da cuidadora.' })
       }
 
       const { data: insertedCaregiver, error: insertCaregiverError } = await adminClient
@@ -142,7 +231,7 @@ Deno.serve(async (req) => {
 
       if (insertCaregiverError || !insertedCaregiver) {
         await adminClient.auth.admin.deleteUser(createdUserData.user.id)
-        return jsonResponse(500, { error: insertCaregiverError?.message || 'NÃ£o foi possÃ­vel salvar a cuidadora.' })
+        return jsonResponse(500, { error: insertCaregiverError?.message || 'Não foi possível salvar a cuidadora.' })
       }
 
       return jsonResponse(200, { caregiver: insertedCaregiver })
@@ -165,7 +254,7 @@ Deno.serve(async (req) => {
       }
 
       if (!caregiver) {
-        return jsonResponse(404, { error: 'Cuidadora nÃ£o encontrada.' })
+        return jsonResponse(404, { error: 'Cuidadora não encontrada.' })
       }
 
       const today = new Date().toISOString().slice(0, 10)
@@ -239,10 +328,50 @@ Deno.serve(async (req) => {
       return jsonResponse(200, { success: true, caregiverId })
     }
 
-    return jsonResponse(400, { error: 'AÃ§Ã£o administrativa invÃ¡lida.' })
+    if (action === 'upsert_family_password') {
+      const email = normalizeEmail(body?.email)
+      const newPassword = String(body?.newPassword ?? '').trim()
+
+      if (!email) {
+        return jsonResponse(400, { error: 'Informe o e-mail do irmão.' })
+      }
+
+      if (newPassword.length < 6) {
+        return jsonResponse(400, { error: 'A nova senha deve ter pelo menos 6 caracteres.' })
+      }
+
+      const result = await upsertFamilyPassword(email, newPassword)
+      return jsonResponse(200, { success: true, result })
+    }
+
+    if (action === 'reset_all_family_passwords') {
+      const newPassword = String(body?.newPassword ?? '').trim()
+      const requestedEmails = Array.isArray(body?.emails)
+        ? body.emails.map((value: unknown) => normalizeEmail(value)).filter(Boolean)
+        : []
+
+      if (newPassword.length < 6) {
+        return jsonResponse(400, { error: 'A nova senha deve ter pelo menos 6 caracteres.' })
+      }
+
+      const allowedFamilyEmails = getAllowedFamilyEmails()
+      const targetEmails = requestedEmails.length > 0
+        ? requestedEmails.filter((email) => allowedFamilyEmails.has(email))
+        : Array.from(allowedFamilyEmails)
+
+      const results = []
+      for (const email of targetEmails) {
+        const result = await upsertFamilyPassword(email, newPassword)
+        results.push(result)
+      }
+
+      return jsonResponse(200, { success: true, results })
+    }
+
+    return jsonResponse(400, { error: 'Ação administrativa inválida.' })
   } catch (error) {
     return jsonResponse(500, {
-      error: error instanceof Error ? error.message : 'Erro inesperado na funÃ§Ã£o administrativa.'
+      error: error instanceof Error ? error.message : 'Erro inesperado na função administrativa.'
     })
   }
 })

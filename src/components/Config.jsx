@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   CAREGIVER_STYLE,
+  FAMILY_ACCOUNTS,
   getCaregivers,
   addCaregiver,
   deleteCaregiver,
   resetCaregiverPassword,
+  resetFamilyPassword,
+  resetAllFamilyPasswords,
   getMedications,
   addMedication,
   deleteMedication
@@ -25,6 +28,9 @@ export default function Config({ onConfigChanged }) {
   const [caregiverSuccess, setCaregiverSuccess] = useState('');
   const [caregiverError, setCaregiverError] = useState('');
   const [caregiverTrigger, setCaregiverTrigger] = useState(0);
+  const [familySuccess, setFamilySuccess] = useState('');
+  const [familyError, setFamilyError] = useState('');
+  const [isFamilyLoading, setIsFamilyLoading] = useState(false);
 
   const [medications, setMedications] = useState([]);
   const [medTime, setMedTime] = useState('');
@@ -117,6 +123,52 @@ export default function Config({ onConfigChanged }) {
       console.error('Erro ao remover cuidadora:', e);
       setCaregiverSuccess('');
       setCaregiverError(e.message || 'Não foi possível remover a cuidadora.');
+    }
+  };
+
+  const handleResetFamilyPassword = async (account) => {
+    const newPassword = window.prompt(`Digite a nova senha temporária para ${account.name}:`, 'lessa123');
+    if (newPassword === null) return;
+
+    const trimmedPassword = newPassword.trim();
+    if (trimmedPassword.length < 6) {
+      setFamilySuccess('');
+      setFamilyError('A senha dos irmãos deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    try {
+      setIsFamilyLoading(true);
+      setFamilyError('');
+      await resetFamilyPassword(account.email, trimmedPassword);
+      setFamilySuccess(`Senha definida para ${account.name}. Login: ${account.email} | Senha temporária: ${trimmedPassword}`);
+    } catch (e) {
+      console.error('Erro ao redefinir senha do irmão:', e);
+      setFamilySuccess('');
+      setFamilyError(e.message || 'Não foi possível redefinir a senha do irmão.');
+    } finally {
+      setIsFamilyLoading(false);
+    }
+  };
+
+  const handleResetAllFamilyPasswords = async () => {
+    const defaultPassword = 'lessa123';
+    const confirmed = window.confirm(
+      `Isso vai definir a senha temporária "${defaultPassword}" para todos os irmãos liberados no app. Deseja continuar?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsFamilyLoading(true);
+      setFamilyError('');
+      await resetAllFamilyPasswords(defaultPassword, FAMILY_ACCOUNTS.map((account) => account.email));
+      setFamilySuccess(`Todos os irmãos foram preparados com a senha temporária ${defaultPassword}. Oriente cada um a trocar a senha após o primeiro login.`);
+    } catch (e) {
+      console.error('Erro ao redefinir senha dos irmãos:', e);
+      setFamilySuccess('');
+      setFamilyError(e.message || 'Não foi possível preparar os acessos dos irmãos.');
+    } finally {
+      setIsFamilyLoading(false);
     }
   };
 
@@ -241,6 +293,81 @@ export default function Config({ onConfigChanged }) {
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="card-title">
+          <Users size={20} />
+          <span>Irmãos</span>
+        </h3>
+
+        {familyError && (
+          <div className="info-banner" style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)', backgroundColor: '#fef2f2', marginBottom: '16px' }}>
+            {familyError}
+          </div>
+        )}
+
+        {familySuccess && (
+          <div className="info-banner" style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)', marginBottom: '16px' }}>
+            {familySuccess}
+          </div>
+        )}
+
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+          Os irmãos entram com o e-mail real deles. Você pode preparar todos com a senha temporária <strong style={{ color: 'var(--text-primary)' }}>lessa123</strong> e depois cada um troca a própria senha dentro do app.
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleResetAllFamilyPasswords}
+            disabled={isFamilyLoading}
+          >
+            <KeyRound size={18} />
+            <span>{isFamilyLoading ? 'Preparando...' : 'Definir lessa123 para todos'}</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {FAMILY_ACCOUNTS.map((account) => (
+            <div
+              key={account.email}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 14px',
+                backgroundColor: 'var(--bg-subtle)',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                <span style={{ fontSize: '1.1rem' }}>{account.avatar}</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span>{account.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Login: <strong style={{ color: 'var(--text-primary)' }}>{account.email}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleResetFamilyPassword(account)}
+                className="btn btn-outline"
+                style={{ padding: '8px 10px', borderColor: 'var(--border-color)' }}
+                disabled={isFamilyLoading}
+                title="Redefinir senha do irmão"
+              >
+                <KeyRound size={16} />
+                <span>Redefinir senha</span>
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
