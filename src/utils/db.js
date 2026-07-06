@@ -518,7 +518,7 @@ function getLocalLogReceiptsMap() {
   try {
     return JSON.parse(local);
   } catch (error) {
-    console.error('Erro ao ler visualizacoes locais do diario:', error);
+    console.error('Erro ao ler visualizações locais do diário:', error);
     return {};
   }
 }
