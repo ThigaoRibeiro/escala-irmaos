@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 
 const REACTION_OPTIONS = [
-  { emoji: '❤️', label: 'Carinho' },
-  { emoji: '👍', label: 'Ciente' },
-  { emoji: '🙏', label: 'Orando' },
-  { emoji: '✅', label: 'Tudo certo' },
-  { emoji: '⚠️', label: 'Atencao' }
+  { emoji: '\u2764\uFE0F', label: 'Carinho' },
+  { emoji: '\uD83D\uDC4D', label: 'Ciente' },
+  { emoji: '\uD83D\uDE4F', label: 'Orando' },
+  { emoji: '\u2705', label: 'Tudo certo' },
+  { emoji: '\u26A0\uFE0F', label: 'Atenção' }
 ];
 
 const EMPTY_FORM = {
@@ -68,7 +68,7 @@ export default function DailyLogs({
 
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
-  const authorName = currentUserName || responsibleName || 'Sem identificacao';
+  const authorName = currentUserName || responsibleName || 'Sem identificação';
 
   useEffect(() => {
     if (!showAddForm) return;
@@ -174,7 +174,7 @@ export default function DailyLogs({
       !formData.activityTv &&
       !hasCheckedMedication
     ) {
-      window.alert('Adicione pelo menos uma observacao, sinal vital ou medicacao para registrar a evolucao.');
+      window.alert('Adicione pelo menos uma observação, sinal vital ou medicação para registrar a evolução.');
       return;
     }
 
@@ -190,7 +190,7 @@ export default function DailyLogs({
     try {
       const saved = await onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
       if (!saved) {
-        window.alert('Nao foi possivel salvar a evolucao. Tente novamente.');
+        window.alert('Não foi possível salvar a evolução. Tente novamente.');
         return;
       }
 
@@ -208,14 +208,14 @@ export default function DailyLogs({
       setReactionPickerEntryId(null);
       setExpandedEntryId(entryId);
     } catch (error) {
-      console.error('Falha ao salvar reacao:', error);
-      window.alert('Nao foi possivel salvar a reacao agora. Tente novamente.');
+      console.error('Falha ao salvar reação:', error);
+      window.alert('Não foi possível salvar a reação agora. Tente novamente.');
     }
   };
 
   const getMemberAvatar = (name) => {
     const member = MEMBERS.find((memberItem) => memberItem.name === name);
-    return member ? member.avatar : '👤';
+    return member ? member.avatar : '\uD83D\uDC64';
   };
 
   const getMemberColor = (name) => {
@@ -243,10 +243,10 @@ export default function DailyLogs({
   const shareGroupToWhatsapp = (group) => {
     const periodLabel = group.period === 'diurno' ? 'Dia' : 'Noite';
 
-    let text = `*EVOLUCAO DO DIARIO*\n`;
+    let text = `*EVOLUÇÃO DO DIÁRIO*\n`;
     text += `Data: ${formatLogDate(group.date)}\n`;
     text += `Turno: ${periodLabel}\n`;
-    text += `Em plantao: ${group.responsibleName}\n\n`;
+    text += `Em plantão: ${group.responsibleName}\n\n`;
 
     group.entries.forEach((entry) => {
       text += `${formatLogTime(entry)} - ${entry.author}\n`;
@@ -256,7 +256,7 @@ export default function DailyLogs({
 
       const entryReceipts = receiptsByLog[entry.id] || [];
       if (entryReceipts.length > 0) {
-        text += 'Visualizacoes:\n';
+        text += 'Visualizações:\n';
         entryReceipts.forEach((receipt) => {
           const reactionSuffix = receipt.reaction ? ` | ${receipt.reaction}` : '';
           text += `- ${receipt.viewer_name} | ${formatReceiptTime(receipt.viewed_at)}${reactionSuffix}\n`;
@@ -277,10 +277,10 @@ export default function DailyLogs({
       <div className="card" style={{ marginBottom: '16px' }}>
         <h3 className="card-title">
           <Activity size={20} />
-          <span>Diario de Evolucao</span>
+          <span>Diário de Evolução</span>
         </h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
-          Cada plantao reune as evolucoes em um unico card. Dentro dele, as mensagens aparecem em ordem cronologica, da mais antiga para a mais recente.
+          Cada plantão reúne as evoluções em um único card. Dentro dele, as mensagens aparecem em ordem cronológica, da mais antiga para a mais recente.
         </p>
       </div>
 
@@ -291,12 +291,12 @@ export default function DailyLogs({
           style={{ width: '100%', marginBottom: '20px', justifyContent: 'center' }}
         >
           <Plus size={20} />
-          <span>Adicionar evolucao</span>
+          <span>Adicionar evolução</span>
         </button>
       ) : (
         <form onSubmit={handleSubmit} className="card animate-scale" style={{ border: '2px solid var(--primary)', marginBottom: '20px' }}>
           <h3 className="card-title" style={{ color: 'var(--primary)', justifyContent: 'space-between' }}>
-            <span>Nova evolucao</span>
+            <span>Nova evolução</span>
             <button
               type="button"
               className="btn btn-secondary btn-icon"
@@ -346,13 +346,13 @@ export default function DailyLogs({
 
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
             <ReadOnlyField label="Registrado por" value={authorName} />
-            <ReadOnlyField label="Responsavel no plantao" value={responsibleName || 'Sem responsavel escalado'} />
+            <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
           </div>
 
           <SectionTitle label="Medicamentos" />
           {medications.length === 0 ? (
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '12px' }}>
-              Nenhum medicamento cadastrado. Adicione na aba Configuracoes.
+              Nenhum medicamento cadastrado. Adicione na aba Configurações.
             </p>
           ) : (
             <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
@@ -378,38 +378,38 @@ export default function DailyLogs({
             </div>
           )}
 
-          <SectionTitle label="Sinais e medicacoes" />
+          <SectionTitle label="Sinais e medicações" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Pressao arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
+            <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
-            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolencia..." />
+            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
           </div>
 
-          <SectionTitle label="Sono e alimentacao" />
+          <SectionTitle label="Sono e alimentação" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <SelectInput
               label="Sono"
               value={formData.sleepStatus}
               onChange={(value) => updateField('sleepStatus', value)}
-              options={['Dormiu bem', 'Acordou algumas vezes', 'Insonia', 'Sonolenta']}
+              options={['Dormiu bem', 'Acordou algumas vezes', 'Insônia', 'Sonolenta']}
             />
-            <TextInput label="Cafe da manha" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horario / aceitacao" />
-            <TextInput label="Almoco" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horario / aceitacao" />
-            <TextInput label="Lanche" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horario / aceitacao" />
-            <TextInput label="Jantar / ceia" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horario / aceitacao" />
+            <TextInput label="Café da manhã" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Almoço" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Lanche" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Jantar / ceia" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horário / aceitação" />
           </div>
 
-          <SectionTitle label="Hidratacao e fisiologia" />
+          <SectionTitle label="Hidratação e fisiologia" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Hidratacao" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Agua, suco, quantidade..." />
+            <TextInput label="Hidratação" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Água, suco, quantidade..." />
             <SelectInput
               label="Urina"
               value={formData.urine}
               onChange={(value) => updateField('urine', value)}
               options={['Normal', 'Pouca', 'Escura / odor forte']}
             />
-            <TextInput label="Fezes" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/nao, aspecto" />
-            <TextInput label="Trocas de fralda" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horarios" />
+            <TextInput label="Fezes" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/não, aspecto" />
+            <TextInput label="Trocas de fralda" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horários" />
           </div>
 
           <SectionTitle label="Higiene e bem-estar" />
@@ -418,7 +418,7 @@ export default function DailyLogs({
               label="Banho"
               value={formData.bath}
               onChange={(value) => updateField('bath', value)}
-              options={['Sim', 'Nao']}
+              options={['Sim', 'Não']}
             />
             <SelectInput
               label="Local do banho"
@@ -427,10 +427,10 @@ export default function DailyLogs({
               options={['Leito', 'Chuveiro']}
             />
             <SelectInput
-              label="Pele / hidratacao"
+              label="Pele / hidratação"
               value={formData.skinCare}
               onChange={(value) => updateField('skinCare', value)}
-              options={['Sim', 'Nao']}
+              options={['Sim', 'Não']}
             />
             <SelectInput
               label="Humor"
@@ -471,19 +471,19 @@ export default function DailyLogs({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Evolucao / observacao</label>
+            <label className="form-label">Evolução / observação</label>
             <textarea
               value={formData.notes}
               onChange={(e) => updateField('notes', e.target.value)}
               className="form-control"
               rows={5}
-              placeholder="Descreva o que aconteceu. Ex: pressao subiu para 15x10 as 14:20, repouso orientado, nova afericao as 14:50..."
+              placeholder="Descreva o que aconteceu. Ex: pressão subiu para 15x10 às 14:20, repouso orientado, nova aferição às 14:50..."
             />
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar evolucao'}
+              {isSaving ? 'Salvando...' : 'Salvar evolução'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={resetForm} disabled={isSaving}>
               Cancelar
@@ -494,12 +494,12 @@ export default function DailyLogs({
 
       <h3 className="card-title" style={{ marginBottom: '12px' }}>
         <ClipboardList size={20} />
-        <span>Historico de plantoes</span>
+        <span>Histórico de plantões</span>
       </h3>
 
       {groupedLogs.length === 0 ? (
         <div className="card empty-state">
-          Nenhuma evolucao registrada ainda.
+          Nenhuma evolução registrada ainda.
         </div>
       ) : (
         groupedLogs.map((group) => (
@@ -519,13 +519,13 @@ export default function DailyLogs({
             </div>
 
             <div style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
-              Em plantao: <strong>{group.responsibleName}</strong>
+              Em plantão: <strong>{group.responsibleName}</strong>
             </div>
 
             <div className="log-checklists">
               <span className={`log-badge ${group.entries.some((entry) => entry.meds_given) ? 'log-badge-done' : 'log-badge-pending'}`}>
                 {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
-                {group.entries.length} {group.entries.length === 1 ? 'evolucao registrada' : 'evolucoes registradas'}
+                {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
               </span>
             </div>
 
@@ -617,7 +617,7 @@ export default function DailyLogs({
                               borderColor: 'rgba(244, 114, 182, 0.28)'
                             }}
                           >
-                            {viewerReceipt?.reaction ? `Sua reacao: ${viewerReceipt.reaction}` : 'Adicionar reacao'}
+                            {viewerReceipt?.reaction ? `Sua reação: ${viewerReceipt.reaction}` : 'Adicionar reação'}
                           </button>
                         )}
                       </div>
@@ -669,12 +669,12 @@ export default function DailyLogs({
                           }}
                         >
                           <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            Ultimas visualizacoes
+                            Últimas visualizações
                           </div>
 
                           {entryReceipts.length === 0 ? (
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                              Ninguem visualizou ainda.
+                              Ninguém visualizou ainda.
                             </div>
                           ) : (
                             entryReceipts.map((receipt) => (
@@ -797,20 +797,20 @@ function buildEvolutionNotes(data) {
   ].filter(Boolean);
 
   const lines = [
-    `Horario do registro: ${data.entryTime}`,
+    `Horário do registro: ${data.entryTime}`,
     formatMedicationGroup(data.medications, data.checkedMeds),
-    data.pressure ? `Pressao arterial: ${data.pressure}` : '',
+    data.pressure ? `Pressão arterial: ${data.pressure}` : '',
     data.temperature ? `Temperatura: ${data.temperature}` : '',
     data.alertSigns ? `Sinais de alerta: ${data.alertSigns}` : '',
     data.sleepStatus ? `Sono: ${data.sleepStatus}` : '',
-    formatGroup('Alimentacao', [
-      formatItem('Cafe da manha', data.breakfast),
-      formatItem('Almoco', data.lunch),
+    formatGroup('Alimentação', [
+      formatItem('Café da manhã', data.breakfast),
+      formatItem('Almoço', data.lunch),
       formatItem('Lanche', data.snack),
       formatItem('Jantar / ceia', data.dinner)
     ]),
-    formatGroup('Hidratacao e fisiologia', [
-      formatItem('Hidratacao', data.hydration),
+    formatGroup('Hidratação e fisiologia', [
+      formatItem('Hidratação', data.hydration),
       formatItem('Urina', data.urine),
       formatItem('Fezes', data.stool),
       formatItem('Trocas de fralda', data.diaperChanges)
@@ -818,11 +818,11 @@ function buildEvolutionNotes(data) {
     formatGroup('Higiene e bem-estar', [
       formatItem('Banho', data.bath),
       formatItem('Local do banho', data.bathPlace),
-      formatItem('Pele / hidratacao', data.skinCare),
+      formatItem('Pele / hidratação', data.skinCare),
       formatItem('Humor', data.mood)
     ]),
     activities.length > 0 ? `Atividades: ${activities.join(' | ')}` : '',
-    data.notes ? `Evolucao: ${data.notes}` : ''
+    data.notes ? `Evolução: ${data.notes}` : ''
   ].filter(Boolean);
 
   return lines.map((line) => `- ${line}`).join('\n');
@@ -853,7 +853,7 @@ function buildGroupedLogs(logs) {
   });
 
   const grouped = sortedEntries.reduce((acc, entry) => {
-    const responsibleName = entry.caregiver || entry.author || 'Sem responsavel';
+    const responsibleName = entry.caregiver || entry.author || 'Sem responsável';
     const key = `${entry.date}_${entry.period}_${responsibleName}`;
 
     if (!acc[key]) {
@@ -882,20 +882,30 @@ function buildGroupedLogs(logs) {
 function getEntrySummaryItems(log) {
   const lines = String(log.notes || '')
     .split('\n')
-    .map((line) => line.replace(/^(-|•|â€¢|Ã¢â‚¬Â¢)\s*/, '').trim())
+    .map((line) => line.replace(/^(-|•|â€¢|Ã¢â‚¬Â¢|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s*/, '').trim())
     .filter(Boolean)
     .filter((line) => (
-      !line.startsWith('Horario do registro:') &&
       !line.startsWith('Horário do registro:') &&
-      !line.startsWith('HorÃ¡rio do registro:')
+      !line.startsWith('Horario do registro:') &&
+      !line.startsWith('HorÃ¡rio do registro:') &&
+      !line.startsWith('HorÃƒÂ¡rio do registro:')
     ));
 
   return lines
     .map((line) => {
-      if (line === 'Tipo: Evolucao geral' || line === 'Tipo: Evolução geral' || line === 'Tipo: EvoluÃ§Ã£o geral') return '';
-      if (line.startsWith('Evolucao: ')) return line.replace('Evolucao: ', '');
+      if (
+        line === 'Tipo: Evolução geral' ||
+        line === 'Tipo: Evolucao geral' ||
+        line === 'Tipo: EvoluÃ§Ã£o geral' ||
+        line === 'Tipo: EvoluÃƒÂ§ÃƒÂ£o geral'
+      ) {
+        return '';
+      }
+
       if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
+      if (line.startsWith('Evolucao: ')) return line.replace('Evolucao: ', '');
       if (line.startsWith('EvoluÃ§Ã£o: ')) return line.replace('EvoluÃ§Ã£o: ', '');
+      if (line.startsWith('EvoluÃƒÂ§ÃƒÂ£o: ')) return line.replace('EvoluÃƒÂ§ÃƒÂ£o: ', '');
       return line;
     })
     .filter(Boolean);
@@ -929,7 +939,7 @@ function getReactionTotals(receipts) {
 }
 
 function buildViewerCountLabel(count) {
-  if (count <= 0) return 'Sem visualizacoes';
+  if (count <= 0) return 'Sem visualizações';
   if (count === 1) return '1 visualizou';
   return `${count} visualizaram`;
 }
