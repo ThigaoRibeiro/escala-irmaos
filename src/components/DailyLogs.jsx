@@ -3,6 +3,8 @@ import { MEMBERS } from '../utils/db';
 import {
   Activity,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Check,
   ClipboardList,
   Clock3,
@@ -63,6 +65,7 @@ export default function DailyLogs({
   const [checkedMeds, setCheckedMeds] = useState({});
   const [copiedGroupKey, setCopiedGroupKey] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedGroupKey, setExpandedGroupKey] = useState(null);
   const [expandedEntryId, setExpandedEntryId] = useState(null);
   const [reactionPickerEntryId, setReactionPickerEntryId] = useState(null);
 
@@ -89,32 +92,6 @@ export default function DailyLogs({
 
   const groupedLogs = useMemo(() => buildGroupedLogs(logs), [logs]);
   const receiptsByLog = useMemo(() => buildReceiptsByLog(receipts), [receipts]);
-
-  useEffect(() => {
-    if (!currentUserName || !onMarkLogSeen) return;
-
-    const pendingLogIds = [];
-
-    groupedLogs.forEach((group) => {
-      group.entries.forEach((entry) => {
-        if (seenEntriesRef.current.has(entry.id)) return;
-        seenEntriesRef.current.add(entry.id);
-        pendingLogIds.push(entry.id);
-      });
-    });
-
-    if (pendingLogIds.length === 0) return;
-
-    Promise.allSettled(
-      pendingLogIds.map((logId) => onMarkLogSeen(logId, currentUserName))
-    ).then((results) => {
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          seenEntriesRef.current.delete(pendingLogIds[index]);
-        }
-      });
-    });
-  }, [groupedLogs, currentUserName, onMarkLogSeen]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({
@@ -210,6 +187,40 @@ export default function DailyLogs({
     } catch (error) {
       console.error('Falha ao salvar reação:', error);
       window.alert('Não foi possível salvar a reação agora. Tente novamente.');
+    }
+  };
+
+  const markGroupAsSeen = async (group) => {
+    if (!group || !currentUserName || !onMarkLogSeen) return;
+
+    const pendingLogIds = group.entries
+      .map((entry) => entry.id)
+      .filter((logId) => !seenEntriesRef.current.has(logId));
+
+    if (pendingLogIds.length === 0) return;
+
+    pendingLogIds.forEach((logId) => seenEntriesRef.current.add(logId));
+
+    const results = await Promise.allSettled(
+      pendingLogIds.map((logId) => onMarkLogSeen(logId, currentUserName))
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        seenEntriesRef.current.delete(pendingLogIds[index]);
+      }
+    });
+  };
+
+  const handleGroupToggle = (group) => {
+    const isOpening = expandedGroupKey !== group.key;
+
+    setExpandedGroupKey((current) => (current === group.key ? null : group.key));
+    setExpandedEntryId(null);
+    setReactionPickerEntryId(null);
+
+    if (isOpening) {
+      void markGroupAsSeen(group);
     }
   };
 
@@ -509,245 +520,312 @@ export default function DailyLogs({
           Nenhuma evolução registrada ainda.
         </div>
       ) : (
-        groupedLogs.map((group) => (
-          <div
-            key={group.key}
-            className="log-item animate-fade"
-            style={{ borderLeftColor: getMemberColor(group.responsibleName) }}
-          >
-            <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
-              <span className="log-author" style={{ color: getMemberColor(group.responsibleName) }}>
-                {getMemberAvatar(group.responsibleName)} {group.responsibleName}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Calendar size={12} />
-                {formatLogDate(group.date)} - {group.period === 'diurno' ? 'Dia' : 'Noite'}
-              </span>
-            </div>
+        groupedLogs.map((group) => {
+          const isGroupExpanded = expandedGroupKey === group.key;
+          const groupReceipts = getLatestGroupReceipts(group, receiptsByLog);
+          const groupReactionTotals = getReactionTotals(groupReceipts);
+          const groupViewerCountLabel = buildViewerCountLabel(groupReceipts.length);
+          const lastEntry = group.entries[group.entries.length - 1];
 
-            <div style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
-              Em plantão: <strong>{group.responsibleName}</strong>
-            </div>
+          return (
+            <div
+              key={group.key}
+              className="log-item animate-fade"
+              style={{ borderLeftColor: getMemberColor(group.responsibleName) }}
+            >
+              <button
+                type="button"
+                onClick={() => handleGroupToggle(group)}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  textAlign: 'left',
+                  color: 'inherit',
+                  cursor: 'pointer'
+                }}
+              >
+                <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
+                  <span className="log-author" style={{ color: getMemberColor(group.responsibleName) }}>
+                    {getMemberAvatar(group.responsibleName)} {group.responsibleName}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Calendar size={12} />
+                    {formatLogDate(group.date)} - {group.period === 'diurno' ? 'Dia' : 'Noite'}
+                  </span>
+                </div>
 
-            <div className="log-checklists">
-              <span className={`log-badge ${group.entries.some((entry) => entry.meds_given) ? 'log-badge-done' : 'log-badge-pending'}`}>
-                {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
-                {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
-              </span>
-            </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.9rem' }}>
+                    {'Em plant\u00e3o: '}<strong>{group.responsibleName}</strong>
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem' }}>
+                    <span>{isGroupExpanded ? 'Recolher' : 'Abrir plant\u00e3o'}</span>
+                    {isGroupExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-              {group.entries.map((entry) => {
-                const entryReceipts = receiptsByLog[entry.id] || [];
-                const viewerReceipt = entryReceipts.find((receipt) => isSameViewerName(receipt.viewer_name, currentUserName));
-                const reactionTotals = getReactionTotals(entryReceipts);
-                const isDetailsOpen = expandedEntryId === entry.id;
-                const isReactionPickerOpen = reactionPickerEntryId === entry.id;
-                const viewerCountLabel = buildViewerCountLabel(entryReceipts.length);
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
+                  <span className={group.entries.some((entry) => entry.meds_given) ? 'log-badge log-badge-done' : 'log-badge log-badge-pending'}>
+                    {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
+                    {group.entries.length} {group.entries.length === 1 ? 'evolu\u00e7\u00e3o registrada' : 'evolu\u00e7\u00f5es registradas'}
+                  </span>
 
-                return (
-                  <div
-                    key={entry.id}
+                  <span
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '72px 1fr',
-                      gap: '10px',
-                      alignItems: 'start',
-                      backgroundColor: 'var(--bg-subtle)',
-                      borderRadius: '8px',
-                      padding: '10px'
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      borderRadius: '999px',
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-muted)',
+                      backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                      border: '1px solid rgba(34, 197, 94, 0.28)'
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
-                      {formatLogTime(entry)}
-                    </div>
+                    <Eye size={14} />
+                    <span>{groupViewerCountLabel}</span>
+                  </span>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
-                        {getEntrySummarySections(entry).map((section, index, sections) => (
-                          <div key={`${entry.id}_${index}`} style={{ marginBottom: index === sections.length - 1 ? 0 : '2px' }}>
-                            {section.title && (
-                              <div style={{ fontWeight: 700, marginBottom: section.items.length > 0 ? '4px' : 0 }}>
-                                {section.title}
+                  {groupReactionTotals.map((item) => (
+                    <span
+                      key={[group.key, item.reaction].join('_')}
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '999px',
+                        padding: '3px 8px',
+                        fontSize: '0.78rem',
+                        color: 'var(--text-muted)'
+                      }}
+                    >
+                      {item.reaction} {item.count}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                  {'\u00daltima atualiza\u00e7\u00e3o: '}<strong style={{ color: 'var(--text-primary)' }}>{formatLogTime(lastEntry)}</strong>
+                </div>
+              </button>
+
+              {isGroupExpanded && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                  {group.entries.map((entry) => {
+                    const entryReceipts = receiptsByLog[entry.id] || [];
+                    const viewerReceipt = entryReceipts.find((receipt) => isSameViewerName(receipt.viewer_name, currentUserName));
+                    const reactionTotals = getReactionTotals(entryReceipts);
+                    const isDetailsOpen = expandedEntryId === entry.id;
+                    const isReactionPickerOpen = reactionPickerEntryId === entry.id;
+                    const viewerCountLabel = buildViewerCountLabel(entryReceipts.length);
+
+                    return (
+                      <div
+                        key={entry.id}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '72px 1fr',
+                          gap: '10px',
+                          alignItems: 'start',
+                          backgroundColor: 'var(--bg-subtle)',
+                          borderRadius: '8px',
+                          padding: '10px'
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
+                          {formatLogTime(entry)}
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
+                            {getEntrySummarySections(entry).map((section, index, sections) => (
+                              <div key={[entry.id, index].join('_')} style={{ marginBottom: index === sections.length - 1 ? 0 : '2px' }}>
+                                {section.title && (
+                                  <div style={{ fontWeight: 700, marginBottom: section.items.length > 0 ? '4px' : 0 }}>
+                                    {section.title}
+                                  </div>
+                                )}
+
+                                {section.items.length > 0 && (
+                                  <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                                    {section.items.map((item, itemIndex) => (
+                                      <li key={[entry.id, index, itemIndex].join('_')}>{item}</li>
+                                    ))}
+                                  </ul>
+                                )}
                               </div>
-                            )}
-
-                            {section.items.length > 0 && (
-                              <ul style={{ margin: 0, paddingLeft: '18px' }}>
-                                {section.items.map((item, itemIndex) => (
-                                  <li key={`${entry.id}_${index}_${itemIndex}`}>{item}</li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => setExpandedEntryId((current) => (current === entry.id ? null : entry.id))}
-                          style={{
-                            fontSize: '0.78rem',
-                            padding: '4px 10px',
-                            display: 'flex',
-                            gap: '6px',
-                            alignItems: 'center',
-                            backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                            borderColor: 'rgba(34, 197, 94, 0.28)'
-                          }}
-                        >
-                          <Eye size={14} />
-                          <span>{viewerCountLabel}</span>
-                        </button>
-
-                        {reactionTotals.length > 0 && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            {reactionTotals.map((item) => (
-                              <span
-                                key={`${entry.id}_${item.reaction}`}
-                                style={{
-                                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                                  border: '1px solid var(--border-color)',
-                                  borderRadius: '999px',
-                                  padding: '3px 8px'
-                                }}
-                              >
-                                {item.reaction} {item.count}
-                              </span>
                             ))}
                           </div>
-                        )}
 
-                        {currentUserName && onSetLogReaction && (
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setReactionPickerEntryId((current) => (current === entry.id ? null : entry.id))}
-                            style={{
-                              fontSize: '0.78rem',
-                              padding: '4px 10px',
-                              backgroundColor: 'rgba(244, 114, 182, 0.08)',
-                              borderColor: 'rgba(244, 114, 182, 0.28)'
-                            }}
-                          >
-                            {viewerReceipt?.reaction ? `Sua reação: ${viewerReceipt.reaction}` : 'Adicionar reação'}
-                          </button>
-                        )}
-                      </div>
-
-                      {isReactionPickerOpen && currentUserName && onSetLogReaction && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            padding: '8px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'rgba(255, 255, 255, 0.03)'
-                          }}
-                        >
-                          {REACTION_OPTIONS.map((reactionOption) => (
-                            <button
-                              key={`${entry.id}_${reactionOption.emoji}`}
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => handleReactionClick(entry.id, reactionOption.emoji)}
-                              title={reactionOption.label}
-                              style={{
-                                minWidth: '70px',
-                                justifyContent: 'center',
-                                flexDirection: 'column',
-                                gap: '4px',
-                                borderColor: viewerReceipt?.reaction === reactionOption.emoji ? 'var(--primary)' : undefined
-                              }}
-                            >
-                              <span style={{ fontSize: '1rem', lineHeight: 1 }}>{reactionOption.emoji}</span>
-                              <span style={{ fontSize: '0.68rem', lineHeight: 1.1 }}>{reactionOption.label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {isDetailsOpen && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '6px',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            border: '1px solid var(--border-color)',
-                            backgroundColor: 'rgba(255, 255, 255, 0.03)'
-                          }}
-                        >
-                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            Últimas visualizações
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
                           </div>
 
-                          {entryReceipts.length === 0 ? (
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                              Ninguém visualizou ainda.
-                            </div>
-                          ) : (
-                            entryReceipts.map((receipt) => (
-                              <div
-                                key={receipt.id}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setExpandedEntryId((current) => (current === entry.id ? null : entry.id))}
+                              style={{
+                                fontSize: '0.78rem',
+                                padding: '4px 10px',
+                                display: 'flex',
+                                gap: '6px',
+                                alignItems: 'center',
+                                backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                                borderColor: 'rgba(34, 197, 94, 0.28)'
+                              }}
+                            >
+                              <Eye size={14} />
+                              <span>{viewerCountLabel}</span>
+                            </button>
+
+                            {reactionTotals.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                {reactionTotals.map((item) => (
+                                  <span
+                                    key={[entry.id, item.reaction].join('_')}
+                                    style={{
+                                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                      border: '1px solid var(--border-color)',
+                                      borderRadius: '999px',
+                                      padding: '3px 8px'
+                                    }}
+                                  >
+                                    {item.reaction} {item.count}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {currentUserName && onSetLogReaction && (
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => setReactionPickerEntryId((current) => (current === entry.id ? null : entry.id))}
                                 style={{
                                   fontSize: '0.78rem',
-                                  color: 'var(--text-muted)',
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  gap: '6px'
+                                  padding: '4px 10px',
+                                  backgroundColor: 'rgba(244, 114, 182, 0.08)',
+                                  borderColor: 'rgba(244, 114, 182, 0.28)'
                                 }}
                               >
-                                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{receipt.viewer_name}</span>
-                                <span>|</span>
-                                <span>{formatReceiptTime(receipt.viewed_at)}</span>
-                                {receipt.reaction ? (
-                                  <>
-                                    <span>|</span>
-                                    <span>{receipt.reaction}</span>
-                                  </>
-                                ) : null}
+                                {viewerReceipt?.reaction ? 'Sua rea\u00e7\u00e3o: ' + viewerReceipt.reaction : 'Adicionar rea\u00e7\u00e3o'}
+                              </button>
+                            )}
+                          </div>
+
+                          {isReactionPickerOpen && currentUserName && onSetLogReaction && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '8px',
+                                padding: '8px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border-color)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                              }}
+                            >
+                              {REACTION_OPTIONS.map((reactionOption) => (
+                                <button
+                                  key={[entry.id, reactionOption.emoji].join('_')}
+                                  type="button"
+                                  className="btn btn-secondary btn-sm"
+                                  onClick={() => handleReactionClick(entry.id, reactionOption.emoji)}
+                                  title={reactionOption.label}
+                                  style={{
+                                    minWidth: '70px',
+                                    justifyContent: 'center',
+                                    flexDirection: 'column',
+                                    gap: '4px',
+                                    borderColor: viewerReceipt?.reaction === reactionOption.emoji ? 'var(--primary)' : undefined
+                                  }}
+                                >
+                                  <span style={{ fontSize: '1rem', lineHeight: 1 }}>{reactionOption.emoji}</span>
+                                  <span style={{ fontSize: '0.68rem', lineHeight: 1.1 }}>{reactionOption.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {isDetailsOpen && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                                padding: '10px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border-color)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                              }}
+                            >
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                {'\u00daltimas visualiza\u00e7\u00f5es'}
                               </div>
-                            ))
+
+                              {entryReceipts.length === 0 ? (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                  {'Ningu\u00e9m visualizou ainda.'}
+                                </div>
+                              ) : (
+                                entryReceipts.map((receipt) => (
+                                  <div
+                                    key={receipt.id}
+                                    style={{
+                                      fontSize: '0.78rem',
+                                      color: 'var(--text-muted)',
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: '6px'
+                                    }}
+                                  >
+                                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{receipt.viewer_name}</span>
+                                    <span>|</span>
+                                    <span>{formatReceiptTime(receipt.viewed_at)}</span>
+                                    {receipt.reaction ? (
+                                      <>
+                                        <span>|</span>
+                                        <span>{receipt.reaction}</span>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => shareGroupToWhatsapp(group)}
-                style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', gap: '6px', alignItems: 'center' }}
-              >
-                {copiedGroupKey === group.key ? (
-                  <>
-                    <Check size={14} style={{ color: 'var(--color-success)' }} />
-                    <span style={{ color: 'var(--color-success)' }}>Copiado!</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 size={14} />
-                    <span>Copiar p/ WhatsApp</span>
-                  </>
-                )}
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => shareGroupToWhatsapp(group)}
+                  style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', gap: '6px', alignItems: 'center' }}
+                >
+                  {copiedGroupKey === group.key ? (
+                    <>
+                      <Check size={14} style={{ color: 'var(--color-success)' }} />
+                      <span style={{ color: 'var(--color-success)' }}>Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 size={14} />
+                      <span>Copiar p/ WhatsApp</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   );
@@ -989,6 +1067,31 @@ function getEntrySummarySections(log) {
   });
 }
 
+function getLatestGroupReceipts(group, receiptsByLog) {
+  const latestByViewer = new Map();
+
+  group.entries.forEach((entry) => {
+    const entryReceipts = receiptsByLog[entry.id] || [];
+
+    entryReceipts.forEach((receipt) => {
+      const viewerKey = normalizeViewerName(receipt.viewer_name);
+      const currentReceipt = latestByViewer.get(viewerKey);
+      const nextTime = new Date(receipt.viewed_at || 0).getTime();
+      const currentTime = new Date(currentReceipt?.viewed_at || 0).getTime();
+
+      if (!currentReceipt || nextTime >= currentTime) {
+        latestByViewer.set(viewerKey, receipt);
+      }
+    });
+  });
+
+  return Array.from(latestByViewer.values()).sort((left, right) => {
+    const leftTime = new Date(left.viewed_at || 0).getTime();
+    const rightTime = new Date(right.viewed_at || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
 function normalizeSummarySectionTitle(title) {
   const normalized = String(title || '').trim().toLowerCase();
 
@@ -1077,7 +1180,11 @@ function formatReceiptTime(value) {
 }
 
 function isSameViewerName(left, right) {
-  return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
+  return normalizeViewerName(left) === normalizeViewerName(right);
+}
+
+function normalizeViewerName(value) {
+  return String(value || '').trim().toLowerCase();
 }
 
 function getCurrentPlantao() {
