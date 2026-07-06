@@ -35,6 +35,7 @@ export const CAREGIVER_STYLE = {
 const CONFIG_KEY = 'escala_supabase_config';
 const LOCAL_SHIFTS_KEY = 'escala_local_shifts_v2';
 const LOCAL_LOGS_KEY = 'escala_local_logs_v3';
+const LOCAL_LOG_RECEIPTS_KEY = 'escala_local_log_receipts_v1';
 const LOCAL_CAREGIVERS_KEY = 'escala_local_caregivers_v2';
 const LOCAL_MEDICATIONS_KEY = 'escala_local_medications_v1';
 const REALTIME_CHANNEL = 'escala-familia-live';
@@ -63,6 +64,12 @@ export function normalizeCaregiverEmail(value) {
   const normalized = normalizeEmail(value);
   if (!normalized) return '';
   return normalized.includes('@') ? normalized : `${normalized}@lessacare.com`;
+}
+
+function isMissingRelationError(error, relationName) {
+  if (!error) return false;
+  const raw = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+  return error.code === '42P01' || raw.includes(`relation "${relationName.toLowerCase()}" does not exist`);
 }
 
 function buildFunctionsUrl() {
@@ -291,7 +298,14 @@ async function sendRealtimeBroadcast(event, payload) {
   }
 }
 
-export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCaregiverChange, onMedicationChange, onStatusChange } = {}) {
+export function subscribeToRealtimeChanges({
+  onShiftChange,
+  onLogChange,
+  onLogReceiptChange,
+  onCaregiverChange,
+  onMedicationChange,
+  onStatusChange
+} = {}) {
   const client = getSupabaseClient();
   if (!client) return () => {};
 
@@ -329,6 +343,14 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
         old: payload.old
       });
     })
+    .on('broadcast', { event: 'log-receipt-change' }, (message) => {
+      const payload = message.payload || {};
+      if (onLogReceiptChange) onLogReceiptChange({
+        eventType: payload.eventType || 'UPSERT',
+        new: payload.row || payload.new,
+        old: payload.old
+      });
+    })
     .on('broadcast', { event: 'caregiver-change' }, (message) => {
       const payload = message.payload || {};
       if (onCaregiverChange) onCaregiverChange({
@@ -350,6 +372,9 @@ export function subscribeToRealtimeChanges({ onShiftChange, onLogChange, onCareg
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_logs' }, (payload) => {
       if (onLogChange) onLogChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_log_receipts' }, (payload) => {
+      if (onLogReceiptChange) onLogReceiptChange(payload);
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'caregivers' }, (payload) => {
       if (onCaregiverChange) onCaregiverChange(payload);
@@ -484,6 +509,31 @@ function getInitialMockLogs() {
   };
 
   return logs;
+}
+
+function getLocalLogReceiptsMap() {
+  const local = localStorage.getItem(LOCAL_LOG_RECEIPTS_KEY);
+  if (!local) return {};
+
+  try {
+    return JSON.parse(local);
+  } catch (error) {
+    console.error('Erro ao ler visualizacoes locais do diario:', error);
+    return {};
+  }
+}
+
+function saveLocalLogReceiptsMap(receipts) {
+  localStorage.setItem(LOCAL_LOG_RECEIPTS_KEY, JSON.stringify(receipts));
+}
+
+function buildLocalReceiptId(logId, viewerName) {
+  const normalizedViewer = String(viewerName || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_');
+
+  return `${logId}__${normalizedViewer || 'viewer'}`;
 }
 
 // --- OPERAÇÕES DE CUIDADORAS ---
@@ -760,6 +810,31 @@ export async function getDailyLogs() {
   return JSON.parse(local);
 }
 
+export async function getDailyLogReceipts() {
+  const client = getSupabaseClient();
+  if (client) {
+    const { data, error } = await client
+      .from('daily_log_receipts')
+      .select('*')
+      .order('viewed_at', { ascending: false });
+
+    if (error) {
+      if (isMissingRelationError(error, 'daily_log_receipts')) {
+        return getLocalLogReceiptsMap();
+      }
+      throw error;
+    }
+
+    const receiptsObj = {};
+    data.forEach((receipt) => {
+      receiptsObj[receipt.id] = receipt;
+    });
+    return receiptsObj;
+  }
+
+  return getLocalLogReceiptsMap();
+}
+
 export async function saveDailyLog(date, period, author, caregiver, meds_given, meals_ok, notes) {
   const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const createdAt = new Date().toISOString();
@@ -792,6 +867,113 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
   logs[id] = row;
   localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
   return true;
+}
+
+export async function markDailyLogSeen(logId, viewerName) {
+  const viewedAt = new Date().toISOString();
+  const normalizedViewerName = String(viewerName || '').trim();
+  if (!logId || !normalizedViewerName) return null;
+
+  const client = getSupabaseClient();
+  if (client) {
+    const row = {
+      log_id: logId,
+      viewer_name: normalizedViewerName,
+      viewed_at: viewedAt,
+      updated_at: viewedAt
+    };
+
+    const { data, error } = await client
+      .from('daily_log_receipts')
+      .upsert(row, { onConflict: 'log_id,viewer_name' })
+      .select()
+      .single();
+
+    if (error) {
+      if (isMissingRelationError(error, 'daily_log_receipts')) {
+        return upsertLocalDailyLogReceipt(logId, normalizedViewerName, { viewed_at: viewedAt, updated_at: viewedAt });
+      }
+      throw error;
+    }
+
+    await sendRealtimeBroadcast('log-receipt-change', {
+      eventType: 'UPSERT',
+      row: data
+    });
+    return data;
+  }
+
+  return upsertLocalDailyLogReceipt(logId, normalizedViewerName, { viewed_at: viewedAt, updated_at: viewedAt });
+}
+
+export async function setDailyLogReaction(logId, viewerName, reaction) {
+  const viewedAt = new Date().toISOString();
+  const normalizedViewerName = String(viewerName || '').trim();
+  if (!logId || !normalizedViewerName) return null;
+
+  const client = getSupabaseClient();
+  if (client) {
+    const row = {
+      log_id: logId,
+      viewer_name: normalizedViewerName,
+      reaction: reaction || null,
+      viewed_at: viewedAt,
+      updated_at: viewedAt
+    };
+
+    const { data, error } = await client
+      .from('daily_log_receipts')
+      .upsert(row, { onConflict: 'log_id,viewer_name' })
+      .select()
+      .single();
+
+    if (error) {
+      if (isMissingRelationError(error, 'daily_log_receipts')) {
+        return upsertLocalDailyLogReceipt(logId, normalizedViewerName, {
+          reaction: reaction || null,
+          viewed_at: viewedAt,
+          updated_at: viewedAt
+        });
+      }
+      throw error;
+    }
+
+    await sendRealtimeBroadcast('log-receipt-change', {
+      eventType: 'UPSERT',
+      row: data
+    });
+    return data;
+  }
+
+  return upsertLocalDailyLogReceipt(logId, normalizedViewerName, {
+    reaction: reaction || null,
+    viewed_at: viewedAt,
+    updated_at: viewedAt
+  });
+}
+
+function upsertLocalDailyLogReceipt(logId, viewerName, changes = {}) {
+  const receipts = getLocalLogReceiptsMap();
+  const existing = Object.values(receipts).find((receipt) => (
+    receipt.log_id === logId &&
+    String(receipt.viewer_name || '').trim().toLowerCase() === viewerName.trim().toLowerCase()
+  ));
+
+  const id = existing?.id || buildLocalReceiptId(logId, viewerName);
+  const row = {
+    id,
+    log_id: logId,
+    viewer_name: viewerName,
+    reaction: existing?.reaction || null,
+    viewed_at: existing?.viewed_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ...existing,
+    ...changes
+  };
+
+  receipts[id] = row;
+  saveLocalLogReceiptsMap(receipts);
+  return row;
 }
 
 // --- SCRIPT SQL DO SUPABASE ---
@@ -842,18 +1024,34 @@ CREATE TABLE IF NOT EXISTS public.daily_logs (
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.daily_log_receipts (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    log_id text NOT NULL REFERENCES public.daily_logs (id) ON DELETE CASCADE,
+    viewer_name text NOT NULL,
+    viewed_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    reaction text,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS daily_log_receipts_log_id_viewer_name_key
+ON public.daily_log_receipts (log_id, viewer_name);
+
 ALTER TABLE public.caregivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_log_receipts ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.caregivers REPLICA IDENTITY FULL;
 ALTER TABLE public.shifts REPLICA IDENTITY FULL;
 ALTER TABLE public.daily_logs REPLICA IDENTITY FULL;
+ALTER TABLE public.daily_log_receipts REPLICA IDENTITY FULL;
 
 GRANT SELECT ON TABLE public.caregivers TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.shifts TO authenticated;
 GRANT SELECT, INSERT ON TABLE public.daily_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.daily_log_receipts TO authenticated;
 REVOKE UPDATE, DELETE ON TABLE public.daily_logs FROM authenticated;
+REVOKE DELETE ON TABLE public.daily_log_receipts FROM authenticated;
 
 -- Remove policies antigas, inclusive a versão com login/allowlist se ela tiver sido aplicada.
 DROP POLICY IF EXISTS "Acesso público total caregivers" ON public.caregivers;
@@ -874,6 +1072,10 @@ DROP POLICY IF EXISTS "Familia pode ler daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "Familia pode inserir daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "Familia pode atualizar daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "Familia pode remover daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "Familia pode ler daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "Familia pode inserir daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "Familia pode atualizar daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "Familia pode remover daily_log_receipts" ON public.daily_log_receipts;
 DROP POLICY IF EXISTS "App publico pode ler caregivers" ON public.caregivers;
 DROP POLICY IF EXISTS "App publico pode inserir caregivers" ON public.caregivers;
 DROP POLICY IF EXISTS "App publico pode atualizar caregivers" ON public.caregivers;
@@ -886,6 +1088,10 @@ DROP POLICY IF EXISTS "App publico pode ler daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "App publico pode inserir daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "App publico pode atualizar daily_logs" ON public.daily_logs;
 DROP POLICY IF EXISTS "App publico pode remover daily_logs" ON public.daily_logs;
+DROP POLICY IF EXISTS "App publico pode ler daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "App publico pode inserir daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "App publico pode atualizar daily_log_receipts" ON public.daily_log_receipts;
+DROP POLICY IF EXISTS "App publico pode remover daily_log_receipts" ON public.daily_log_receipts;
 
 CREATE POLICY "App publico pode ler caregivers"
 ON public.caregivers
@@ -930,6 +1136,25 @@ FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
+CREATE POLICY "App publico pode ler daily_log_receipts"
+ON public.daily_log_receipts
+FOR SELECT
+TO authenticated
+USING (true);
+
+CREATE POLICY "App publico pode inserir daily_log_receipts"
+ON public.daily_log_receipts
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "App publico pode atualizar daily_log_receipts"
+ON public.daily_log_receipts
+FOR UPDATE
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
 
 -- Habilitar Supabase Realtime para atualizações ao vivo entre navegadores.
 DO $$
@@ -951,6 +1176,14 @@ END $$;
 DO $$
 BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_logs;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_log_receipts;
 EXCEPTION
     WHEN duplicate_object THEN NULL;
     WHEN undefined_object THEN NULL;

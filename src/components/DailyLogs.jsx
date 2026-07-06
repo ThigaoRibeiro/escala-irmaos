@@ -1,15 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBERS } from '../utils/db';
 import {
-  Plus,
-  Share2,
+  Activity,
   Calendar,
   Check,
-  X,
   ClipboardList,
   Clock3,
-  Activity
+  Eye,
+  Plus,
+  Share2,
+  X
 } from 'lucide-react';
+
+const REACTION_OPTIONS = ['❤️', '👍', '🙏', '✅', '⚠️'];
 
 const EMPTY_FORM = {
   entryTime: getCurrentTimeValue(),
@@ -35,8 +38,18 @@ const EMPTY_FORM = {
   notes: ''
 };
 
-export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], currentUserName = '' }) {
+export default function DailyLogs({
+  shifts,
+  logs,
+  receipts = {},
+  onSaveLog,
+  onMarkLogSeen,
+  onSetLogReaction,
+  medications = [],
+  currentUserName = ''
+}) {
   const currentPlantao = getCurrentPlantao();
+  const seenEntriesRef = useRef(new Set());
   const [showAddForm, setShowAddForm] = useState(false);
   const [date, setDate] = useState(currentPlantao.date);
   const [period, setPeriod] = useState(currentPlantao.period);
@@ -44,10 +57,12 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
   const [checkedMeds, setCheckedMeds] = useState({});
   const [copiedGroupKey, setCopiedGroupKey] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedEntryId, setExpandedEntryId] = useState(null);
+  const [reactionPickerEntryId, setReactionPickerEntryId] = useState(null);
 
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
-  const authorName = currentUserName || responsibleName || 'Sem identificação';
+  const authorName = currentUserName || responsibleName || 'Sem identificacao';
 
   useEffect(() => {
     if (!showAddForm) return;
@@ -62,7 +77,38 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     setCheckedMeds({});
   }, [showAddForm]);
 
+  useEffect(() => {
+    seenEntriesRef.current = new Set();
+  }, [currentUserName]);
+
   const groupedLogs = useMemo(() => buildGroupedLogs(logs), [logs]);
+  const receiptsByLog = useMemo(() => buildReceiptsByLog(receipts), [receipts]);
+
+  useEffect(() => {
+    if (!currentUserName || !onMarkLogSeen) return;
+
+    const pendingLogIds = [];
+
+    groupedLogs.forEach((group) => {
+      group.entries.forEach((entry) => {
+        if (seenEntriesRef.current.has(entry.id)) return;
+        seenEntriesRef.current.add(entry.id);
+        pendingLogIds.push(entry.id);
+      });
+    });
+
+    if (pendingLogIds.length === 0) return;
+
+    Promise.allSettled(
+      pendingLogIds.map((logId) => onMarkLogSeen(logId, currentUserName))
+    ).then((results) => {
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          seenEntriesRef.current.delete(pendingLogIds[index]);
+        }
+      });
+    });
+  }, [groupedLogs, currentUserName, onMarkLogSeen]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({
@@ -122,7 +168,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       !formData.activityTv &&
       !hasCheckedMedication
     ) {
-      window.alert('Adicione pelo menos uma observação, sinal vital ou medicação para registrar a evolução.');
+      window.alert('Adicione pelo menos uma observacao, sinal vital ou medicacao para registrar a evolucao.');
       return;
     }
 
@@ -138,13 +184,26 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
     try {
       const saved = await onSaveLog(date, period, authorName, responsibleName || null, medsGiven, true, notes);
       if (!saved) {
-        window.alert('Não foi possível salvar a evolução. Tente novamente.');
+        window.alert('Nao foi possivel salvar a evolucao. Tente novamente.');
         return;
       }
 
       resetForm();
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReactionClick = async (entryId, reaction) => {
+    if (!currentUserName || !onSetLogReaction) return;
+
+    try {
+      await onSetLogReaction(entryId, currentUserName, reaction);
+      setReactionPickerEntryId(null);
+      setExpandedEntryId(entryId);
+    } catch (error) {
+      console.error('Falha ao salvar reacao:', error);
+      window.alert('Nao foi possivel salvar a reacao agora. Tente novamente.');
     }
   };
 
@@ -159,7 +218,8 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
   };
 
   const formatLogDate = (dateStr) => {
-    const [year, month, day] = dateStr.split('-');
+    const [year, month, day] = String(dateStr || '').split('-');
+    if (!year || !month || !day) return dateStr;
     return `${day}/${month}/${year}`;
   };
 
@@ -175,18 +235,28 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
   };
 
   const shareGroupToWhatsapp = (group) => {
-    const periodLabel = group.period === 'diurno' ? '☀️ Diurno' : '🌙 Noturno';
+    const periodLabel = group.period === 'diurno' ? 'Dia' : 'Noite';
 
-    let text = `📝 *EVOLUÇÃO DO DIÁRIO*\n`;
-    text += `📅 Data: ${formatLogDate(group.date)}\n`;
-    text += `⏰ Turno: ${periodLabel}\n`;
-    text += `🩺 Em plantão: ${group.responsibleName}\n\n`;
+    let text = `*EVOLUCAO DO DIARIO*\n`;
+    text += `Data: ${formatLogDate(group.date)}\n`;
+    text += `Turno: ${periodLabel}\n`;
+    text += `Em plantao: ${group.responsibleName}\n\n`;
 
     group.entries.forEach((entry) => {
-      text += `🕒 ${formatLogTime(entry)} - ${entry.author}\n`;
+      text += `${formatLogTime(entry)} - ${entry.author}\n`;
       getEntrySummaryItems(entry).forEach((item) => {
-        text += `• ${item}\n`;
+        text += `- ${item}\n`;
       });
+
+      const entryReceipts = receiptsByLog[entry.id] || [];
+      if (entryReceipts.length > 0) {
+        text += 'Visualizacoes:\n';
+        entryReceipts.forEach((receipt) => {
+          const reactionSuffix = receipt.reaction ? ` | ${receipt.reaction}` : '';
+          text += `- ${receipt.viewer_name} | ${formatReceiptTime(receipt.viewed_at)}${reactionSuffix}\n`;
+        });
+      }
+
       text += '\n';
     });
 
@@ -201,10 +271,10 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
       <div className="card" style={{ marginBottom: '16px' }}>
         <h3 className="card-title">
           <Activity size={20} />
-          <span>Diário de Evolução</span>
+          <span>Diario de Evolucao</span>
         </h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
-          Cada plantão reúne as evoluções em um único card. Dentro dele, as mensagens aparecem em ordem cronológica, da mais antiga para a mais recente.
+          Cada plantao reune as evolucoes em um unico card. Dentro dele, as mensagens aparecem em ordem cronologica, da mais antiga para a mais recente.
         </p>
       </div>
 
@@ -215,12 +285,12 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
           style={{ width: '100%', marginBottom: '20px', justifyContent: 'center' }}
         >
           <Plus size={20} />
-          <span>Adicionar evolução</span>
+          <span>Adicionar evolucao</span>
         </button>
       ) : (
         <form onSubmit={handleSubmit} className="card animate-scale" style={{ border: '2px solid var(--primary)', marginBottom: '20px' }}>
           <h3 className="card-title" style={{ color: 'var(--primary)', justifyContent: 'space-between' }}>
-            <span>Nova evolução</span>
+            <span>Nova evolucao</span>
             <button
               type="button"
               className="btn btn-secondary btn-icon"
@@ -251,8 +321,8 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
                 onChange={(e) => setPeriod(e.target.value)}
                 className="form-control"
               >
-                <option value="diurno">☀️ Diurno</option>
-                <option value="noturno">🌙 Noturno</option>
+                <option value="diurno">Dia</option>
+                <option value="noturno">Noite</option>
               </select>
             </div>
 
@@ -266,18 +336,17 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
                 required
               />
             </div>
-
           </div>
 
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
             <ReadOnlyField label="Registrado por" value={authorName} />
-            <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
+            <ReadOnlyField label="Responsavel no plantao" value={responsibleName || 'Sem responsavel escalado'} />
           </div>
 
           <SectionTitle label="Medicamentos" />
           {medications.length === 0 ? (
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '12px' }}>
-              Nenhum medicamento cadastrado. Adicione na aba Configurações.
+              Nenhum medicamento cadastrado. Adicione na aba Configuracoes.
             </p>
           ) : (
             <div className="checkbox-group" style={{ flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
@@ -303,38 +372,38 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
             </div>
           )}
 
-          <SectionTitle label="Sinais e medicações" />
+          <SectionTitle label="Sinais e medicacoes" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
+            <TextInput label="Pressao arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
-            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
+            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolencia..." />
           </div>
 
-          <SectionTitle label="Sono e alimentação" />
+          <SectionTitle label="Sono e alimentacao" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <SelectInput
               label="Sono"
               value={formData.sleepStatus}
               onChange={(value) => updateField('sleepStatus', value)}
-              options={['Dormiu bem', 'Acordou algumas vezes', 'Insônia', 'Sonolenta']}
+              options={['Dormiu bem', 'Acordou algumas vezes', 'Insonia', 'Sonolenta']}
             />
-            <TextInput label="Café da manhã" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Almoço" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Lanche" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horário / aceitação" />
-            <TextInput label="Jantar / ceia" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horário / aceitação" />
+            <TextInput label="Cafe da manha" value={formData.breakfast} onChange={(value) => updateField('breakfast', value)} placeholder="Horario / aceitacao" />
+            <TextInput label="Almoco" value={formData.lunch} onChange={(value) => updateField('lunch', value)} placeholder="Horario / aceitacao" />
+            <TextInput label="Lanche" value={formData.snack} onChange={(value) => updateField('snack', value)} placeholder="Horario / aceitacao" />
+            <TextInput label="Jantar / ceia" value={formData.dinner} onChange={(value) => updateField('dinner', value)} placeholder="Horario / aceitacao" />
           </div>
 
-          <SectionTitle label="Hidratação e fisiologia" />
+          <SectionTitle label="Hidratacao e fisiologia" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Hidratação" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Água, suco, quantidade..." />
+            <TextInput label="Hidratacao" value={formData.hydration} onChange={(value) => updateField('hydration', value)} placeholder="Agua, suco, quantidade..." />
             <SelectInput
               label="Urina"
               value={formData.urine}
               onChange={(value) => updateField('urine', value)}
               options={['Normal', 'Pouca', 'Escura / odor forte']}
             />
-            <TextInput label="Fezes" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/não, aspecto" />
-            <TextInput label="Trocas de fralda" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horários" />
+            <TextInput label="Fezes" value={formData.stool} onChange={(value) => updateField('stool', value)} placeholder="Sim/nao, aspecto" />
+            <TextInput label="Trocas de fralda" value={formData.diaperChanges} onChange={(value) => updateField('diaperChanges', value)} placeholder="Horarios" />
           </div>
 
           <SectionTitle label="Higiene e bem-estar" />
@@ -343,7 +412,7 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
               label="Banho"
               value={formData.bath}
               onChange={(value) => updateField('bath', value)}
-              options={['Sim', 'Não']}
+              options={['Sim', 'Nao']}
             />
             <SelectInput
               label="Local do banho"
@@ -352,10 +421,10 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
               options={['Leito', 'Chuveiro']}
             />
             <SelectInput
-              label="Pele / hidratação"
+              label="Pele / hidratacao"
               value={formData.skinCare}
               onChange={(value) => updateField('skinCare', value)}
-              options={['Sim', 'Não']}
+              options={['Sim', 'Nao']}
             />
             <SelectInput
               label="Humor"
@@ -396,19 +465,19 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
           </div>
 
           <div className="form-group">
-            <label className="form-label">Evolução / observação</label>
+            <label className="form-label">Evolucao / observacao</label>
             <textarea
               value={formData.notes}
               onChange={(e) => updateField('notes', e.target.value)}
               className="form-control"
               rows={5}
-              placeholder="Descreva o que aconteceu. Ex: pressão subiu para 15x10 às 14:20, repouso orientado, nova aferição às 14:50..."
+              placeholder="Descreva o que aconteceu. Ex: pressao subiu para 15x10 as 14:20, repouso orientado, nova afericao as 14:50..."
             />
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar evolução'}
+              {isSaving ? 'Salvando...' : 'Salvar evolucao'}
             </button>
             <button type="button" className="btn btn-secondary" onClick={resetForm} disabled={isSaving}>
               Cancelar
@@ -419,12 +488,12 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
 
       <h3 className="card-title" style={{ marginBottom: '12px' }}>
         <ClipboardList size={20} />
-        <span>Histórico de plantões</span>
+        <span>Historico de plantoes</span>
       </h3>
 
       {groupedLogs.length === 0 ? (
         <div className="card empty-state">
-          Nenhuma evolução registrada ainda.
+          Nenhuma evolucao registrada ainda.
         </div>
       ) : (
         groupedLogs.map((group) => (
@@ -439,53 +508,181 @@ export default function DailyLogs({ shifts, logs, onSaveLog, medications = [], c
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Calendar size={12} />
-                {formatLogDate(group.date)} - {group.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
+                {formatLogDate(group.date)} - {group.period === 'diurno' ? 'Dia' : 'Noite'}
               </span>
             </div>
 
             <div style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
-              Em plantão: <strong>{group.responsibleName}</strong>
+              Em plantao: <strong>{group.responsibleName}</strong>
             </div>
 
             <div className="log-checklists">
               <span className={`log-badge ${group.entries.some((entry) => entry.meds_given) ? 'log-badge-done' : 'log-badge-pending'}`}>
                 {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
-                {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
+                {group.entries.length} {group.entries.length === 1 ? 'evolucao registrada' : 'evolucoes registradas'}
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-              {group.entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '72px 1fr',
-                    gap: '10px',
-                    alignItems: 'start',
-                    backgroundColor: 'var(--bg-subtle)',
-                    borderRadius: '8px',
-                    padding: '10px'
-                  }}
-                >
-                  <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
-                    {formatLogTime(entry)}
-                  </div>
+              {group.entries.map((entry) => {
+                const entryReceipts = receiptsByLog[entry.id] || [];
+                const viewerReceipt = entryReceipts.find((receipt) => isSameViewerName(receipt.viewer_name, currentUserName));
+                const reactionTotals = getReactionTotals(entryReceipts);
+                const isDetailsOpen = expandedEntryId === entry.id;
+                const isReactionPickerOpen = reactionPickerEntryId === entry.id;
+                const viewerCountLabel = buildViewerCountLabel(entryReceipts.length);
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
-                      {getEntrySummaryItems(entry).map((item, index, items) => (
-                        <li key={`${entry.id}_${index}`} style={{ marginBottom: index === items.length - 1 ? 0 : '4px' }}>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '72px 1fr',
+                      gap: '10px',
+                      alignItems: 'start',
+                      backgroundColor: 'var(--bg-subtle)',
+                      borderRadius: '8px',
+                      padding: '10px'
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
+                      {formatLogTime(entry)}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
+                        {getEntrySummaryItems(entry).map((item, index, items) => (
+                          <li key={`${entry.id}_${index}`} style={{ marginBottom: index === items.length - 1 ? 0 : '4px' }}>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
+                      </div>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setExpandedEntryId((current) => (current === entry.id ? null : entry.id))}
+                          style={{ fontSize: '0.78rem', padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'center' }}
+                        >
+                          <Eye size={14} />
+                          <span>{viewerCountLabel}</span>
+                        </button>
+
+                        {reactionTotals.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {reactionTotals.map((item) => (
+                              <span
+                                key={`${entry.id}_${item.reaction}`}
+                                style={{
+                                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                                  border: '1px solid var(--border-color)',
+                                  borderRadius: '999px',
+                                  padding: '3px 8px'
+                                }}
+                              >
+                                {item.reaction} {item.count}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {currentUserName && onSetLogReaction && (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setReactionPickerEntryId((current) => (current === entry.id ? null : entry.id))}
+                            style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                          >
+                            {viewerReceipt?.reaction ? `Sua reacao: ${viewerReceipt.reaction}` : 'Adicionar reacao'}
+                          </button>
+                        )}
+                      </div>
+
+                      {isReactionPickerOpen && currentUserName && onSetLogReaction && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            padding: '8px',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                          }}
+                        >
+                          {REACTION_OPTIONS.map((reaction) => (
+                            <button
+                              key={`${entry.id}_${reaction}`}
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => handleReactionClick(entry.id, reaction)}
+                              style={{
+                                minWidth: '44px',
+                                justifyContent: 'center',
+                                borderColor: viewerReceipt?.reaction === reaction ? 'var(--primary)' : undefined
+                              }}
+                            >
+                              {reaction}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {isDetailsOpen && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                          }}
+                        >
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            Ultimas visualizacoes
+                          </div>
+
+                          {entryReceipts.length === 0 ? (
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                              Ninguem visualizou ainda.
+                            </div>
+                          ) : (
+                            entryReceipts.map((receipt) => (
+                              <div
+                                key={receipt.id}
+                                style={{
+                                  fontSize: '0.78rem',
+                                  color: 'var(--text-muted)',
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: '6px'
+                                }}
+                              >
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{receipt.viewer_name}</span>
+                                <span>|</span>
+                                <span>{formatReceiptTime(receipt.viewed_at)}</span>
+                                {receipt.reaction ? (
+                                  <>
+                                    <span>|</span>
+                                    <span>{receipt.reaction}</span>
+                                  </>
+                                ) : null}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
@@ -577,20 +774,20 @@ function buildEvolutionNotes(data) {
   ].filter(Boolean);
 
   const lines = [
-    `Horário do registro: ${data.entryTime}`,
+    `Horario do registro: ${data.entryTime}`,
     formatMedicationGroup(data.medications, data.checkedMeds),
-    data.pressure ? `Pressão arterial: ${data.pressure}` : '',
+    data.pressure ? `Pressao arterial: ${data.pressure}` : '',
     data.temperature ? `Temperatura: ${data.temperature}` : '',
     data.alertSigns ? `Sinais de alerta: ${data.alertSigns}` : '',
     data.sleepStatus ? `Sono: ${data.sleepStatus}` : '',
-    formatGroup('Alimentação', [
-      formatItem('Café da manhã', data.breakfast),
-      formatItem('Almoço', data.lunch),
+    formatGroup('Alimentacao', [
+      formatItem('Cafe da manha', data.breakfast),
+      formatItem('Almoco', data.lunch),
       formatItem('Lanche', data.snack),
       formatItem('Jantar / ceia', data.dinner)
     ]),
-    formatGroup('Hidratação e fisiologia', [
-      formatItem('Hidratação', data.hydration),
+    formatGroup('Hidratacao e fisiologia', [
+      formatItem('Hidratacao', data.hydration),
       formatItem('Urina', data.urine),
       formatItem('Fezes', data.stool),
       formatItem('Trocas de fralda', data.diaperChanges)
@@ -598,14 +795,14 @@ function buildEvolutionNotes(data) {
     formatGroup('Higiene e bem-estar', [
       formatItem('Banho', data.bath),
       formatItem('Local do banho', data.bathPlace),
-      formatItem('Pele / hidratação', data.skinCare),
+      formatItem('Pele / hidratacao', data.skinCare),
       formatItem('Humor', data.mood)
     ]),
     activities.length > 0 ? `Atividades: ${activities.join(' | ')}` : '',
-    data.notes ? `Evolução: ${data.notes}` : ''
+    data.notes ? `Evolucao: ${data.notes}` : ''
   ].filter(Boolean);
 
-  return lines.map((line) => `• ${line}`).join('\n');
+  return lines.map((line) => `- ${line}`).join('\n');
 }
 
 function formatMedicationGroup(medications = [], checkedMeds = {}) {
@@ -633,7 +830,7 @@ function buildGroupedLogs(logs) {
   });
 
   const grouped = sortedEntries.reduce((acc, entry) => {
-    const responsibleName = entry.caregiver || entry.author || 'Sem responsável';
+    const responsibleName = entry.caregiver || entry.author || 'Sem responsavel';
     const key = `${entry.date}_${entry.period}_${responsibleName}`;
 
     if (!acc[key]) {
@@ -662,20 +859,70 @@ function buildGroupedLogs(logs) {
 function getEntrySummaryItems(log) {
   const lines = String(log.notes || '')
     .split('\n')
-    .map((line) => line.replace(/^(•|â€¢)\s*/, '').trim())
+    .map((line) => line.replace(/^(-|•|â€¢|Ã¢â‚¬Â¢)\s*/, '').trim())
     .filter(Boolean)
-    .filter((line) => !line.startsWith('Horário do registro:') && !line.startsWith('HorÃ¡rio do registro:'));
+    .filter((line) => (
+      !line.startsWith('Horario do registro:') &&
+      !line.startsWith('Horário do registro:') &&
+      !line.startsWith('HorÃ¡rio do registro:')
+    ));
 
-  return lines.map((line) => {
-    if (line === 'Tipo: Evolução geral' || line === 'Tipo: EvoluÃ§Ã£o geral') return '';
-    if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
-    if (line.startsWith('EvoluÃ§Ã£o: ')) return line.replace('EvoluÃ§Ã£o: ', '');
-    return line;
-  }).filter(Boolean);
+  return lines
+    .map((line) => {
+      if (line === 'Tipo: Evolucao geral' || line === 'Tipo: Evolução geral' || line === 'Tipo: EvoluÃ§Ã£o geral') return '';
+      if (line.startsWith('Evolucao: ')) return line.replace('Evolucao: ', '');
+      if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
+      if (line.startsWith('EvoluÃ§Ã£o: ')) return line.replace('EvoluÃ§Ã£o: ', '');
+      return line;
+    })
+    .filter(Boolean);
 }
 
-function buildEntrySummary(log) {
-  return getEntrySummaryItems(log).join(' • ');
+function buildReceiptsByLog(receipts) {
+  return Object.values(receipts || {})
+    .sort((a, b) => {
+      const dateA = new Date(a.viewed_at || 0);
+      const dateB = new Date(b.viewed_at || 0);
+      return dateB - dateA;
+    })
+    .reduce((acc, receipt) => {
+      if (!receipt.log_id) return acc;
+      if (!acc[receipt.log_id]) acc[receipt.log_id] = [];
+      acc[receipt.log_id].push(receipt);
+      return acc;
+    }, {});
+}
+
+function getReactionTotals(receipts) {
+  const counts = receipts.reduce((acc, receipt) => {
+    if (!receipt.reaction) return acc;
+    acc[receipt.reaction] = (acc[receipt.reaction] || 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts)
+    .map(([reaction, count]) => ({ reaction, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function buildViewerCountLabel(count) {
+  if (count <= 0) return 'Sem visualizacoes';
+  if (count === 1) return '1 visualizou';
+  return `${count} visualizaram`;
+}
+
+function formatReceiptTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--:--';
+
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function isSameViewerName(left, right) {
+  return String(left || '').trim().toLowerCase() === String(right || '').trim().toLowerCase();
 }
 
 function getCurrentPlantao() {

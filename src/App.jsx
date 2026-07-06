@@ -8,7 +8,10 @@ import {
   getShifts,
   updateShift,
   getDailyLogs,
+  getDailyLogReceipts,
+  markDailyLogSeen,
   saveDailyLog,
+  setDailyLogReaction,
   getCaregivers,
   getMedications,
   subscribeToRealtimeChanges,
@@ -26,6 +29,7 @@ export default function App() {
   
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
+  const [logReceipts, setLogReceipts] = useState({});
   const [caregivers, setCaregivers] = useState([]);
   
   // Active member for admins to impersonate
@@ -94,15 +98,17 @@ export default function App() {
       setLoadWarning('');
 
       try {
-        const [fetchedShifts, fetchedLogs, fetchedCaregivers, fetchedMedications] = await Promise.all([
+        const [fetchedShifts, fetchedLogs, fetchedLogReceipts, fetchedCaregivers, fetchedMedications] = await Promise.all([
           getShifts(),
           getDailyLogs(),
+          getDailyLogReceipts(),
           getCaregivers(),
           getMedications()
         ]);
         
         setShifts(fetchedShifts);
         setLogs(fetchedLogs);
+        setLogReceipts(fetchedLogReceipts);
         setCaregivers(fetchedCaregivers);
         setMedications(fetchedMedications);
       } catch (e) {
@@ -183,6 +189,23 @@ export default function App() {
         });
         showLiveNotice('Diário atualizado por outra pessoa.');
       },
+      onLogReceiptChange: (payload) => {
+        setLogReceipts(prev => {
+          const id = getPayloadId(payload.new) || getPayloadId(payload.old);
+          if (!id) return prev;
+
+          if (payload.eventType === 'DELETE') {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          }
+
+          return {
+            ...prev,
+            [id]: payload.new
+          };
+        });
+      },
       onCaregiverChange: () => {
         getCaregivers().then(setCaregivers);
         showLiveNotice('Lista de cuidadoras atualizada.');
@@ -218,6 +241,8 @@ export default function App() {
       localStorage.removeItem('escala_supabase_config');
       localStorage.removeItem('escala_local_shifts_v2');
       localStorage.removeItem('escala_local_logs_v2');
+      localStorage.removeItem('escala_local_logs_v3');
+      localStorage.removeItem('escala_local_log_receipts_v1');
       localStorage.removeItem('escala_local_caregivers_v2');
       localStorage.setItem('escala_local_mode_active', 'false');
     } catch (e) {
@@ -265,6 +290,28 @@ export default function App() {
       console.error('Falha ao salvar diário de bordo:', e);
       return false;
     }
+  };
+
+  const handleMarkLogSeen = async (logId, viewerName) => {
+    const receipt = await markDailyLogSeen(logId, viewerName);
+    if (receipt?.id) {
+      setLogReceipts(prev => ({
+        ...prev,
+        [receipt.id]: receipt
+      }));
+    }
+    return receipt;
+  };
+
+  const handleSetLogReaction = async (logId, viewerName, reaction) => {
+    const receipt = await setDailyLogReaction(logId, viewerName, reaction);
+    if (receipt?.id) {
+      setLogReceipts(prev => ({
+        ...prev,
+        [receipt.id]: receipt
+      }));
+    }
+    return receipt;
   };
 
   if (isAuthLoading) {
@@ -355,7 +402,10 @@ export default function App() {
               <DailyLogs
                 shifts={shifts}
                 logs={logs}
+                receipts={logReceipts}
                 onSaveLog={handleSaveLog}
+                onMarkLogSeen={handleMarkLogSeen}
+                onSetLogReaction={handleSetLogReaction}
                 medications={medications}
                 currentUserName={userProfile?.name || ''}
               />
