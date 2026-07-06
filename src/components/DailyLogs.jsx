@@ -552,7 +552,7 @@ export default function DailyLogs({
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Calendar size={12} />
-                    {formatLogDate(group.date)} - {group.period === 'diurno' ? 'Dia' : 'Noite'}
+                    {formatLogDate(group.date)} - {group.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
                   </span>
                 </div>
 
@@ -560,8 +560,22 @@ export default function DailyLogs({
                   <div style={{ fontSize: '0.9rem' }}>
                     {'Em plant\u00e3o: '}<strong>{group.responsibleName}</strong>
                   </div>
-                  <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem' }}>
-                    <span>{isGroupExpanded ? 'Recolher' : 'Abrir plant\u00e3o'}</span>
+                  <div
+                    style={{
+                      color: isGroupExpanded ? 'var(--text-primary)' : 'var(--primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.84rem',
+                      fontWeight: 700,
+                      padding: '6px 10px',
+                      borderRadius: '999px',
+                      border: isGroupExpanded ? '1px solid var(--border-color)' : '1px solid rgba(45, 212, 191, 0.38)',
+                      backgroundColor: isGroupExpanded ? 'rgba(255, 255, 255, 0.04)' : 'rgba(45, 212, 191, 0.14)',
+                      boxShadow: isGroupExpanded ? 'none' : '0 0 0 1px rgba(45, 212, 191, 0.06)'
+                    }}
+                  >
+                    <span>{isGroupExpanded ? 'Recolher diário' : 'Abrir diário'}</span>
                     {isGroupExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </div>
                 </div>
