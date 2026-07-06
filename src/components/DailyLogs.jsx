@@ -947,10 +947,6 @@ function getEntrySummarySections(log) {
 
       const title = item.slice(0, separatorIndex).trim();
       const content = item.slice(separatorIndex + 1).trim();
-      const shouldSplitIntoMultipleBullets =
-        title === 'Hidratação e fisiologia' ||
-        title === 'Higiene e bem-estar';
-
       if (!content) {
         return {
           title,
@@ -960,7 +956,7 @@ function getEntrySummarySections(log) {
 
       return {
         title,
-        items: shouldSplitIntoMultipleBullets
+        items: content.includes('|')
           ? content.split('|').map((part) => part.trim()).filter(Boolean)
           : [content]
       };
