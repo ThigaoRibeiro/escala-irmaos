@@ -12,7 +12,13 @@ import {
   X
 } from 'lucide-react';
 
-const REACTION_OPTIONS = ['❤️', '👍', '🙏', '✅', '⚠️'];
+const REACTION_OPTIONS = [
+  { emoji: '❤️', label: 'Carinho' },
+  { emoji: '👍', label: 'Ciente' },
+  { emoji: '🙏', label: 'Orando' },
+  { emoji: '✅', label: 'Tudo certo' },
+  { emoji: '⚠️', label: 'Atencao' }
+];
 
 const EMPTY_FORM = {
   entryTime: getCurrentTimeValue(),
@@ -567,7 +573,15 @@ export default function DailyLogs({
                           type="button"
                           className="btn btn-secondary btn-sm"
                           onClick={() => setExpandedEntryId((current) => (current === entry.id ? null : entry.id))}
-                          style={{ fontSize: '0.78rem', padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'center' }}
+                          style={{
+                            fontSize: '0.78rem',
+                            padding: '4px 10px',
+                            display: 'flex',
+                            gap: '6px',
+                            alignItems: 'center',
+                            backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                            borderColor: 'rgba(34, 197, 94, 0.28)'
+                          }}
                         >
                           <Eye size={14} />
                           <span>{viewerCountLabel}</span>
@@ -596,7 +610,12 @@ export default function DailyLogs({
                             type="button"
                             className="btn btn-secondary btn-sm"
                             onClick={() => setReactionPickerEntryId((current) => (current === entry.id ? null : entry.id))}
-                            style={{ fontSize: '0.78rem', padding: '4px 10px' }}
+                            style={{
+                              fontSize: '0.78rem',
+                              padding: '4px 10px',
+                              backgroundColor: 'rgba(244, 114, 182, 0.08)',
+                              borderColor: 'rgba(244, 114, 182, 0.28)'
+                            }}
                           >
                             {viewerReceipt?.reaction ? `Sua reacao: ${viewerReceipt.reaction}` : 'Adicionar reacao'}
                           </button>
@@ -615,19 +634,23 @@ export default function DailyLogs({
                             backgroundColor: 'rgba(255, 255, 255, 0.03)'
                           }}
                         >
-                          {REACTION_OPTIONS.map((reaction) => (
+                          {REACTION_OPTIONS.map((reactionOption) => (
                             <button
-                              key={`${entry.id}_${reaction}`}
+                              key={`${entry.id}_${reactionOption.emoji}`}
                               type="button"
                               className="btn btn-secondary btn-sm"
-                              onClick={() => handleReactionClick(entry.id, reaction)}
+                              onClick={() => handleReactionClick(entry.id, reactionOption.emoji)}
+                              title={reactionOption.label}
                               style={{
-                                minWidth: '44px',
+                                minWidth: '70px',
                                 justifyContent: 'center',
-                                borderColor: viewerReceipt?.reaction === reaction ? 'var(--primary)' : undefined
+                                flexDirection: 'column',
+                                gap: '4px',
+                                borderColor: viewerReceipt?.reaction === reactionOption.emoji ? 'var(--primary)' : undefined
                               }}
                             >
-                              {reaction}
+                              <span style={{ fontSize: '1rem', lineHeight: 1 }}>{reactionOption.emoji}</span>
+                              <span style={{ fontSize: '0.68rem', lineHeight: 1.1 }}>{reactionOption.label}</span>
                             </button>
                           ))}
                         </div>
