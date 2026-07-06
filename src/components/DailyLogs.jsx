@@ -358,7 +358,7 @@ export default function DailyLogs({
             <ReadOnlyField label="Registrado por" value={authorName} />
             <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
           </div>
-          <SectionTitle label="Sinais e medicações" />
+          <SectionTitle label="Sinais vitais e alertas" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
             <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
@@ -817,7 +817,7 @@ function buildEvolutionNotes(data) {
 
   const lines = [
     `Horário do registro: ${data.entryTime}`,
-    formatGroup('Sinais e medicações', [
+    formatGroup('Sinais vitais e alertas', [
       formatItem('Pressão arterial', data.pressure),
       formatItem('Temperatura', data.temperature),
       formatItem('Sinais de alerta', data.alertSigns)
@@ -923,7 +923,7 @@ function getEntrySummaryItems(log) {
 }
 
 function getEntrySummarySections(log) {
-  return getEntrySummaryItems(log)
+  const parsedSections = getEntrySummaryItems(log)
     .map((item) => {
       const separatorIndex = item.indexOf(':');
 
@@ -951,6 +951,86 @@ function getEntrySummarySections(log) {
       };
     })
     .filter((section) => section.title || section.items.length > 0);
+
+  const groupedSections = [];
+  const groupedIndex = new Map();
+
+  parsedSections.forEach((section) => {
+    if (!section.title) {
+      groupedSections.push(section);
+      return;
+    }
+
+    const normalizedTitle = normalizeSummarySectionTitle(section.title);
+    const normalizedItems = isLegacySignalField(section.title)
+      ? section.items.map((item) => `${section.title}: ${item}`)
+      : section.items;
+
+    const existingIndex = groupedIndex.get(normalizedTitle);
+
+    if (existingIndex === undefined) {
+      groupedIndex.set(normalizedTitle, groupedSections.length);
+      groupedSections.push({
+        title: normalizedTitle,
+        items: [...normalizedItems]
+      });
+      return;
+    }
+
+    groupedSections[existingIndex].items.push(...normalizedItems);
+  });
+
+  return groupedSections.sort((left, right) => {
+    const leftOrder = getSummarySectionOrder(left.title);
+    const rightOrder = getSummarySectionOrder(right.title);
+
+    if (leftOrder === rightOrder) return 0;
+    return leftOrder - rightOrder;
+  });
+}
+
+function normalizeSummarySectionTitle(title) {
+  const normalized = String(title || '').trim().toLowerCase();
+
+  if (
+    normalized === 'sinais e medicações' ||
+    normalized === 'sinais e medicacoes' ||
+    normalized === 'sinais vitais e alertas' ||
+    normalized === 'pressão arterial' ||
+    normalized === 'pressao arterial' ||
+    normalized === 'temperatura' ||
+    normalized === 'sinais de alerta'
+  ) {
+    return 'Sinais vitais e alertas';
+  }
+
+  return title;
+}
+
+function isLegacySignalField(title) {
+  const normalized = String(title || '').trim().toLowerCase();
+  return (
+    normalized === 'pressão arterial' ||
+    normalized === 'pressao arterial' ||
+    normalized === 'temperatura' ||
+    normalized === 'sinais de alerta'
+  );
+}
+
+function getSummarySectionOrder(title) {
+  const order = [
+    'Sinais vitais e alertas',
+    'Medicamentos administrados',
+    'Sono',
+    'Alimentação',
+    'Hidratação e fisiologia',
+    'Higiene e bem-estar',
+    'Atividades',
+    'Evolução / observação'
+  ];
+
+  const index = order.indexOf(title);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
 function buildReceiptsByLog(receipts) {
