@@ -31,7 +31,7 @@ export default function Login({ onLoginSuccess }) {
 
         const lowerEmail = email.trim().toLowerCase();
         if (!lowerEmail.includes('@') || lowerEmail.endsWith('@lessacare.com')) {
-          throw new Error('O cadastro de cuidadoras deve ser feito pelo Administrador na aba de Configurações.');
+          throw new Error('O cadastro de cuidadoras deve ser feito pelo administrador na aba Configurações.');
         }
 
         const { error, data } = await signUp(email, password);
@@ -40,12 +40,12 @@ export default function Login({ onLoginSuccess }) {
         if (data?.user?.identities?.length === 0) {
           setErrorMsg('Este e-mail já está em uso.');
         } else {
-          setSuccessMsg('Conta criada! Verifique seu e-mail ou faça login agora.');
+          setSuccessMsg('Conta criada com sucesso. Verifique seu e-mail ou faça login agora.');
           setIsLoginMode(true);
         }
       }
     } catch (err) {
-      setErrorMsg(err.message || 'Erro ao autenticar. Verifique suas credenciais.');
+      setErrorMsg(err.message || 'Não foi possível entrar. Confira seus dados e tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -73,18 +73,36 @@ export default function Login({ onLoginSuccess }) {
             {isLoginMode ? 'Acesse sua conta' : 'Crie sua conta'}
           </h2>
           <p style={{ color: 'var(--text-muted)' }}>
-            {isLoginMode ? 'Faça login para acessar a escala e o diário de cuidados.' : 'Preencha os dados abaixo para se cadastrar no sistema.'}
+            {isLoginMode
+              ? 'Entre para acessar a escala e o diário de cuidados.'
+              : 'Preencha os dados abaixo para criar seu acesso ao sistema.'}
           </p>
         </div>
 
         {errorMsg && (
-          <div className="info-banner" style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)', backgroundColor: '#fef2f2', marginBottom: '20px' }}>
+          <div
+            className="info-banner"
+            style={{
+              borderColor: 'var(--color-danger)',
+              color: 'var(--color-danger)',
+              backgroundColor: '#fef2f2',
+              marginBottom: '20px'
+            }}
+          >
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="info-banner" style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)', marginBottom: '20px' }}>
+          <div
+            className="info-banner"
+            style={{
+              borderColor: 'var(--color-success)',
+              color: 'var(--color-success)',
+              backgroundColor: 'var(--color-success-light)',
+              marginBottom: '20px'
+            }}
+          >
             {successMsg}
           </div>
         )}
@@ -92,7 +110,7 @@ export default function Login({ onLoginSuccess }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mail size={16} /> {isLoginMode ? 'E-mail ou Usuário' : 'E-mail'}
+              <Mail size={16} /> {isLoginMode ? 'E-mail ou usuário' : 'E-mail'}
             </label>
             <input
               type={isLoginMode ? 'text' : 'email'}
@@ -104,7 +122,7 @@ export default function Login({ onLoginSuccess }) {
             />
             {isLoginMode && (
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
-                Cuidadoras podem entrar com o usuário curto, como `maria`, ou com o login completo `maria@lessacare.com`.
+                Cuidadoras podem entrar com o nome curto, como `maria`, ou com o login completo `maria@lessacare.com`.
               </span>
             )}
           </div>
@@ -149,7 +167,7 @@ export default function Login({ onLoginSuccess }) {
           {!isLoginMode && (
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Lock size={16} /> Confirmar Senha
+                <Lock size={16} /> Confirmar senha
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
@@ -191,7 +209,11 @@ export default function Login({ onLoginSuccess }) {
             style={{ padding: '12px', marginTop: '8px', justifyContent: 'center' }}
             disabled={isLoading}
           >
-            {isLoading ? <Loader2 size={20} className="spinner" style={{ animation: 'spin 1s linear infinite' }} /> : (isLoginMode ? 'Entrar no Lessa Care' : 'Criar minha conta')}
+            {isLoading ? (
+              <Loader2 size={20} className="spinner" style={{ animation: 'spin 1s linear infinite' }} />
+            ) : (
+              isLoginMode ? 'Entrar no Lessa Care' : 'Criar minha conta'
+            )}
           </button>
         </form>
 
@@ -214,7 +236,7 @@ export default function Login({ onLoginSuccess }) {
               textDecoration: 'underline'
             }}
           >
-            {isLoginMode ? 'Ainda não tem conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
+            {isLoginMode ? 'Ainda não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
           </button>
         </div>
       </div>

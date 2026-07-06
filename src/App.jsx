@@ -24,15 +24,13 @@ import {
 import { CalendarDays, FileText, Settings } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('calendar'); // calendar, logs, config
+  const [activeTab, setActiveTab] = useState('calendar');
 
-  
   const [shifts, setShifts] = useState({});
   const [logs, setLogs] = useState({});
   const [logReceipts, setLogReceipts] = useState({});
   const [caregivers, setCaregivers] = useState([]);
-  
-  // Active member for admins to impersonate
+
   const [activeMember, setActiveMember] = useState(() => {
     return localStorage.getItem('escala_active_member') || 'David';
   });
@@ -52,11 +50,9 @@ export default function App() {
   const [loadWarning, setLoadWarning] = useState('');
   const [liveNotice, setLiveNotice] = useState('');
 
-  // Authentication states
   const [session, setSession] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Monitor auth state
   useEffect(() => {
     let authListener = null;
 
@@ -65,7 +61,7 @@ export default function App() {
         const { data } = await getSession();
         setSession(data.session);
       } catch (e) {
-        console.error('Error checking session:', e);
+        console.error('Erro ao verificar sessão:', e);
       } finally {
         setIsAuthLoading(false);
       }
@@ -74,13 +70,13 @@ export default function App() {
     checkSession();
 
     try {
-      const { data } = onAuthStateChange((_event, session) => {
-        setSession(session);
+      const { data } = onAuthStateChange((_event, nextSession) => {
+        setSession(nextSession);
         setIsAuthLoading(false);
       });
       authListener = data.subscription;
     } catch (e) {
-      console.warn('Cannot attach auth listener. Maybe local mode or config is missing.', e);
+      console.warn('Não foi possível registrar o listener de autenticação.', e);
     }
 
     return () => {
@@ -88,9 +84,8 @@ export default function App() {
     };
   }, []);
 
-  // Carrega as escalas, logs e cuidadoras do banco (ou localstorage)
   useEffect(() => {
-    if (!session) return; // Only load data if authenticated
+    if (!session) return;
 
     async function loadData() {
       setIsLoading(true);
@@ -105,7 +100,7 @@ export default function App() {
           getCaregivers(),
           getMedications()
         ]);
-        
+
         setShifts(fetchedShifts);
         setLogs(fetchedLogs);
         setLogReceipts(fetchedLogReceipts);
@@ -122,14 +117,13 @@ export default function App() {
     loadData();
   }, [dbTrigger, session]);
 
-  // Se for cuidadora, valida em tempo real se o cadastro dela ainda existe no banco
   useEffect(() => {
     if (!session || isLoading || loadError) return;
 
     const currentEmail = session.user?.email?.toLowerCase();
     if (!currentEmail || USER_MAPPING[currentEmail]) return;
 
-    const exists = caregivers.some(c => c.email && c.email.toLowerCase() === currentEmail);
+    const exists = caregivers.some((caregiver) => caregiver.email && caregiver.email.toLowerCase() === currentEmail);
     if (!exists) {
       signOut().then(() => {
         window.location.reload();
@@ -138,7 +132,7 @@ export default function App() {
   }, [caregivers, session, isLoading, loadError]);
 
   useEffect(() => {
-    if (!session) return; // Only subscribe if authenticated
+    if (!session) return;
 
     const getPayloadId = (row) => {
       if (!row) return null;
@@ -154,7 +148,7 @@ export default function App() {
 
     const unsubscribe = subscribeToRealtimeChanges({
       onShiftChange: (payload) => {
-        setShifts(prev => {
+        setShifts((prev) => {
           const id = getPayloadId(payload.new) || getPayloadId(payload.old);
           if (!id) return prev;
 
@@ -172,7 +166,7 @@ export default function App() {
         showLiveNotice('Escala atualizada por outra pessoa.');
       },
       onLogChange: (payload) => {
-        setLogs(prev => {
+        setLogs((prev) => {
           const id = getPayloadId(payload.new) || getPayloadId(payload.old);
           if (!id) return prev;
 
@@ -190,7 +184,7 @@ export default function App() {
         showLiveNotice('Diário atualizado por outra pessoa.');
       },
       onLogReceiptChange: (payload) => {
-        setLogReceipts(prev => {
+        setLogReceipts((prev) => {
           const id = getPayloadId(payload.new) || getPayloadId(payload.old);
           if (!id) return prev;
 
@@ -211,14 +205,14 @@ export default function App() {
         showLiveNotice('Lista de cuidadoras atualizada.');
       },
       onMedicationChange: (payload) => {
-        setMedications(prev => {
+        setMedications((prev) => {
           if (payload.eventType === 'DELETE') {
-            return prev.filter(item => item.id !== payload.old?.id);
+            return prev.filter((item) => item.id !== payload.old?.id);
           }
 
           if (!payload.new?.id) return prev;
 
-          const withoutCurrent = prev.filter(item => item.id !== payload.new.id);
+          const withoutCurrent = prev.filter((item) => item.id !== payload.new.id);
           return [...withoutCurrent, payload.new].sort((a, b) => a.time.localeCompare(b.time));
         });
         showLiveNotice('Lista de medicamentos atualizada.');
@@ -252,12 +246,10 @@ export default function App() {
     }
   };
 
-  // Atualizar escala
   const handleUpdateShift = async (date, period, assignedTo, caregiverAssigned, status) => {
     const id = `${date}_${period}`;
-    
-    // Atualização otimista na tela (UI rápida)
-    setShifts(prev => ({
+
+    setShifts((prev) => ({
       ...prev,
       [id]: {
         ...prev[id],
@@ -275,16 +267,14 @@ export default function App() {
       await updateShift(date, period, assignedTo, caregiverAssigned, status);
     } catch (e) {
       console.error('Falha ao gravar alteração na escala:', e);
-      // Força recarga para reverter
-      setDbTrigger(prev => prev + 1);
+      setDbTrigger((prev) => prev + 1);
     }
   };
 
-  // Salvar diário de bordo
   const handleSaveLog = async (date, period, author, caregiver, medsGiven, mealsOk, notes) => {
     try {
       await saveDailyLog(date, period, author, caregiver, medsGiven, mealsOk, notes);
-      setDbTrigger(prev => prev + 1);
+      setDbTrigger((prev) => prev + 1);
       return true;
     } catch (e) {
       console.error('Falha ao salvar diário de bordo:', e);
@@ -295,7 +285,7 @@ export default function App() {
   const handleMarkLogSeen = async (logId, viewerName) => {
     const receipt = await markDailyLogSeen(logId, viewerName);
     if (receipt?.id) {
-      setLogReceipts(prev => ({
+      setLogReceipts((prev) => ({
         ...prev,
         [receipt.id]: receipt
       }));
@@ -306,7 +296,7 @@ export default function App() {
   const handleSetLogReaction = async (logId, viewerName, reaction) => {
     const receipt = await setDailyLogReaction(logId, viewerName, reaction);
     if (receipt?.id) {
-      setLogReceipts(prev => ({
+      setLogReceipts((prev) => ({
         ...prev,
         [receipt.id]: receipt
       }));
@@ -327,7 +317,7 @@ export default function App() {
   }
 
   const userEmail = session?.user?.email?.toLowerCase() || '';
-  const caregiverRecord = caregivers.find(c => c.email && c.email.toLowerCase() === userEmail);
+  const caregiverRecord = caregivers.find((caregiver) => caregiver.email && caregiver.email.toLowerCase() === userEmail);
   const userProfile = USER_MAPPING[userEmail] || buildCaregiverProfile(caregiverRecord);
 
   const isSuperAdmin = userProfile?.role === 'SUPERADMIN';
@@ -367,7 +357,7 @@ export default function App() {
             <h3 className="card-title" style={{ color: 'var(--color-danger)' }}>Banco indisponível</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{loadError}</p>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={() => setDbTrigger(prev => prev + 1)}>
+              <button className="btn btn-primary" onClick={() => setDbTrigger((prev) => prev + 1)}>
                 Tentar novamente
               </button>
               <button className="btn btn-secondary" onClick={handleResetConnection}>
@@ -390,14 +380,14 @@ export default function App() {
             )}
 
             {activeTab === 'calendar' && (
-              <Calendar 
-                shifts={shifts} 
-                onUpdateShift={handleUpdateShift} 
-                activeMember={effectiveActiveMember} 
+              <Calendar
+                shifts={shifts}
+                onUpdateShift={handleUpdateShift}
+                activeMember={effectiveActiveMember}
                 caregivers={caregivers}
               />
             )}
-            
+
             {activeTab === 'logs' && (
               <DailyLogs
                 shifts={shifts}
@@ -410,36 +400,35 @@ export default function App() {
                 currentUserName={userProfile?.name || ''}
               />
             )}
-            
+
             {isAdmin && activeTab === 'config' && (
               <Config
-                onConfigChanged={() => setDbTrigger(prev => prev + 1)}
+                onConfigChanged={() => setDbTrigger((prev) => prev + 1)}
               />
             )}
           </>
         )}
       </main>
 
-      {/* Menu Inferior (Navigation Bar) */}
       <nav className="bottom-nav">
-        <button 
+        <button
           className={`nav-item ${activeTab === 'calendar' ? 'nav-item-active' : ''}`}
           onClick={() => setActiveTab('calendar')}
         >
           <CalendarDays />
           <span>Escalas</span>
         </button>
-        
-        <button 
+
+        <button
           className={`nav-item ${activeTab === 'logs' ? 'nav-item-active' : ''}`}
           onClick={() => setActiveTab('logs')}
         >
           <FileText />
           <span>Diário</span>
         </button>
-        
+
         {isAdmin && (
-          <button 
+          <button
             className={`nav-item ${activeTab === 'config' ? 'nav-item-active' : ''}`}
             onClick={() => setActiveTab('config')}
           >

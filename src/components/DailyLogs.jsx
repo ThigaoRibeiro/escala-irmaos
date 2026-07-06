@@ -250,8 +250,18 @@ export default function DailyLogs({
 
     group.entries.forEach((entry) => {
       text += `${formatLogTime(entry)} - ${entry.author}\n`;
-      getEntrySummaryItems(entry).forEach((item) => {
-        text += `- ${item}\n`;
+      getEntrySummarySections(entry).forEach((section) => {
+        if (section.title) {
+          text += `*${section.title}*\n`;
+        }
+
+        section.items.forEach((item) => {
+          text += `- ${item}\n`;
+        });
+
+        if (section.title || section.items.length > 0) {
+          text += '\n';
+        }
       });
 
       const entryReceipts = receiptsByLog[entry.id] || [];
@@ -556,13 +566,25 @@ export default function DailyLogs({
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
-                        {getEntrySummaryItems(entry).map((item, index, items) => (
-                          <li key={`${entry.id}_${index}`} style={{ marginBottom: index === items.length - 1 ? 0 : '4px' }}>
-                            {item}
-                          </li>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: 'var(--text-primary)', fontSize: '0.92rem' }}>
+                        {getEntrySummarySections(entry).map((section, index, sections) => (
+                          <div key={`${entry.id}_${index}`} style={{ marginBottom: index === sections.length - 1 ? 0 : '2px' }}>
+                            {section.title && (
+                              <div style={{ fontWeight: 700, marginBottom: section.items.length > 0 ? '4px' : 0 }}>
+                                {section.title}
+                              </div>
+                            )}
+
+                            {section.items.length > 0 && (
+                              <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                                {section.items.map((item, itemIndex) => (
+                                  <li key={`${entry.id}_${index}_${itemIndex}`}>{item}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         ))}
-                      </ul>
+                      </div>
 
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                         Registrado por <strong style={{ color: 'var(--text-primary)' }}>{entry.author}</strong>
@@ -909,6 +931,36 @@ function getEntrySummaryItems(log) {
       return line;
     })
     .filter(Boolean);
+}
+
+function getEntrySummarySections(log) {
+  return getEntrySummaryItems(log)
+    .map((item) => {
+      const separatorIndex = item.indexOf(':');
+
+      if (separatorIndex === -1) {
+        return {
+          title: '',
+          items: [item]
+        };
+      }
+
+      const title = item.slice(0, separatorIndex).trim();
+      const content = item.slice(separatorIndex + 1).trim();
+
+      if (!content) {
+        return {
+          title,
+          items: []
+        };
+      }
+
+      return {
+        title,
+        items: [content]
+      };
+    })
+    .filter((section) => section.title || section.items.length > 0);
 }
 
 function buildReceiptsByLog(receipts) {

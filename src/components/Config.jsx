@@ -162,7 +162,7 @@ export default function Config({ onConfigChanged }) {
       setIsFamilyLoading(true);
       setFamilyError('');
       await resetAllFamilyPasswords(defaultPassword, FAMILY_ACCOUNTS.map((account) => account.email));
-      setFamilySuccess(`Todos os irmãos foram preparados com a senha temporária ${defaultPassword}. Oriente cada um a trocar a senha após o primeiro login.`);
+      setFamilySuccess(`Todos os irmãos foram preparados com a senha temporária ${defaultPassword}. Oriente cada um a trocar a senha depois do primeiro acesso.`);
     } catch (e) {
       console.error('Erro ao redefinir senha dos irmãos:', e);
       setFamilySuccess('');
@@ -315,7 +315,7 @@ export default function Config({ onConfigChanged }) {
         )}
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-          Os irmãos entram com o e-mail real deles. Você pode preparar todos com a senha temporária <strong style={{ color: 'var(--text-primary)' }}>lessa123</strong> e depois cada um troca a própria senha dentro do app.
+          Os irmãos entram com o e-mail real de cada um. Você pode preparar todos com a senha temporária <strong style={{ color: 'var(--text-primary)' }}>lessa123</strong> e depois cada pessoa troca a própria senha dentro do app.
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
@@ -391,7 +391,7 @@ export default function Config({ onConfigChanged }) {
 
         <form onSubmit={handleAddCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-            O login da cuidadora é criado no Supabase com o padrão `nome@lessacare.com`. A senha atual não pode ser exibida depois, mas os irmãos podem redefinir uma nova senha temporária a qualquer momento.
+            O login da cuidadora é criado no Supabase com o padrão `nome@lessacare.com`. A senha atual não fica visível depois, mas os irmãos podem redefinir uma nova senha temporária sempre que precisarem.
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <input
@@ -421,7 +421,7 @@ export default function Config({ onConfigChanged }) {
               type="text"
               value={newCaregiverEmail}
               onChange={(e) => setNewCaregiverEmail(e.target.value)}
-              placeholder="Usuário / E-mail de acesso"
+              placeholder="Usuário / e-mail de acesso"
               className="form-control"
               style={{ flex: '1 1 180px' }}
               required
