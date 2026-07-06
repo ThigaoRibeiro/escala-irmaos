@@ -947,6 +947,9 @@ function getEntrySummarySections(log) {
 
       const title = item.slice(0, separatorIndex).trim();
       const content = item.slice(separatorIndex + 1).trim();
+      const shouldSplitIntoMultipleBullets =
+        title === 'Hidratação e fisiologia' ||
+        title === 'Higiene e bem-estar';
 
       if (!content) {
         return {
@@ -957,7 +960,9 @@ function getEntrySummarySections(log) {
 
       return {
         title,
-        items: [content]
+        items: shouldSplitIntoMultipleBullets
+          ? content.split('|').map((part) => part.trim()).filter(Boolean)
+          : [content]
       };
     })
     .filter((section) => section.title || section.items.length > 0);
