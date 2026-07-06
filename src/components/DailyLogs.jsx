@@ -358,6 +358,12 @@ export default function DailyLogs({
             <ReadOnlyField label="Registrado por" value={authorName} />
             <ReadOnlyField label="Responsável no plantão" value={responsibleName || 'Sem responsável escalado'} />
           </div>
+          <SectionTitle label="Sinais e medicações" />
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+            <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
+            <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
+            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
+          </div>
 
           <SectionTitle label="Medicamentos" />
           {medications.length === 0 ? (
@@ -387,14 +393,6 @@ export default function DailyLogs({
               ))}
             </div>
           )}
-
-          <SectionTitle label="Sinais e medicações" />
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-            <TextInput label="Pressão arterial" value={formData.pressure} onChange={(value) => updateField('pressure', value)} placeholder="Ex: 15x10" />
-            <TextInput label="Temperatura" value={formData.temperature} onChange={(value) => updateField('temperature', value)} placeholder="Ex: 37,2" />
-            <TextInput label="Sinais de alerta" value={formData.alertSigns} onChange={(value) => updateField('alertSigns', value)} placeholder="Tosse, febre, sonolência..." />
-          </div>
-
           <SectionTitle label="Sono e alimentação" />
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
             <SelectInput
@@ -449,7 +447,7 @@ export default function DailyLogs({
               options={['Calma', 'Agitada', 'Alegre', 'Triste', 'Confusa']}
             />
           </div>
-
+          <SectionTitle label="Atividades" />
           <div className="checkbox-group" style={{ flexWrap: 'wrap', marginBottom: '12px' }}>
             <label className="checkbox-label">
               <input
@@ -479,9 +477,8 @@ export default function DailyLogs({
               <span>Assistiu TV</span>
             </label>
           </div>
-
+          <SectionTitle label="Evolução / observação" />
           <div className="form-group">
-            <label className="form-label">Evolução / observação</label>
             <textarea
               value={formData.notes}
               onChange={(e) => updateField('notes', e.target.value)}
@@ -820,10 +817,12 @@ function buildEvolutionNotes(data) {
 
   const lines = [
     `Horário do registro: ${data.entryTime}`,
+    formatGroup('Sinais e medicações', [
+      formatItem('Pressão arterial', data.pressure),
+      formatItem('Temperatura', data.temperature),
+      formatItem('Sinais de alerta', data.alertSigns)
+    ]),
     formatMedicationGroup(data.medications, data.checkedMeds),
-    data.pressure ? `Pressão arterial: ${data.pressure}` : '',
-    data.temperature ? `Temperatura: ${data.temperature}` : '',
-    data.alertSigns ? `Sinais de alerta: ${data.alertSigns}` : '',
     data.sleepStatus ? `Sono: ${data.sleepStatus}` : '',
     formatGroup('Alimentação', [
       formatItem('Café da manhã', data.breakfast),
@@ -844,7 +843,7 @@ function buildEvolutionNotes(data) {
       formatItem('Humor', data.mood)
     ]),
     activities.length > 0 ? `Atividades: ${activities.join(' | ')}` : '',
-    data.notes ? `Evolução: ${data.notes}` : ''
+    data.notes ? `Evolução / observação: ${data.notes}` : ''
   ].filter(Boolean);
 
   return lines.map((line) => `- ${line}`).join('\n');
@@ -904,30 +903,20 @@ function buildGroupedLogs(logs) {
 function getEntrySummaryItems(log) {
   const lines = String(log.notes || '')
     .split('\n')
-    .map((line) => line.replace(/^(-|•|â€¢|Ã¢â‚¬Â¢|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s*/, '').trim())
+    .map((line) => line.replace(/^[-•]\s*/, '').trim())
     .filter(Boolean)
-    .filter((line) => (
-      !line.startsWith('Horário do registro:') &&
-      !line.startsWith('Horario do registro:') &&
-      !line.startsWith('HorÃ¡rio do registro:') &&
-      !line.startsWith('HorÃƒÂ¡rio do registro:')
-    ));
+    .filter((line) => !/^hor.*rio do registro:/i.test(line));
 
   return lines
     .map((line) => {
-      if (
-        line === 'Tipo: Evolução geral' ||
-        line === 'Tipo: Evolucao geral' ||
-        line === 'Tipo: EvoluÃ§Ã£o geral' ||
-        line === 'Tipo: EvoluÃƒÂ§ÃƒÂ£o geral'
-      ) {
+      if (/^tipo:\s*evol.*geral$/i.test(line)) {
         return '';
       }
 
-      if (line.startsWith('Evolução: ')) return line.replace('Evolução: ', '');
-      if (line.startsWith('Evolucao: ')) return line.replace('Evolucao: ', '');
-      if (line.startsWith('EvoluÃ§Ã£o: ')) return line.replace('EvoluÃ§Ã£o: ', '');
-      if (line.startsWith('EvoluÃƒÂ§ÃƒÂ£o: ')) return line.replace('EvoluÃƒÂ§ÃƒÂ£o: ', '');
+      if (/^evol.*:\s*/i.test(line)) {
+        return `Evolução / observação: ${line.replace(/^evol.*:\s*/i, '')}`;
+      }
+
       return line;
     })
     .filter(Boolean);
