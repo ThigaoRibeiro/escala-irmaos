@@ -1015,34 +1015,38 @@ function getEntrySummaryItems(log) {
 }
 
 function getEntrySummarySections(log) {
-  const parsedSections = getEntrySummaryItems(log)
-    .map((item) => {
-      const separatorIndex = item.indexOf(':');
+  const parsedSections = [];
 
-      if (separatorIndex === -1) {
-        return {
-          title: '',
-          items: [item]
-        };
-      }
+  getEntrySummaryItems(log).forEach((item) => {
+    const lastSection = parsedSections[parsedSections.length - 1];
 
-      const title = item.slice(0, separatorIndex).trim();
-      const content = item.slice(separatorIndex + 1).trim();
-      if (!content) {
-        return {
-          title,
-          items: []
-        };
-      }
+    if (shouldAppendToEvolutionSection(item, lastSection)) {
+      lastSection.items.push(item);
+      return;
+    }
 
-      return {
-        title,
-        items: content.includes('|')
+    const separatorIndex = item.indexOf(':');
+
+    if (separatorIndex === -1) {
+      parsedSections.push({
+        title: '',
+        items: [item]
+      });
+      return;
+    }
+
+    const title = item.slice(0, separatorIndex).trim();
+    const content = item.slice(separatorIndex + 1).trim();
+
+    parsedSections.push({
+      title,
+      items: !content
+        ? []
+        : content.includes('|')
           ? content.split('|').map((part) => part.trim()).filter(Boolean)
           : [content]
-      };
-    })
-    .filter((section) => section.title || section.items.length > 0);
+    });
+  });
 
   const groupedSections = [];
   const groupedIndex = new Map();
@@ -1079,6 +1083,17 @@ function getEntrySummarySections(log) {
     if (leftOrder === rightOrder) return 0;
     return leftOrder - rightOrder;
   });
+}
+
+function shouldAppendToEvolutionSection(item, lastSection) {
+  if (!lastSection) return false;
+
+  const normalizedTitle = normalizeSummarySectionTitle(lastSection.title);
+  if (normalizedTitle !== 'Evolução / observação') return false;
+
+  if (!item.includes(':')) return true;
+
+  return /^(\d{1,2}:\d{2}|\d{1,2}h(?:\d{2})?)/i.test(item);
 }
 
 function getLatestGroupReceipts(group, receiptsByLog) {
