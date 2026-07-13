@@ -581,9 +581,9 @@ export default function DailyLogs({
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
-                  <span className={group.entries.some((entry) => entry.meds_given) ? 'log-badge log-badge-done' : 'log-badge log-badge-pending'}>
-                    {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
-                    {group.entries.some((entry) => entry.meds_given) ? 'Com medicação registrada' : 'Sem medicação registrada'}
+                  <span className="log-badge log-badge-neutral">
+                    <ClipboardList size={12} />
+                    {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
                   </span>
 
                   <span

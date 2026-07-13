@@ -560,6 +560,12 @@ button, input, select, textarea {
   color: var(--color-success);
 }
 
+.log-badge-neutral {
+  background-color: rgba(45, 212, 191, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(45, 212, 191, 0.22);
+}
+
 .log-badge-pending {
   background-color: var(--color-danger-light);
   color: var(--color-danger);
