@@ -583,7 +583,7 @@ export default function DailyLogs({
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
                   <span className={group.entries.some((entry) => entry.meds_given) ? 'log-badge log-badge-done' : 'log-badge log-badge-pending'}>
                     {group.entries.some((entry) => entry.meds_given) ? <Check size={12} /> : <Clock3 size={12} />}
-                    {group.entries.length} {group.entries.length === 1 ? 'evolu\u00e7\u00e3o registrada' : 'evolu\u00e7\u00f5es registradas'}
+                    {group.entries.some((entry) => entry.meds_given) ? 'Com medicação registrada' : 'Sem medicação registrada'}
                   </span>
 
                   <span
