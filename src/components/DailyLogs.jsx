@@ -14,6 +14,21 @@ import {
   X
 } from 'lucide-react';
 
+// Rótulos de seção emitidos por buildEvolutionNotes (+ variantes legadas e sem acento).
+const KNOWN_SECTION_LABELS = new Set([
+  'horário do registro', 'horario do registro',
+  'sinais vitais e alertas',
+  'sinais e medicações', 'sinais e medicacoes',
+  'medicamentos administrados',
+  'sono',
+  'alimentação', 'alimentacao',
+  'hidratação e fisiologia', 'hidratacao e fisiologia',
+  'higiene e bem-estar',
+  'atividades',
+  'evolução / observação', 'evolucao / observacao',
+  'tipo'
+]);
+
 const REACTION_OPTIONS = [
   { emoji: '\u2764\uFE0F', label: 'Carinho' },
   { emoji: '\uD83D\uDC4D', label: 'Ciente' },
@@ -1005,8 +1020,8 @@ function getEntrySummaryItems(log) {
         return '';
       }
 
-      if (/^evol.*:\s*/i.test(line)) {
-        return `Evolução / observação: ${line.replace(/^evol.*:\s*/i, '')}`;
+      if (/^evol.*?:\s*/i.test(line)) {
+        return `Evolução / observação: ${line.replace(/^evol.*?:\s*/i, '')}`;
       }
 
       return line;
@@ -1093,7 +1108,14 @@ function shouldAppendToEvolutionSection(item, lastSection) {
 
   if (!item.includes(':')) return true;
 
-  return /^(\d{1,2}:\d{2}|\d{1,2}h(?:\d{2})?)/i.test(item);
+  // Texto livre da observação costuma conter ':' (horários, pressão, proporções).
+  // Só encerra a seção quando o trecho antes do ':' é um rótulo conhecido.
+  return !isKnownSectionLabel(item.slice(0, item.indexOf(':')));
+}
+
+function isKnownSectionLabel(title) {
+  const normalized = String(title || '').trim().toLowerCase();
+  return KNOWN_SECTION_LABELS.has(normalized) || isLegacySignalField(title);
 }
 
 function getLatestGroupReceipts(group, receiptsByLog) {
