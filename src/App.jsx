@@ -273,8 +273,13 @@ export default function App() {
 
   const handleSaveLog = async (date, period, author, caregiver, medsGiven, mealsOk, notes) => {
     try {
-      await saveDailyLog(date, period, author, caregiver, medsGiven, mealsOk, notes);
-      setDbTrigger((prev) => prev + 1);
+      const savedLog = await saveDailyLog(date, period, author, caregiver, medsGiven, mealsOk, notes);
+      if (savedLog && savedLog.id) {
+        setLogs((prev) => ({
+          ...prev,
+          [savedLog.id]: savedLog
+        }));
+      }
       return true;
     } catch (e) {
       console.error('Falha ao salvar diário de bordo:', e);

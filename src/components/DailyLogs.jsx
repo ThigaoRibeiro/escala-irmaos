@@ -84,6 +84,8 @@ export default function DailyLogs({
   const [expandedEntryId, setExpandedEntryId] = useState(null);
   const [reactionPickerEntryId, setReactionPickerEntryId] = useState(null);
 
+  const [visibleCount, setVisibleCount] = useState(10);
+
   const selectedShift = shifts?.[`${date}_${period}`];
   const responsibleName = selectedShift?.assigned_to || selectedShift?.caregiver_assigned || '';
   const authorName = currentUserName || responsibleName || 'Sem identificação';
@@ -106,6 +108,7 @@ export default function DailyLogs({
   }, [currentUserName]);
 
   const groupedLogs = useMemo(() => buildGroupedLogs(logs), [logs]);
+  const visibleGroupedLogs = useMemo(() => groupedLogs.slice(0, visibleCount), [groupedLogs, visibleCount]);
   const receiptsByLog = useMemo(() => buildReceiptsByLog(receipts), [receipts]);
 
   const updateField = (field, value) => {
@@ -535,122 +538,123 @@ export default function DailyLogs({
           Nenhuma evolução registrada ainda.
         </div>
       ) : (
-        groupedLogs.map((group) => {
-          const isGroupExpanded = expandedGroupKey === group.key;
-          const groupReceipts = getLatestGroupReceipts(group, receiptsByLog);
-          const groupReactionTotals = getReactionTotals(groupReceipts);
-          const groupViewerCountLabel = buildViewerCountLabel(groupReceipts.length);
-          const lastEntry = group.entries[group.entries.length - 1];
+        <>
+          {visibleGroupedLogs.map((group) => {
+            const isGroupExpanded = expandedGroupKey === group.key;
+            const groupReceipts = getLatestGroupReceipts(group, receiptsByLog);
+            const groupReactionTotals = getReactionTotals(groupReceipts);
+            const groupViewerCountLabel = buildViewerCountLabel(groupReceipts.length);
+            const lastEntry = group.entries[group.entries.length - 1];
 
-          return (
-            <div
-              key={group.key}
-              className="log-item animate-fade"
-              style={{ borderLeftColor: getMemberColor(group.responsibleName) }}
-            >
-              <button
-                type="button"
-                onClick={() => handleGroupToggle(group)}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  padding: 0,
-                  textAlign: 'left',
-                  color: 'inherit',
-                  cursor: 'pointer'
-                }}
+            return (
+              <div
+                key={group.key}
+                className="log-item animate-fade"
+                style={{ borderLeftColor: getMemberColor(group.responsibleName) }}
               >
-                <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
-                  <span className="log-author" style={{ color: getMemberColor(group.responsibleName) }}>
-                    {getMemberAvatar(group.responsibleName)} {group.responsibleName}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Calendar size={12} />
-                    {formatLogDate(group.date)} - {group.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginTop: '4px' }}>
-                  <div style={{ fontSize: '0.9rem' }}>
-                    {'Em plant\u00e3o: '}<strong>{group.responsibleName}</strong>
+                <button
+                  type="button"
+                  onClick={() => handleGroupToggle(group)}
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    textAlign: 'left',
+                    color: 'inherit',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div className="log-meta" style={{ alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
+                    <span className="log-author" style={{ color: getMemberColor(group.responsibleName) }}>
+                      {getMemberAvatar(group.responsibleName)} {group.responsibleName}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Calendar size={12} />
+                      {formatLogDate(group.date)} - {group.period === 'diurno' ? '☀️ Dia' : '🌙 Noite'}
+                    </span>
                   </div>
-                  <div
-                    style={{
-                      color: isGroupExpanded ? 'var(--text-primary)' : 'var(--primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      padding: '6px 10px',
-                      borderRadius: '999px',
-                      border: isGroupExpanded ? '1px solid var(--border-color)' : '1px solid rgba(45, 212, 191, 0.38)',
-                      backgroundColor: isGroupExpanded ? 'rgba(255, 255, 255, 0.04)' : 'rgba(45, 212, 191, 0.14)',
-                      boxShadow: isGroupExpanded ? 'none' : '0 0 0 1px rgba(45, 212, 191, 0.06)'
-                    }}
-                  >
-                    <span>{isGroupExpanded ? 'Recolher diário' : 'Abrir diário'}</span>
-                    {isGroupExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </div>
-                </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
-                  <span className="log-badge log-badge-neutral">
-                    <ClipboardList size={12} />
-                    {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
-                  </span>
-
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      borderRadius: '999px',
-                      padding: '4px 10px',
-                      fontSize: '0.78rem',
-                      color: 'var(--text-muted)',
-                      backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                      border: '1px solid rgba(34, 197, 94, 0.28)'
-                    }}
-                  >
-                    <Eye size={14} />
-                    <span>{groupViewerCountLabel}</span>
-                  </span>
-
-                  {groupReactionTotals.map((item) => (
-                    <span
-                      key={[group.key, item.reaction].join('_')}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.9rem' }}>
+                      {'Em plant\u00e3o: '}<strong>{group.responsibleName}</strong>
+                    </div>
+                    <div
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--border-color)',
+                        color: isGroupExpanded ? 'var(--text-primary)' : 'var(--primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        padding: '6px 10px',
                         borderRadius: '999px',
-                        padding: '3px 8px',
-                        fontSize: '0.78rem',
-                        color: 'var(--text-muted)'
+                        border: isGroupExpanded ? '1px solid var(--border-color)' : '1px solid rgba(45, 212, 191, 0.38)',
+                        backgroundColor: isGroupExpanded ? 'rgba(255, 255, 255, 0.04)' : 'rgba(45, 212, 191, 0.14)',
+                        boxShadow: isGroupExpanded ? 'none' : '0 0 0 1px rgba(45, 212, 191, 0.06)'
                       }}
                     >
-                      {item.reaction} {item.count}
+                      <span>{isGroupExpanded ? 'Recolher diário' : 'Abrir diário'}</span>
+                      {isGroupExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
+                    <span className="log-badge log-badge-neutral">
+                      <ClipboardList size={12} />
+                      {group.entries.length} {group.entries.length === 1 ? 'evolução registrada' : 'evoluções registradas'}
                     </span>
-                  ))}
-                </div>
 
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                  {'\u00daltima atualiza\u00e7\u00e3o: '}<strong style={{ color: 'var(--text-primary)' }}>{formatLogTime(lastEntry)}</strong>
-                </div>
-              </button>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        borderRadius: '999px',
+                        padding: '4px 10px',
+                        fontSize: '0.78rem',
+                        color: 'var(--text-muted)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                        border: '1px solid rgba(34, 197, 94, 0.28)'
+                      }}
+                    >
+                      <Eye size={14} />
+                      <span>{groupViewerCountLabel}</span>
+                    </span>
 
-              {isGroupExpanded && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                  {group.entries.map((entry) => {
-                    const entryReceipts = receiptsByLog[entry.id] || [];
-                    const viewerReceipt = entryReceipts.find((receipt) => isSameViewerName(receipt.viewer_name, currentUserName));
-                    const reactionTotals = getReactionTotals(entryReceipts);
-                    const isDetailsOpen = expandedEntryId === entry.id;
-                    const isReactionPickerOpen = reactionPickerEntryId === entry.id;
-                    const viewerCountLabel = buildViewerCountLabel(entryReceipts.length);
+                    {groupReactionTotals.map((item) => (
+                      <span
+                        key={[group.key, item.reaction].join('_')}
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '999px',
+                          padding: '3px 8px',
+                          fontSize: '0.78rem',
+                          color: 'var(--text-muted)'
+                        }}
+                      >
+                        {item.reaction} {item.count}
+                      </span>
+                    ))}
+                  </div>
 
-                    return (
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                    {'Última atualização: '}<strong style={{ color: 'var(--text-primary)' }}>{formatLogTime(lastEntry)}</strong>
+                  </div>
+                </button>
+
+                {isGroupExpanded && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                    {group.entries.map((entry) => {
+                      const entryReceipts = receiptsByLog[entry.id] || [];
+                      const viewerReceipt = entryReceipts.find((receipt) => isSameViewerName(receipt.viewer_name, currentUserName));
+                      const reactionTotals = getReactionTotals(entryReceipts);
+                      const isDetailsOpen = expandedEntryId === entry.id;
+                      const isReactionPickerOpen = reactionPickerEntryId === entry.id;
+                      const viewerCountLabel = buildViewerCountLabel(entryReceipts.length);
+
+                      return (
                       <div
                         key={entry.id}
                         style={{
@@ -855,6 +859,20 @@ export default function DailyLogs({
             </div>
           );
         })
+      )}
+
+      {groupedLogs.length > visibleCount && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', marginBottom: '24px' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setVisibleCount((prev) => prev + 10)}
+            style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '8px', padding: '10px 16px' }}
+          >
+            <Clock3 size={16} />
+            <span>Ver mais plantões anteriores ({groupedLogs.length - visibleCount} restantes)</span>
+          </button>
+        </div>
       )}
     </div>
   );

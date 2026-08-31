@@ -282,7 +282,10 @@ async function sendRealtimeBroadcast(event, payload) {
     const channel = getBroadcastChannel();
     if (!channel || !broadcastReadyPromise) return false;
 
-    const isReady = await broadcastReadyPromise;
+    const isReady = await Promise.race([
+      broadcastReadyPromise,
+      new Promise((resolve) => setTimeout(() => resolve(false), 800))
+    ]);
     if (!isReady) return false;
 
     await channel.send({
@@ -570,7 +573,7 @@ export async function addCaregiver(name, email, password) {
     });
 
     if (result.caregiver) {
-      await sendRealtimeBroadcast('caregiver-change', {
+      void sendRealtimeBroadcast('caregiver-change', {
         eventType: 'UPSERT',
         row: result.caregiver
       });
@@ -596,7 +599,7 @@ export async function deleteCaregiver(id) {
   const client = getSupabaseClient();
   if (client) {
     await callCaregiverAdminFunction('delete_caregiver', { caregiverId: id });
-    await sendRealtimeBroadcast('caregiver-change', {
+    void sendRealtimeBroadcast('caregiver-change', {
       eventType: 'DELETE',
       old: { id }
     });
@@ -699,7 +702,7 @@ export async function addMedication(time, name, dose, note) {
       .insert({ time, name, dose, note })
       .select();
     if (error) throw error;
-    await sendRealtimeBroadcast('medication-change', { eventType: 'UPSERT', row: data[0] });
+    void sendRealtimeBroadcast('medication-change', { eventType: 'UPSERT', row: data[0] });
     return data[0];
   }
 
@@ -716,7 +719,7 @@ export async function deleteMedication(id) {
   if (client) {
     const { error } = await client.from('medications').delete().eq('id', id);
     if (error) throw error;
-    await sendRealtimeBroadcast('medication-change', { eventType: 'DELETE', old: { id } });
+    void sendRealtimeBroadcast('medication-change', { eventType: 'DELETE', old: { id } });
     return true;
   }
 
@@ -730,9 +733,15 @@ export async function deleteMedication(id) {
 export async function getShifts() {
   const client = getSupabaseClient();
   if (client) {
+    // Busca escalas dos últimos 45 dias em diante para manter a resposta leve
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - 45);
+    const sinceDateStr = sinceDate.toISOString().split('T')[0];
+
     const { data, error } = await client
       .from('shifts')
-      .select('*');
+      .select('*')
+      .gte('date', sinceDateStr);
     if (error) throw error;
 
     const shiftsObj = {};
@@ -770,7 +779,7 @@ export async function updateShift(date, period, assigned_to, caregiver_assigned,
       .from('shifts')
       .upsert(row);
     if (error) throw error;
-    await sendRealtimeBroadcast('shift-change', {
+    void sendRealtimeBroadcast('shift-change', {
       eventType: 'UPSERT',
       row
     });
@@ -785,13 +794,19 @@ export async function updateShift(date, period, assigned_to, caregiver_assigned,
 
 // --- OPERAÇÕES DE DIÁRIO (LOGS) ---
 
-export async function getDailyLogs() {
+export async function getDailyLogs(limit = 100) {
   const client = getSupabaseClient();
   if (client) {
-    const { data, error } = await client
+    let query = client
       .from('daily_logs')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
 
     const logsObj = {};
@@ -810,13 +825,19 @@ export async function getDailyLogs() {
   return JSON.parse(local);
 }
 
-export async function getDailyLogReceipts() {
+export async function getDailyLogReceipts(limit = 200) {
   const client = getSupabaseClient();
   if (client) {
-    const { data, error } = await client
+    let query = client
       .from('daily_log_receipts')
       .select('*')
       .order('viewed_at', { ascending: false });
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       if (isMissingRelationError(error, 'daily_log_receipts')) {
@@ -852,21 +873,23 @@ export async function saveDailyLog(date, period, author, caregiver, meds_given, 
 
   const client = getSupabaseClient();
   if (client) {
-    const { error } = await client
+    const { data, error } = await client
       .from('daily_logs')
-      .insert(row);
+      .insert(row)
+      .select();
     if (error) throw error;
-    await sendRealtimeBroadcast('log-change', {
+    const insertedRow = data?.[0] || row;
+    void sendRealtimeBroadcast('log-change', {
       eventType: 'UPSERT',
-      row
+      row: insertedRow
     });
-    return true;
+    return insertedRow;
   }
 
-  const logs = await getDailyLogs();
+  const logs = await getDailyLogs(null);
   logs[id] = row;
   localStorage.setItem(LOCAL_LOGS_KEY, JSON.stringify(logs));
-  return true;
+  return row;
 }
 
 export async function markDailyLogSeen(logId, viewerName) {
@@ -896,7 +919,7 @@ export async function markDailyLogSeen(logId, viewerName) {
       throw error;
     }
 
-    await sendRealtimeBroadcast('log-receipt-change', {
+    void sendRealtimeBroadcast('log-receipt-change', {
       eventType: 'UPSERT',
       row: data
     });
@@ -938,7 +961,7 @@ export async function setDailyLogReaction(logId, viewerName, reaction) {
       throw error;
     }
 
-    await sendRealtimeBroadcast('log-receipt-change', {
+    void sendRealtimeBroadcast('log-receipt-change', {
       eventType: 'UPSERT',
       row: data
     });
