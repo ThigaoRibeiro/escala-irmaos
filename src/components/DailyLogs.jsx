@@ -858,24 +858,25 @@ export default function DailyLogs({
               </div>
             </div>
           );
-        })
-      )}
+        })}
 
-      {groupedLogs.length > visibleCount && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', marginBottom: '24px' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setVisibleCount((prev) => prev + 10)}
-            style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '8px', padding: '10px 16px' }}
-          >
-            <Clock3 size={16} />
-            <span>Ver mais plantões anteriores ({groupedLogs.length - visibleCount} restantes)</span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
+        {groupedLogs.length > visibleCount && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px', marginBottom: '24px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setVisibleCount((prev) => prev + 10)}
+              style={{ width: '100%', maxWidth: '380px', justifyContent: 'center', gap: '8px', padding: '10px 16px' }}
+            >
+              <Clock3 size={16} />
+              <span>Ver mais plantões anteriores ({groupedLogs.length - visibleCount} restantes)</span>
+            </button>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+);
 }
 
 function SectionTitle({ label }) {
