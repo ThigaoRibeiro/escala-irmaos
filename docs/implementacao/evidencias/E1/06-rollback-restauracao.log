@@ -1,0 +1,172 @@
+﻿====================================================
+PASSO 6: ROLLBACK E RESTAURAÇÃO DO BANCO DE DADOS
+====================================================
+Data/Hora: 2026-11-03T18:01:34Z
+Arquivo Rollback: docs/implementacao/sql/estoque_e1_rollback.sql
+Arquivo Migration: supabase/migrations/20260707120000_estoque_e1.sql
+
+--- APLICAÇÃO DO ROLLBACK (Código: 0) ---
+DO
+DO
+DO
+DO
+DO
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP TABLE
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+DROP FUNCTION
+
+
+--- TABELAS EM PUBLIC APÓS ROLLBACK ---
+caregivers
+daily_log_receipts
+daily_logs
+medications
+shifts
+
+
+--- RESTAURAÇÃO DA MIGRATION (Código: 0) ---
+CREATE FUNCTION
+GRANT
+REVOKE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE FUNCTION
+docker : NOTICE:  trigger "trg_estoque_produtos_autoria" for relation "public.estoque_produtos" does not exist, 
+skipping
+No C:\Users\thiag\Projetos\escala-irmaos\scripts\estoque\evidencia-e1.ps1:221 caractere:55
++ ... Path -Raw | docker exec -i supabase_db_estoque-local-db psql -U postg ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (NOTICE:  trigge...exist, skipping:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+NOTICE:  trigger "trg_estoque_produtos_auditoria" for relation "public.estoque_produtos" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+NOTICE:  trigger "trg_estoque_movimentos_validar" for relation "public.estoque_movimentos" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+NOTICE:  trigger "trg_estoque_sinalizacoes_autoria" for relation "public.estoque_sinalizacoes" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+NOTICE:  trigger "trg_estoque_produtos_bloquear_delete" for relation "public.estoque_produtos" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+NOTICE:  trigger "trg_estoque_movimentos_bloquear_upd_del" for relation "public.estoque_movimentos" does not exist, 
+skipping
+DROP TRIGGER
+CREATE TRIGGER
+NOTICE:  trigger "trg_estoque_sinalizacoes_bloquear_upd_del" for relation "public.estoque_sinalizacoes" does not 
+exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+NOTICE:  trigger "trg_estoque_auditoria_bloquear_upd_del" for relation "public.estoque_auditoria" does not exist, 
+skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+GRANT
+REVOKE
+REVOKE
+REVOKE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+NOTICE:  policy "estoque_produtos_select_policy" for relation "public.estoque_produtos" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_produtos_insert_policy" for relation "public.estoque_produtos" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_produtos_update_policy" for relation "public.estoque_produtos" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_movimentos_select_policy" for relation "public.estoque_movimentos" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_movimentos_insert_policy" for relation "public.estoque_movimentos" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_sinalizacoes_select_policy" for relation "public.estoque_sinalizacoes" does not exist, 
+skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_sinalizacoes_insert_policy" for relation "public.estoque_sinalizacoes" does not exist, 
+skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_compras_select_policy" for relation "public.estoque_compras" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+NOTICE:  policy "estoque_auditoria_select_policy" for relation "public.estoque_auditoria" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+DO
+DO
+DO
+DO
+DO
+
+
+--- TABELAS EM PUBLIC APÓS RESTAURAÇÃO ---
+caregivers
+daily_log_receipts
+daily_logs
+estoque_auditoria
+estoque_compras
+estoque_movimentos
+estoque_produtos
+estoque_sinalizacoes
+medications
+shifts
+
