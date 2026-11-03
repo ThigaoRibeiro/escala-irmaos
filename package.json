@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:tz": "node scripts/estoque/test-tz.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -16,11 +18,14 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@testing-library/react": "16.3.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "jsdom": "30.1.3",
     "oxlint": "^1.69.0",
     "vite": "^8.1.0",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "5.1.0"
   }
 }
