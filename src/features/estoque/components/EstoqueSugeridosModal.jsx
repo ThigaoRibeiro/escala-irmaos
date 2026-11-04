@@ -70,7 +70,7 @@ export default function EstoqueSugeridosModal({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 36, minWidth: 36, padding: 0 }}
+            style={{ minHeight: 44, minWidth: 44, padding: 0 }}
             onClick={onFechar}
             aria-label="Fechar"
           >
@@ -123,6 +123,7 @@ export default function EstoqueSugeridosModal({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '8px 10px',
+                        minHeight: 44,
                         border: '1px solid var(--border-color)',
                         borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer',
@@ -167,6 +168,7 @@ export default function EstoqueSugeridosModal({
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '8px 10px',
+                        minHeight: 44,
                             border: '1px solid var(--border-color)',
                             borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer',

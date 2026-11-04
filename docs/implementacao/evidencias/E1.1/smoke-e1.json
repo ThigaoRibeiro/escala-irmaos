@@ -1,0 +1,2809 @@
+{
+  "geradoEm": "2026-11-04T00:42:14.710Z",
+  "node": "v24.20.0",
+  "navegador": "156.0.8078.49",
+  "viewport": "360x800 fixo (DPR 2, toque)",
+  "passos": [
+    {
+      "nome": "A1. Irmão entra (Supabase Auth real) e o app carrega",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A2. Cuidadora entra (Supabase Auth real) e o app carrega",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A3. Irmão: Escalas, Diário, Configurações e Estoque abrem sem tela de erro",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A4. Cuidadora: Escalas, Diário e Estoque abrem; Configurações não aparece",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A5. Cadastrar produto pela tela (fralda, pacote de 20, 6 por dia)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A6. Produto novo fica ⚪ sem projeção e pede a primeira conferência",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A7. Primeira conferência: 3 pacotes = 60 fraldas, com previsão de término",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A8. \"Está acabando\" registra o aviso com o nome de quem avisou",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A9. \"Eu compro\" marca o comprador no card",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A10. TEMPO REAL: a cuidadora vê a compra assumida sem recarregar a página",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A11. Cuidadora conclui a compra (1 pacote = 20 fraldas)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A12. TEMPO REAL: o irmão vê a compra concluída sem recarregar",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A13. Banco: entrada de 20 gravada com a autoria da cuidadora (vinda do login, não do cliente)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A14. Histórico + estorno: corrigir a entrada exige motivo e gera um estorno",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A15. Selo da navegação = ⚫ acabou + 🔴 comprar do cabeçalho (inclui remédio ligado à agenda)",
+      "ok": true,
+      "detalhe": "selo=2, cabeçalho=2"
+    },
+    {
+      "nome": "A16. WhatsApp: \"Copiar mensagem\" e \"Abrir no WhatsApp\" com mensagem pronta, sem envio automático",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "A17. Nenhum erro de console/página nas duas sessões (Realtime do selo + aba convivem)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "B. Medir irmao / light",
+      "ok": true,
+      "detalhe": "Escalas:50px Diário:50px Configurações:50px Estoque:50px"
+    },
+    {
+      "nome": "B. Medir irmao / dark",
+      "ok": true,
+      "detalhe": "Escalas:50px Diário:50px Configurações:50px Estoque:50px"
+    },
+    {
+      "nome": "B. Medir cuidadora / light",
+      "ok": true,
+      "detalhe": "Escalas:0px Diário:0px Estoque:0px"
+    },
+    {
+      "nome": "B. Medir cuidadora / dark",
+      "ok": true,
+      "detalhe": "Escalas:0px Diário:0px Estoque:0px"
+    },
+    {
+      "nome": "C. irmao: sem a migration, nada quebra e o Estoque avisa que não está configurado",
+      "ok": true,
+      "detalhe": "8 mensagem(ns) 404 esperada(s) do navegador"
+    },
+    {
+      "nome": "C. cuidadora: sem a migration, nada quebra e o Estoque avisa que não está configurado",
+      "ok": true,
+      "detalhe": "8 mensagem(ns) 404 esperada(s) do navegador"
+    },
+    {
+      "nome": "D. Medir a rolagem horizontal do SUPERADMIN na origin/main (Escalas, 360 px)",
+      "ok": true,
+      "detalhe": "origin/main ed6c8f2: 50px"
+    },
+    {
+      "nome": "B-resumo. Nenhum elemento do CONTEÚDO (abas e modais) passa da borda em 360 px",
+      "ok": true,
+      "detalhe": "46 medições"
+    },
+    {
+      "nome": "B-resumo. Rolagem horizontal da página causada pelo estoque = 0",
+      "ok": true,
+      "detalhe": "AVISO pré-existente: 24 de 46 medições (só o papel \"irmao\"/SUPERADMIN, TODAS as abas) têm 50px de rolagem, idêntica na origin/main ed6c8f2 (50px). Elemento fora do conteúdo: {\"tag\":\"div\",\"classe\":\"\",\"direita\":410.3,\"noConteudo\":false}"
+    },
+    {
+      "nome": "B-resumo. Rótulos da navegação (3 e 4 itens) sem corte nem quebra de linha",
+      "ok": true,
+      "detalhe": "46 medições"
+    },
+    {
+      "nome": "B-resumo. Alvos de toque do Estoque >= 44 px",
+      "ok": true,
+      "detalhe": "4 telas"
+    }
+  ],
+  "medicoes": [
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Escalas",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Diário",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Configurações",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 39,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Novo produto",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 19,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Sugeridos",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 26,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal WhatsApp",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 5,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Conferência",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Compra",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 10,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Saída",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Histórico",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 3,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "light",
+      "tela": "Estoque: modal Editar produto",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 18,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Escalas",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Diário",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Configurações",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 39,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Novo produto",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 19,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Sugeridos",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 26,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal WhatsApp",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 5,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Conferência",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Compra",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 10,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Saída",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Histórico",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 3,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "irmao",
+      "esquema": "dark",
+      "tela": "Estoque: modal Editar produto",
+      "rolagemHorizontalPx": 50,
+      "larguraDocumento": 410,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [
+        {
+          "tag": "div",
+          "classe": "",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "button",
+          "classe": "btn btn-outline",
+          "direita": 410.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "svg",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 398.3,
+          "noConteudo": false
+        },
+        {
+          "tag": "path",
+          "classe": "[object SVGAnimatedString]",
+          "direita": 395.8,
+          "noConteudo": false
+        }
+      ],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Configurações",
+          "larguraItem": 90,
+          "larguraTexto": 77.2,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 18,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Escalas",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Diário",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 39,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Novo produto",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 19,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Sugeridos",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 26,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal WhatsApp",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 5,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Conferência",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Compra",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 10,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Saída",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Histórico",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 3,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "light",
+      "tela": "Estoque: modal Editar produto",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 18,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Escalas",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Diário",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": null
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 39,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Novo produto",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 19,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Sugeridos",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 26,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal WhatsApp",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 5,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Conferência",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Compra",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 10,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Saída",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 6,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Histórico",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 3,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    },
+    {
+      "papel": "cuidadora",
+      "esquema": "dark",
+      "tela": "Estoque: modal Editar produto",
+      "rolagemHorizontalPx": 0,
+      "larguraDocumento": 360,
+      "larguraJanela": 360,
+      "elementosQuePassamDaBorda": [],
+      "nav": [
+        {
+          "texto": "Escalas",
+          "larguraItem": 90,
+          "larguraTexto": 39.8,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Diário",
+          "larguraItem": 90,
+          "larguraTexto": 33.1,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        },
+        {
+          "texto": "Estoque",
+          "larguraItem": 90,
+          "larguraTexto": 42.9,
+          "cortado": false,
+          "alturaItem": 41,
+          "quebrouLinha": null
+        }
+      ],
+      "alvos": {
+        "total": 18,
+        "abaixoDe44": 0,
+        "itens": []
+      }
+    }
+  ],
+  "telas": [
+    {
+      "nome": "A16-whatsapp-claro",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\A16-whatsapp-claro.png",
+      "sha256": "4e0df9f48a0e3074612e5898784291595f3ecf76c64d8a042adeacc24b519a7c"
+    },
+    {
+      "nome": "B-estoque-irmao-light",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-irmao-light.png",
+      "sha256": "ec8a951ed05ee754ea0b53eb3bb26c14582b57ffc77781434bbe15e9b5821e31"
+    },
+    {
+      "nome": "B-estoque-irmao-dark",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-irmao-dark.png",
+      "sha256": "e72b886d74d628a8f22d8e190caeb078c42542395bd9b07e79179e9d39916b26"
+    },
+    {
+      "nome": "B-estoque-cuidadora-light",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-cuidadora-light.png",
+      "sha256": "c4760666d87d824d593265aad16de90e74192b4501515bfca4452e910673ce31"
+    },
+    {
+      "nome": "B-estoque-cuidadora-dark",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-cuidadora-dark.png",
+      "sha256": "cc166430043622a9773705796553b9ab4dc3a3d921c57bebaf8694013a702a6d"
+    },
+    {
+      "nome": "C-sem-migration-irmao",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\C-sem-migration-irmao.png",
+      "sha256": "14345c5409ef681ca726621f2a7a3ccbfe2b6ab021a6651b2475b8f5116fa34c"
+    },
+    {
+      "nome": "C-sem-migration-cuidadora",
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\C-sem-migration-cuidadora.png",
+      "sha256": "f0d3825e132e93ab181cf63f92046fe7e576f868a311d73398c23902a31af78c"
+    }
+  ],
+  "baselineMain": {
+    "commit": "ed6c8f2",
+    "rolagemHorizontalPx": 50,
+    "elementos": [
+      {
+        "tag": "div",
+        "classe": "",
+        "direita": 410.3,
+        "noConteudo": false
+      },
+      {
+        "tag": "button",
+        "classe": "btn btn-outline",
+        "direita": 410.3,
+        "noConteudo": false
+      }
+    ]
+  },
+  "rolagemFora": {
+    "telasMedidas": 46,
+    "telasComRolagemHorizontal": 24,
+    "telasSomenteComElementoDoTopo": 24,
+    "papeis": [
+      "irmao"
+    ]
+  },
+  "resumo": {
+    "passos": 28,
+    "falhas": 0
+  }
+}

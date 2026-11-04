@@ -52,7 +52,7 @@ export default function EstoqueConferenciaModal({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 36, minWidth: 36, padding: 0 }}
+            style={{ minHeight: 44, minWidth: 44, padding: 0 }}
             onClick={onFechar}
             aria-label="Fechar"
           >
@@ -111,7 +111,7 @@ export default function EstoqueConferenciaModal({
                     key={f.label}
                     type="button"
                     className="est-btn est-btn-outline"
-                    style={{ fontSize: '0.75rem', padding: '0 8px', minHeight: 36 }}
+                    style={{ fontSize: '0.75rem', padding: '0 8px', minHeight: 44 }}
                     onClick={() => handleAplicarFracao(f.valor)}
                   >
                     {f.label} (~{Math.round(f.valor * eq)} ml)

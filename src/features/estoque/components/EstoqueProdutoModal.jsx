@@ -132,7 +132,7 @@ export default function EstoqueProdutoModal({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 36, minWidth: 36, padding: 0 }}
+            style={{ minHeight: 44, minWidth: 44, padding: 0 }}
             onClick={onFechar}
             aria-label="Fechar"
           >
@@ -276,7 +276,7 @@ export default function EstoqueProdutoModal({
                   </span>
                   <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: 6, marginTop: 4 }}>
                     {medications.map(med => (
-                      <label key={med.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', padding: '3px 0', cursor: 'pointer' }}>
+                      <label key={med.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', padding: '3px 0', minHeight: 44, cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           checked={medicamentoIds.includes(String(med.id))}
@@ -297,7 +297,7 @@ export default function EstoqueProdutoModal({
                         min="0.01"
                         step="any"
                         className="est-input"
-                        style={{ minHeight: 36 }}
+                        style={{ minHeight: 44 }}
                         value={qtdPorAdmin}
                         onChange={(e) => setQtdPorAdmin(e.target.value)}
                         required
@@ -366,7 +366,7 @@ export default function EstoqueProdutoModal({
           </div>
 
           <div style={{ padding: 10, border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600, minHeight: 44 }}>
               <input
                 type="checkbox"
                 checked={requerReceita}
@@ -431,7 +431,7 @@ export default function EstoqueProdutoModal({
                 <button
                   type="button"
                   className="est-btn est-btn-danger"
-                  style={{ minHeight: 36, fontSize: '0.75rem' }}
+                  style={{ minHeight: 44, fontSize: '0.75rem' }}
                   onClick={async () => {
                     if (window.confirm(`Deseja arquivar "${produto.nome}"? Ele não aparecerá na lista ativa.`)) {
                       await onArquivar(produto.id);

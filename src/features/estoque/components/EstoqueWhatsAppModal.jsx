@@ -44,7 +44,7 @@ export default function EstoqueWhatsAppModal({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 36, minWidth: 36, padding: 0 }}
+            style={{ minHeight: 44, minWidth: 44, padding: 0 }}
             onClick={onFechar}
             aria-label="Fechar"
           >

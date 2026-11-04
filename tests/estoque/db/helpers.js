@@ -23,7 +23,7 @@ function base64Url(data) {
   return Buffer.from(data).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function gerarJwt(payload) {
+export function gerarJwt(payload) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const corpo = {
     iss: 'supabase-demo',

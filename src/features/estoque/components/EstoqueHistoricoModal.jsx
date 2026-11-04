@@ -69,7 +69,7 @@ export default function EstoqueHistoricoModal({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 36, minWidth: 36, padding: 0 }}
+            style={{ minHeight: 44, minWidth: 44, padding: 0 }}
             onClick={onFechar}
             aria-label="Fechar"
           >
@@ -151,7 +151,7 @@ export default function EstoqueHistoricoModal({
                               <input
                                 type="text"
                                 className="est-input"
-                                style={{ minHeight: 36, fontSize: '0.8rem' }}
+                                style={{ minHeight: 44, fontSize: '0.8rem' }}
                                 placeholder="Ex: digitação errada da quantidade"
                                 value={motivoEstorno}
                                 onChange={(e) => setMotivoEstorno(e.target.value)}
@@ -162,7 +162,7 @@ export default function EstoqueHistoricoModal({
                               <button
                                 type="button"
                                 className="est-btn est-btn-secondary"
-                                style={{ minHeight: 32, fontSize: '0.75rem' }}
+                                style={{ minHeight: 44, fontSize: '0.75rem' }}
                                 onClick={() => {
                                   setEstornandoId(null);
                                   setMotivoEstorno('');
@@ -174,7 +174,7 @@ export default function EstoqueHistoricoModal({
                               <button
                                 type="button"
                                 className="est-btn est-btn-danger"
-                                style={{ minHeight: 32, fontSize: '0.75rem' }}
+                                style={{ minHeight: 44, fontSize: '0.75rem' }}
                                 onClick={() => handleConfirmarEstorno(m.id)}
                                 disabled={processando}
                               >
@@ -186,7 +186,7 @@ export default function EstoqueHistoricoModal({
                           <button
                             type="button"
                             className="est-btn est-btn-outline"
-                            style={{ minHeight: 30, fontSize: '0.75rem', padding: '0 8px' }}
+                            style={{ minHeight: 44, fontSize: '0.75rem', padding: '0 8px' }}
                             onClick={() => {
                               setEstornandoId(m.id);
                               setMotivoEstorno('');

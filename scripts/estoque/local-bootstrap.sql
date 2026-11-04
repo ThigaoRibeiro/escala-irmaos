@@ -77,6 +77,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_logs TO authenticated
 GRANT SELECT, INSERT, UPDATE ON TABLE public.daily_log_receipts TO authenticated;
 GRANT SELECT ON TABLE public.medications TO authenticated;
 
+-- Policies equivalentes às de produção (espelham as migrations existentes: "App publico pode ..." para
+-- authenticated). Sem elas, RLS ligado e nenhuma policy = o app local enxerga ZERO linhas (cuidadoras e
+-- remédios incluídos) e desloga as cuidadoras. Apenas para o ambiente LOCAL de testes.
+DO $$
+DECLARE
+    t text;
+BEGIN
+    FOREACH t IN ARRAY ARRAY['caregivers', 'shifts', 'daily_logs', 'daily_log_receipts', 'medications'] LOOP
+        EXECUTE format('DROP POLICY IF EXISTS "local leitura %1$s" ON public.%1$s', t);
+        EXECUTE format('CREATE POLICY "local leitura %1$s" ON public.%1$s FOR SELECT TO authenticated USING (true)', t);
+    END LOOP;
+    FOREACH t IN ARRAY ARRAY['shifts', 'daily_logs', 'daily_log_receipts'] LOOP
+        EXECUTE format('DROP POLICY IF EXISTS "local insercao %1$s" ON public.%1$s', t);
+        EXECUTE format('CREATE POLICY "local insercao %1$s" ON public.%1$s FOR INSERT TO authenticated WITH CHECK (true)', t);
+        EXECUTE format('DROP POLICY IF EXISTS "local atualizacao %1$s" ON public.%1$s', t);
+        EXECUTE format('CREATE POLICY "local atualizacao %1$s" ON public.%1$s FOR UPDATE TO authenticated USING (true) WITH CHECK (true)', t);
+    END LOOP;
+END $$;
+
 -- Seed inicial de medicamentos na agenda
 INSERT INTO public.medications (id, time, name, dose, note)
 VALUES 

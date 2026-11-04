@@ -248,7 +248,7 @@ export function EstoqueTabContent({
           <button
             type="button"
             className="est-btn est-btn-outline"
-            style={{ minHeight: 30, fontSize: '0.75rem', marginLeft: 'auto' }}
+            style={{ minHeight: 44, fontSize: '0.75rem', marginLeft: 'auto' }}
             onClick={() => carregarDados()}
           >
             Tentar novamente
