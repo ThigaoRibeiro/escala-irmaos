@@ -16,13 +16,35 @@ export function isTabelaAusenteError(error) {
          msg.includes('could not find the') && msg.includes('schema cache');
 }
 
+const TAMANHO_PAGINA = 1000;
+const MAX_PAGINAS = 200;
+
+/**
+ * Busca TODAS as linhas de uma consulta, página a página.
+ * O PostgREST limita cada resposta (max_rows, 1000 por padrão) e corta o excedente em silêncio;
+ * como o saldo depende do movimento mais recente, uma única página daria saldo errado.
+ * Continua até receber uma página vazia, então funciona mesmo se o servidor limitar abaixo de 1000.
+ * `montarQuery` precisa devolver uma consulta nova, com ordenação total (ex.: coluna + id).
+ */
+async function buscarPaginado(montarQuery) {
+  const linhas = [];
+  for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+    const de = pagina * TAMANHO_PAGINA;
+    const { data, error } = await montarQuery().range(de, de + TAMANHO_PAGINA - 1);
+    if (error) return { data: null, error };
+    if (!data || data.length === 0) return { data: linhas, error: null };
+    linhas.push(...data);
+  }
+  return { data: null, error: new Error('O histórico do estoque é grande demais para ser carregado.') };
+}
+
 /**
  * Busca produtos, movimentos, sinalizações e compras assumidas do banco.
  * @param {boolean} [incluirArquivados=false]
  * @returns {Promise<{ sucesso: boolean, tabelasAusentes?: boolean, erro?: string, produtos: Array, movimentos: Array, sinalizacoes: Array, compras: Array }>}
  */
-export async function buscarDadosEstoque(incluirArquivados = false) {
-  const supabase = getSupabaseClient();
+export async function buscarDadosEstoque(incluirArquivados = false, cliente = null) {
+  const supabase = cliente || getSupabaseClient();
   if (!supabase) {
     return {
       sucesso: false,
@@ -36,20 +58,18 @@ export async function buscarDadosEstoque(incluirArquivados = false) {
   }
 
   try {
-    let queryProdutos = supabase
-      .from('estoque_produtos')
-      .select('*')
-      .order('nome', { ascending: true });
-
-    if (!incluirArquivados) {
-      queryProdutos = queryProdutos.is('arquivado_em', null);
-    }
-
     const [resProdutos, resMovs, resSinais, resCompras] = await Promise.all([
-      queryProdutos,
-      supabase.from('estoque_movimentos').select('*').order('ocorrido_em', { ascending: true }),
-      supabase.from('estoque_sinalizacoes').select('*').order('criado_em', { ascending: true }),
-      supabase.from('estoque_compras').select('*').eq('status', 'assumida')
+      buscarPaginado(() => {
+        let q = supabase.from('estoque_produtos').select('*');
+        if (!incluirArquivados) q = q.is('arquivado_em', null);
+        return q.order('nome', { ascending: true }).order('id', { ascending: true });
+      }),
+      buscarPaginado(() => supabase.from('estoque_movimentos').select('*')
+        .order('ocorrido_em', { ascending: true }).order('id', { ascending: true })),
+      buscarPaginado(() => supabase.from('estoque_sinalizacoes').select('*')
+        .order('criado_em', { ascending: true }).order('id', { ascending: true })),
+      buscarPaginado(() => supabase.from('estoque_compras').select('*').eq('status', 'assumida')
+        .order('assumida_em', { ascending: true }).order('id', { ascending: true }))
     ]);
 
     // Verifica erro de tabela inexistente
@@ -401,14 +421,17 @@ export async function concluirCompra(compraId, quantidadeBase, valorPago = null,
  * @param {Function} onMudanca
  * @returns {{ unsubscribe: Function }}
  */
-export function assinarRealtimeEstoque(onMudanca) {
-  const supabase = getSupabaseClient();
+export function assinarRealtimeEstoque(onMudanca, cliente = null) {
+  const supabase = cliente || getSupabaseClient();
   if (!supabase || !supabase.channel) {
     return { unsubscribe: () => {} };
   }
 
+  // Nome ÚNICO por assinatura: o selo da navegação e a aba assinam ao mesmo tempo. O supabase-js
+  // devolve o canal já existente quando o nome repete, e adicionar callbacks depois do subscribe()
+  // lança erro. Cada assinatura também remove só o próprio canal.
   const canal = supabase
-    .channel('estoque_realtime_channel')
+    .channel(`estoque_rt_${novoIdCanal()}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'estoque_produtos' }, () => onMudanca('produtos'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'estoque_movimentos' }, () => onMudanca('movimentos'))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'estoque_sinalizacoes' }, () => onMudanca('sinalizacoes'))
@@ -420,4 +443,11 @@ export function assinarRealtimeEstoque(onMudanca) {
       supabase.removeChannel(canal);
     }
   };
+}
+
+function novoIdCanal() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 }

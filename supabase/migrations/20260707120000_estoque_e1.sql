@@ -205,6 +205,7 @@ BEGIN
         NEW.atualizado_por_email := lower(auth.jwt()->>'email');
         NEW.atualizado_em := now();
         IF NEW.arquivado_em IS NOT NULL THEN
+            NEW.arquivado_em := now();
             NEW.arquivado_por := auth.uid();
         ELSE
             NEW.arquivado_por := NULL;
@@ -218,11 +219,14 @@ BEGIN
         NEW.atualizado_por_email := lower(auth.jwt()->>'email');
         NEW.atualizado_em := now();
 
+        -- A data de arquivamento vem sempre do relógio do banco, nunca do cliente.
         IF NEW.arquivado_em IS NOT NULL AND OLD.arquivado_em IS NULL THEN
+            NEW.arquivado_em := now();
             NEW.arquivado_por := auth.uid();
         ELSIF NEW.arquivado_em IS NULL AND OLD.arquivado_em IS NOT NULL THEN
             NEW.arquivado_por := NULL;
         ELSIF NEW.arquivado_em IS NOT NULL AND OLD.arquivado_em IS NOT NULL THEN
+            NEW.arquivado_em := OLD.arquivado_em;
             NEW.arquivado_por := coalesce(OLD.arquivado_por, auth.uid());
         ELSE
             NEW.arquivado_por := NULL;
@@ -512,9 +516,11 @@ BEGIN
         RAISE EXCEPTION 'Usuario nao autorizado para operacoes de estoque' USING ERRCODE = '42501';
     END IF;
 
+    -- FOR UPDATE: serializa com concluir/desistir simultaneos da mesma compra.
     SELECT status INTO v_status
     FROM public.estoque_compras
-    WHERE id = p_compra;
+    WHERE id = p_compra
+    FOR UPDATE;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Compra % nao encontrada', p_compra;
@@ -530,6 +536,10 @@ BEGIN
         finalizada_por = auth.uid(),
         finalizada_por_email = lower(auth.jwt()->>'email')
     WHERE id = p_compra AND status = 'assumida';
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'A compra % mudou de situacao durante a operacao', p_compra;
+    END IF;
 END;
 $$;
 
@@ -563,7 +573,8 @@ BEGIN
     INTO v_produto_id, v_status, v_prod_arquivado_em
     FROM public.estoque_compras c
     JOIN public.estoque_produtos p ON p.id = c.produto_id
-    WHERE c.id = p_compra;
+    WHERE c.id = p_compra
+    FOR UPDATE OF c;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Compra % nao encontrada', p_compra;
@@ -612,6 +623,10 @@ BEGIN
         finalizada_por_email = lower(auth.jwt()->>'email'),
         movimento_entrada_id = v_movimento_id
     WHERE id = p_compra AND status = 'assumida';
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'A compra % mudou de situacao durante a operacao', p_compra;
+    END IF;
 
     RETURN v_movimento_id;
 END;
