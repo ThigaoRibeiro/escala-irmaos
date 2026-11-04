@@ -334,6 +334,7 @@ export default function Config({ onConfigChanged }) {
           {FAMILY_ACCOUNTS.map((account) => (
             <div
               key={account.email}
+              className="config-conta-linha"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -345,7 +346,7 @@ export default function Config({ onConfigChanged }) {
                 border: '1px solid var(--border-color)'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+              <div className="config-conta-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                 <span style={{ fontSize: '1.1rem' }}>{account.avatar}</span>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span>{account.name}</span>
@@ -452,6 +453,7 @@ export default function Config({ onConfigChanged }) {
             caregivers.map((item) => (
               <div
                 key={item.id}
+                className="config-conta-linha"
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -463,7 +465,7 @@ export default function Config({ onConfigChanged }) {
                   border: '1px solid var(--border-color)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                <div className="config-conta-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
                   <span style={{ fontSize: '1.2rem' }}>{CAREGIVER_STYLE.avatar}</span>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{item.name}</span>
