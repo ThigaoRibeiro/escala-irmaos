@@ -82,7 +82,7 @@ describe('whatsapp.test.js - Formatação de mensagem para WhatsApp', () => {
     const texto = gerarTextoWhatsApp(itens, compras, userMapping, caregivers, agora);
 
     expect(texto).toContain('📦 Estoque da mãe – 15/07');
-    expect(texto).toContain('⚪ Acabou\n• Shampoo Johnson – 🙋‍♂️ Thiago vai comprar');
+    expect(texto).toContain('⚫ Acabou\n• Shampoo Johnson – 🙋‍♂️ Thiago vai comprar');
     expect(texto).toContain('🔴 Comprar agora\n• Fralda Geriátrica G – 45 fraldas (~ 2,3 pacotes), acaba ~20/07');
     expect(texto).toContain('🟡 Ficar de olho (pesquisar preço)\n• Curativo Gaze – 3 pacotes, acaba ~28/07');
     expect(texto).toContain('⚪ 2 itens sem conferência');
@@ -101,7 +101,7 @@ describe('whatsapp.test.js - Formatação de mensagem para WhatsApp', () => {
 
     const texto = gerarTextoWhatsApp(itens, [], userMapping, caregivers, agora);
     expect(texto).toContain('🔴 Comprar agora');
-    expect(texto).not.toContain('⚪ Acabou');
+    expect(texto).not.toContain('⚫ Acabou');
     expect(texto).not.toContain('🟡 Ficar de olho');
     expect(texto).not.toContain('sem conferência');
   });

@@ -17,7 +17,7 @@ import {
   concluirCompra,
   assinarRealtimeEstoque
 } from './data/estoqueService.js';
-import { calcularSaldoEProjecao } from './domain/saldo.js';
+import { calcularItens, contarPorSituacao } from './domain/resumo.js';
 import { ordenarItensEstoque } from './domain/ordenacao.js';
 
 import EstoqueHeader from './components/EstoqueHeader.jsx';
@@ -110,16 +110,10 @@ export function EstoqueTabContent({
   }, [carregarDados]);
 
   // Cálculos puros para cada produto
-  const itensCalculados = useMemo(() => {
-    const agora = new Date();
-    return produtos.map((prod) => {
-      const calc = calcularSaldoEProjecao(prod, movimentos, sinalizacoes, medications, agora);
-      return {
-        produto: prod,
-        calculo: calc
-      };
-    });
-  }, [produtos, movimentos, sinalizacoes, medications]);
+  const itensCalculados = useMemo(
+    () => calcularItens(produtos, movimentos, sinalizacoes, medications, new Date()),
+    [produtos, movimentos, sinalizacoes, medications]
+  );
 
   // Mapa de compras assumidas por produto_id
   const comprasAssumidasMap = useMemo(() => {
@@ -133,16 +127,7 @@ export function EstoqueTabContent({
   }, [compras]);
 
   // Contagem para o header
-  const contadores = useMemo(() => {
-    const c = { acabou: 0, critico: 0, atencao: 0, sem_conferencia: 0, ok: 0 };
-    for (const item of itensCalculados) {
-      const sit = item.calculo?.situacao;
-      if (c[sit] !== undefined) {
-        c[sit]++;
-      }
-    }
-    return c;
-  }, [itensCalculados]);
+  const contadores = useMemo(() => contarPorSituacao(itensCalculados), [itensCalculados]);
 
   // Filtragem
   const itensFiltrados = useMemo(() => {

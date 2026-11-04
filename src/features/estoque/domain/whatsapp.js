@@ -84,6 +84,11 @@ export function gerarTextoWhatsApp(itens = [], compras = [], userMapping = {}, c
       return `• ${prod.nome} – 🙋‍♂️ ${comprador} vai comprar`;
     }
 
+    // Avisado por alguém, mas ainda sem a primeira conferência: não há saldo nem previsão.
+    if (calc.temConferencia === false) {
+      return `• ${prod.nome} – sem conferência`;
+    }
+
     const qtdStr = formatarQuantidade(
       calc.saldoEstimado ?? calc.saldo,
       prod.unidade_base,
@@ -100,7 +105,7 @@ export function gerarTextoWhatsApp(itens = [], compras = [], userMapping = {}, c
 
   if (itensAcabou.length > 0) {
     const linhas = itensAcabou.map(formatarLinhaProduto);
-    blocos.push(`⚪ Acabou\n${linhas.join('\n')}`);
+    blocos.push(`⚫ Acabou\n${linhas.join('\n')}`);
   }
 
   if (itensCritico.length > 0) {

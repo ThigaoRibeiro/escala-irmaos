@@ -30,7 +30,7 @@ describe('agenda.test.js - Vínculo com a agenda de remédios (M11)', () => {
     expect(res.vinculoMudou).toBe(false);
   });
 
-  it('detecta vínculo parcialmente quebrado quando uma linha da agenda é removida', () => {
+  it('A3: vínculo parcialmente quebrado com consumo manual usa o consumo manual (nunca reduz pelos horários restantes)', () => {
     const produto = {
       id: 'p-mem',
       nome: 'Memantina 10mg',
@@ -39,13 +39,39 @@ describe('agenda.test.js - Vínculo com a agenda de remédios (M11)', () => {
       embalagem_quantidade: 30,
       modo_consumo: 'taxa',
       medicamento_ids: ['101', '102', '999'], // 999 não existe mais na agenda
-      quantidade_por_administracao: 1
+      quantidade_por_administracao: 1,
+      consumo_diario_base: 3
     };
 
     const res = calcularConsumoDiario(produto, medications);
-    // Encontrou 2 de 3: consumo = 2, mas vinculoMudou = true
-    expect(res.consumoDiario).toBe(2);
+    expect(res.consumoDiario).toBe(3);
     expect(res.vinculoMudou).toBe(true);
+    expect(res.vinculoQuebradoSemManual).toBe(false);
+  });
+
+  it('A3: vínculo parcialmente quebrado SEM consumo manual não estima nada (⚪ com o motivo)', () => {
+    const produto = {
+      id: 'p-mem',
+      nome: 'Memantina 10mg',
+      unidade_base: 'comprimido',
+      embalagem_nome: 'caixa',
+      embalagem_quantidade: 30,
+      modo_consumo: 'taxa',
+      medicamento_ids: ['101', '102', '999'],
+      quantidade_por_administracao: 1,
+      consumo_diario_base: null
+    };
+
+    const res = calcularConsumoDiario(produto, medications);
+    expect(res.consumoDiario).toBe(0);
+    expect(res.vinculoMudou).toBe(true);
+    expect(res.vinculoQuebradoSemManual).toBe(true);
+
+    const movimentos = [{ id: 'c-1', produto_id: 'p-mem', tipo: 'conferencia', quantidade_base: 30, ocorrido_em: agora.toISOString() }];
+    const calc = calcularSaldoEProjecao(produto, movimentos, [], medications, agora);
+    expect(calc.situacao).toBe('sem_conferencia');
+    expect(calc.diasRestantes).toBeNull();
+    expect(calc.situacaoLabel).toContain('quebrado');
   });
 
   it('vínculo totalmente quebrado com consumo manual configurado usa o consumo manual', () => {

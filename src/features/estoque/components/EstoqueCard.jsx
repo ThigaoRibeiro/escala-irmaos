@@ -92,6 +92,14 @@ export default function EstoqueCard({
             <p style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
               ⚪ Produto novo: ainda não possui nenhuma conferência registrada. Sem projeção de término.
             </p>
+            {sinalizacaoPendente && (
+              <p style={{ margin: '0 0 8px 0', fontSize: '0.875rem' }}>
+                <span className="est-tag est-tag-aviso">
+                  <AlertCircle size={12} />
+                  Avisado por {obterNomeUsuario(sinalizacaoPendente.criado_por_email, userMapping, caregivers)} em {formatarDataPtBr(sinalizacaoPendente.criado_em)}
+                </span>
+              </p>
+            )}
             <button
               type="button"
               className="est-btn est-btn-primary"

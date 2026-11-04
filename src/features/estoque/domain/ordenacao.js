@@ -1,7 +1,7 @@
 /**
  * Função pura para ordenação da lista de estoque.
  * Ordem dos grupos:
- * 1. ⚪ Acabou (`acabou`)
+ * 1. ⚫ Acabou (`acabou`)
  * 2. 🔴 Comprar agora (`critico`)
  * 3. 🟡 Ficar de olho (`atencao`)
  * 4. ⚪ Sem conferência (`sem_conferencia`)

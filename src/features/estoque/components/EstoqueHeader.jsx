@@ -72,7 +72,7 @@ export default function EstoqueHeader({
           title="Filtrar itens que acabaram"
         >
           <div className="est-summary-icon-count">
-            <span>⚪</span>
+            <span>⚫</span>
             <span>{contadores.acabou || 0}</span>
           </div>
           <span className="est-summary-label">Acabou</span>

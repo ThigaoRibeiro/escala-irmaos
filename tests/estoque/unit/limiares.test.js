@@ -147,13 +147,13 @@ describe('limiares.test.js - Limiares e fronteiras exatas (M1, M3)', () => {
       estoque_atencao_base: 5
     };
 
-    it('saldo <= 0 -> acabou (⚪)', () => {
+    it('saldo <= 0 -> acabou (⚫)', () => {
       const movimentos = [
         { id: 'c-1', produto_id: 'p-min', tipo: 'conferencia', quantidade_base: 0, ocorrido_em: agora.toISOString() }
       ];
       const res = calcularSaldoEProjecao(produtoMin, movimentos, [], [], agora);
       expect(res.situacao).toBe('acabou');
-      expect(res.situacaoIcon).toBe('⚪');
+      expect(res.situacaoIcon).toBe('⚫');
     });
 
     it('fronteira mínima exata: saldo == estoque_minimo_base -> crítico (🔴)', () => {

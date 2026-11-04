@@ -23,6 +23,8 @@ import {
 } from './utils/db';
 import { CalendarDays, FileText, Package, Settings } from 'lucide-react';
 
+import EstoqueLazyBoundary from './features/estoque/EstoqueLazyBoundary';
+
 const EstoqueTab = React.lazy(() => import('./features/estoque/EstoqueTab'));
 const EstoqueNavBadge = React.lazy(() => import('./features/estoque/EstoqueNavBadge'));
 
@@ -410,13 +412,15 @@ export default function App() {
             )}
 
             {activeTab === 'estoque' && (
-              <React.Suspense fallback={<div className="loading-spinner">Carregando estoque...</div>}>
-                <EstoqueTab
-                  medications={medications}
-                  caregivers={caregivers}
-                  currentUserEmail={userEmail}
-                />
-              </React.Suspense>
+              <EstoqueLazyBoundary modo="aba">
+                <React.Suspense fallback={<div className="loading-spinner">Carregando estoque...</div>}>
+                  <EstoqueTab
+                    medications={medications}
+                    caregivers={caregivers}
+                    currentUserEmail={userEmail}
+                  />
+                </React.Suspense>
+              </EstoqueLazyBoundary>
             )}
 
             {isAdmin && activeTab === 'config' && (
@@ -451,9 +455,11 @@ export default function App() {
         >
           <div style={{ position: 'relative', display: 'inline-flex' }}>
             <Package />
-            <React.Suspense fallback={null}>
-              <EstoqueNavBadge />
-            </React.Suspense>
+            <EstoqueLazyBoundary modo="selo">
+              <React.Suspense fallback={null}>
+                <EstoqueNavBadge medications={medications} />
+              </React.Suspense>
+            </EstoqueLazyBoundary>
           </div>
           <span>Estoque</span>
         </button>

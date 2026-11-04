@@ -25,6 +25,22 @@ export function formatarDataPtBr(data, incluirAno = false) {
 }
 
 /**
+ * Sinalização "está acabando" mais recente criada depois de `desdeMs` (a última conferência/entrada).
+ * @param {Array} sinalizacoes
+ * @param {string} produtoId
+ * @param {number} desdeMs
+ * @returns {Object|null}
+ */
+function obterSinalizacaoPendente(sinalizacoes, produtoId, desdeMs) {
+  const pendentes = (sinalizacoes || []).filter((s) => {
+    return s.produto_id === produtoId && new Date(s.criado_em).getTime() > desdeMs;
+  });
+  if (pendentes.length === 0) return null;
+  pendentes.sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+  return pendentes[0];
+}
+
+/**
  * Calcula o consumo diário efetivo do produto, verificando vínculo com a agenda de remédios.
  * O texto da coluna `dose` NUNCA é interpretado.
  *
@@ -50,16 +66,9 @@ export function calcularConsumoDiario(produto, medications = []) {
       };
     }
 
-    if (existingMeds.length > 0) {
-      return {
-        consumoDiario: existingMeds.length * qtdPorAdmin,
-        vinculoOrigem: `pela agenda (${existingMeds.length} de ${linkedIds.length} horários restantes)`,
-        vinculoMudou: true,
-        vinculoQuebradoSemManual: false
-      };
-    }
-
-    // Vínculo totalmente quebrado (nenhuma linha existe mais na agenda)
+    // Vínculo parcial ou totalmente quebrado (alguma linha da agenda sumiu). Nunca se reduz o consumo
+    // pelos horários que sobraram: isso superestimaria os dias restantes e atrasaria o alerta.
+    // Usa o consumo manual, se houver; senão, fica sem estimativa (⚪) com o motivo.
     if (consumoManual > 0) {
       return {
         consumoDiario: consumoManual,
@@ -125,12 +134,15 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
   const conferencias = movsValidos.filter(m => m.tipo === 'conferencia');
 
   if (conferencias.length === 0) {
+    // Sem saldo confiável não há projeção. Mas um aviso "está acabando" de alguém não pode se perder:
+    // eleva para pelo menos 🟡 (sem inventar dias restantes).
+    const avisoSemConferencia = obterSinalizacaoPendente(sinalizacoes, produto.id, -Infinity);
     return {
       produtoId: produto.id,
       temConferencia: false,
-      situacao: 'sem_conferencia',
-      situacaoLabel: 'Sem conferência',
-      situacaoIcon: '⚪',
+      situacao: avisoSemConferencia ? 'atencao' : 'sem_conferencia',
+      situacaoLabel: avisoSemConferencia ? 'Avisado: sem conferência' : 'Sem conferência',
+      situacaoIcon: avisoSemConferencia ? '🟡' : '⚪',
       saldo: null,
       saldoEstimado: null,
       diasRestantes: null,
@@ -138,7 +150,7 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
       previsaoTerminoFormatada: null,
       ancora: null,
       conferirDeNovo: false,
-      sinalizacaoPendente: null,
+      sinalizacaoPendente: avisoSemConferencia,
       consumoDiario: 0,
       vinculoOrigem: 'Sem conferência',
       vinculoMudou: false,
@@ -210,7 +222,8 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
         previsaoTerminoFormatada = formatarDataPtBr(previsaoTermino);
       }
     } else {
-      diasRestantes = Infinity;
+      // Sem consumo configurado não há projeção. Vínculo quebrado: nenhum dado de dias (⚪ com o motivo).
+      diasRestantes = infoConsumo.vinculoQuebradoSemManual ? null : Infinity;
     }
   }
 
@@ -231,7 +244,7 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
     } else if (saldoEstimado <= 0) {
       situacao = 'acabou';
       situacaoLabel = 'Acabou';
-      situacaoIcon = '⚪';
+      situacaoIcon = '⚫';
     } else if (diasRestantes <= diasCritico) {
       situacao = 'critico';
       situacaoLabel = 'Comprar agora';
@@ -253,7 +266,7 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
     if (saldo <= 0) {
       situacao = 'acabou';
       situacaoLabel = 'Acabou';
-      situacaoIcon = '⚪';
+      situacaoIcon = '⚫';
     } else if (saldo <= minBase) {
       situacao = 'critico';
       situacaoLabel = 'Comprar agora';
@@ -281,17 +294,8 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
     }
   }
 
-  const prodSinais = (sinalizacoes || []).filter(s => s.produto_id === produto.id);
-  const sinaisPendentes = prodSinais.filter(s => {
-    const t = new Date(s.criado_em).getTime();
-    return t > ultimoMovConferidoOuEntradaMs;
-  });
-
-  let sinalizacaoPendente = null;
-  if (sinaisPendentes.length > 0) {
-    sinaisPendentes.sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
-    sinalizacaoPendente = sinaisPendentes[0];
-
+  const sinalizacaoPendente = obterSinalizacaoPendente(sinalizacoes, produto.id, ultimoMovConferidoOuEntradaMs);
+  if (sinalizacaoPendente) {
     // Sinalização pendente eleva situação para pelo menos 🟡 Ficar de olho
     if (situacao === 'ok') {
       situacao = 'atencao';
@@ -307,7 +311,9 @@ export function calcularSaldoEProjecao(produto, movimentos = [], sinalizacoes = 
   let receitaStatus = null;
   if (produto.requer_receita) {
     if (produto.receita_validade) {
-      const validadeMs = new Date(produto.receita_validade + 'T23:59:59.999Z').getTime();
+      // A receita vale até o fim do dia em Brasília (UTC-3 fixo; o Brasil não tem horário de verão
+      // desde 2019). Em UTC o "fim do dia" cairia às 21h de Brasília e a receita venceria antes da hora.
+      const validadeMs = new Date(`${produto.receita_validade}T23:59:59.999-03:00`).getTime();
       if (validadeMs < agoraMs) {
         receitaStatus = { tipo: 'vencida', texto: 'Receita vencida' };
       } else {
