@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '0 11 * * 1'
   workflow_dispatch:
+  # Autoteste: roda também quando ESTE arquivo é alterado em um Pull Request.
+  pull_request:
+    paths:
+      - '.github/workflows/verificar-token.yml'
 
 permissions:
   contents: read
