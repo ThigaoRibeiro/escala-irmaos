@@ -1,0 +1,68 @@
+﻿====================================================
+PASSO 1: TRAVA DE ARQUIVOS PERMITIDOS VS ORIGIN/MAIN
+====================================================
+Data/Hora: 2026-11-03T18:01:03Z
+Branch: feat/estoque-e1
+Base: origin/main
+
+Total de arquivos modificados/criados: 56
+Lista de arquivos:
+docs/implementacao/evidencias/E1/01-trava-arquivos.log
+docs/implementacao/evidencias/E1/02-lint.log
+docs/implementacao/evidencias/E1/03-test-tz.log
+docs/implementacao/evidencias/E1/04-db-tests.log
+docs/implementacao/evidencias/E1/05-migration-idempotencia.log
+docs/implementacao/evidencias/E1/06-rollback-restauracao.log
+docs/implementacao/evidencias/E1/07-build-node22.log
+docs/implementacao/evidencias/E1/08-hashes-e-chunks.txt
+docs/implementacao/evidencias/E1/SHA256SUMS.txt
+docs/implementacao/prompts/lote-e1-estoque.md
+docs/implementacao/prompts/prompt-base-estoque.md
+docs/implementacao/prompts/teamwork-e1.md
+docs/implementacao/sql/estoque_e1_rollback.sql
+package-lock.json
+package.json
+scripts/estoque/db-local.ps1
+scripts/estoque/evidencia-e1.ps1
+scripts/estoque/local-bootstrap.sql
+scripts/estoque/test-tz.mjs
+src/App.jsx
+src/features/estoque/EstoqueNavBadge.jsx
+src/features/estoque/EstoqueTab.jsx
+src/features/estoque/components/EstoqueCard.jsx
+src/features/estoque/components/EstoqueCompraModal.jsx
+src/features/estoque/components/EstoqueConferenciaModal.jsx
+src/features/estoque/components/EstoqueErrorBoundary.jsx
+src/features/estoque/components/EstoqueHeader.jsx
+src/features/estoque/components/EstoqueHistoricoModal.jsx
+src/features/estoque/components/EstoqueProdutoModal.jsx
+src/features/estoque/components/EstoqueSaidaModal.jsx
+src/features/estoque/components/EstoqueSugeridosModal.jsx
+src/features/estoque/components/EstoqueWhatsAppModal.jsx
+src/features/estoque/data/estoqueService.js
+src/features/estoque/domain/catalogoSugerido.js
+src/features/estoque/domain/conversoes.js
+src/features/estoque/domain/index.js
+src/features/estoque/domain/ordenacao.js
+src/features/estoque/domain/saldo.js
+src/features/estoque/domain/whatsapp.js
+src/features/estoque/estoque.css
+supabase/migrations/20260707120000_estoque_e1.sql
+tests/estoque/components/EstoqueCard.test.jsx
+tests/estoque/components/EstoqueErrorBoundary.test.jsx
+tests/estoque/components/EstoqueNavBadge.test.jsx
+tests/estoque/unit/agenda.test.js
+tests/estoque/unit/conferenciaAntiga.test.js
+tests/estoque/unit/conversoes.test.js
+tests/estoque/unit/limiares.test.js
+tests/estoque/unit/migrationMapping.test.js
+tests/estoque/unit/ordenacao.test.js
+tests/estoque/unit/responsividade360.test.js
+tests/estoque/unit/saldo.test.js
+tests/estoque/unit/semConferencia.test.js
+tests/estoque/unit/sinalizacao.test.js
+tests/estoque/unit/whatsapp.test.js
+vitest.config.js
+
+Verificação de conformidade com a lista de permitidos:
+[SUCESSO] 100% dos arquivos estao estritamente dentro da lista permitida do Lote E1.

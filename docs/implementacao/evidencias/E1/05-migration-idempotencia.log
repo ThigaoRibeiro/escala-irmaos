@@ -1,0 +1,219 @@
+﻿====================================================
+PASSO 5: IDEMPOTÊNCIA DA MIGRATION
+====================================================
+Data/Hora: 2026-11-03T18:01:33Z
+Arquivo: supabase/migrations/20260707120000_estoque_e1.sql
+
+--- 1ª APLICAÇÃO (Código: 0) ---
+CREATE FUNCTION
+GRANT
+REVOKE
+docker : NOTICE:  relation "estoque_produtos" already exists, skipping
+No C:\Users\thiag\Projetos\escala-irmaos\scripts\estoque\evidencia-e1.ps1:178 caractere:52
++ ... Path -Raw | docker exec -i supabase_db_estoque-local-db psql -U postg ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (NOTICE:  relati...xists, skipping:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CREATE TABLE
+CREATE INDEX
+NOTICE:  relation "estoque_produtos_nome_ativo_idx" already exists, skipping
+NOTICE:  relation "estoque_movimentos" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "estoque_movimentos_estorna_unico_idx" already exists, skipping
+CREATE INDEX
+CREATE TABLE
+NOTICE:  relation "estoque_sinalizacoes" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "estoque_compras" already exists, skipping
+NOTICE:  relation "estoque_compras_assumida_unica_idx" already exists, skipping
+CREATE INDEX
+CREATE TABLE
+NOTICE:  relation "estoque_auditoria" already exists, skipping
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+GRANT
+REVOKE
+REVOKE
+REVOKE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+DO
+DO
+DO
+DO
+DO
+
+
+--- 2ª APLICAÇÃO CONSECUTIVA (Código: 0) ---
+CREATE FUNCTION
+GRANT
+REVOKE
+docker : NOTICE:  relation "estoque_produtos" already exists, skipping
+No C:\Users\thiag\Projetos\escala-irmaos\scripts\estoque\evidencia-e1.ps1:181 caractere:52
++ ... Path -Raw | docker exec -i supabase_db_estoque-local-db psql -U postg ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (NOTICE:  relati...xists, skipping:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+CREATE TABLE
+NOTICE:  relation "estoque_produtos_nome_ativo_idx" already exists, skipping
+CREATE INDEX
+CREATE TABLE
+NOTICE:  relation "estoque_movimentos" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "estoque_movimentos_estorna_unico_idx" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "estoque_sinalizacoes" already exists, skipping
+NOTICE:  relation "estoque_compras" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "estoque_compras_assumida_unica_idx" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "estoque_auditoria" already exists, skipping
+CREATE TABLE
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+GRANT
+GRANT
+GRANT
+REVOKE
+REVOKE
+REVOKE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+GRANT
+REVOKE
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+DROP POLICY
+CREATE POLICY
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+DO
+DO
+DO
+DO
+DO
+

@@ -1,0 +1,46 @@
+{
+  "antes": [
+    {
+      "arquivo": "index-sf-tRrKv.js",
+      "bytes": 501727
+    },
+    {
+      "arquivo": "index-Z2m_9DIi.css",
+      "bytes": 9250
+    },
+    {
+      "arquivo": "workbox-window.prod.es5-Bd17z0YL.js",
+      "bytes": 5653
+    }
+  ],
+  "depois": [
+    {
+      "arquivo": "index-Dx5QRkiQ.js",
+      "bytes": 503843
+    },
+    {
+      "arquivo": "EstoqueTab-C9Y7857C.js",
+      "bytes": 64532
+    },
+    {
+      "arquivo": "resumo-CaHE-gbh.js",
+      "bytes": 12075
+    },
+    {
+      "arquivo": "index-Z2m_9DIi.css",
+      "bytes": 9250
+    },
+    {
+      "arquivo": "EstoqueTab-K-nzUiWe.css",
+      "bytes": 7591
+    },
+    {
+      "arquivo": "workbox-window.prod.es5-Bd17z0YL.js",
+      "bytes": 5653
+    },
+    {
+      "arquivo": "EstoqueNavBadge-Ct-XrDG1.js",
+      "bytes": 836
+    }
+  ]
+}

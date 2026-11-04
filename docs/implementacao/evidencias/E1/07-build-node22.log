@@ -1,0 +1,44 @@
+﻿====================================================
+PASSO 7: BUILD COM NODE 22 (VITE)
+====================================================
+Data/Hora: 2026-11-03T18:01:42Z
+Comando: npx -y node@22 node_modules/vite/bin/vite.js build
+Código de saída: 0
+
+Saída:
+[36mvite v8.1.0 [32mbuilding client environment for production...[36m[39m
+[2K
+transforming...Ô£ô 147 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/manifest.webmanifest                          0.47 kB
+dist/index.html                                    0.89 kB Ôöé gzip:   0.44 kB
+dist/assets/EstoqueTab-K-nzUiWe.css                7.59 kB Ôöé gzip:   1.65 kB
+dist/assets/index-Z2m_9DIi.css                     9.25 kB Ôöé gzip:   2.45 kB
+dist/assets/EstoqueNavBadge-CU6ecxkt.js            0.74 kB Ôöé gzip:   0.50 kB
+dist/assets/workbox-window.prod.es5-Bd17z0YL.js    5.65 kB Ôöé gzip:   2.20 kB
+dist/assets/saldo-5ag0nnRJ.js                     11.13 kB Ôöé gzip:   3.24 kB
+dist/assets/EstoqueTab-DWXT_1j4.js                64.35 kB Ôöé gzip:  15.01 kB
+dist/assets/index-C7CDxi9V.js                    503.03 kB Ôöé gzip: 138.43 kB
+
+[32mÔ£ô built in 431ms[39m
+npx.cmd : [33m[plugin builtin:vite-reporter] 
+No C:\Users\thiag\Projetos\escala-irmaos\scripts\estoque\evidencia-e1.ps1:262 caractere:16
++ ... ildOutput = npx.cmd -y node@22 node_modules/vite/bin/vite.js build 2> ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33m[plugin builtin:vite-reporter] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: 
+https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+
+PWA v1.3.0
+mode      generateSW
+precache  14 entries (588.52 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
