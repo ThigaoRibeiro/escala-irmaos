@@ -1,0 +1,41 @@
+name: CI (verificação antes do merge)
+
+# Roda em todo Pull Request. NÃO publica nada: só confere se o projeto
+# instala, passa no lint, nos testes (quando existirem) e compila.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (mesma versão do deploy)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes (só roda se o projeto tiver script de teste)
+        run: npm test --if-present
+
+      - name: Build com valores de mentira (este job nunca usa segredos reais)
+        env:
+          VITE_SUPABASE_URL: https://exemplo.supabase.co
+          VITE_SUPABASE_ANON_KEY: chave-de-mentira-so-para-compilar
+        run: npm run build
