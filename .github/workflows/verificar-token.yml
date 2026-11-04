@@ -1,0 +1,66 @@
+name: Verificar token do Supabase
+
+# Alarme automático: toda segunda-feira (08:00 de Brasília) confere se o token
+# do Supabase guardado no GitHub ainda funciona e se não está perto de vencer.
+# Se algo estiver errado, o job FALHA e o GitHub manda e-mail para o dono.
+# Também pode ser rodado à mão: aba Actions > este workflow > Run workflow.
+on:
+  schedule:
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+  # Autoteste: roda também quando ESTE arquivo é alterado em um Pull Request.
+  pull_request:
+    paths:
+      - '.github/workflows/verificar-token.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir token e validade
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # Data de vencimento no formato AAAA-MM-DD (aba Variables do GitHub).
+          # Deixe vazio ou "nunca" se o token foi criado sem vencimento.
+          EXPIRA_EM: ${{ vars.SUPABASE_TOKEN_EXPIRA_EM }}
+          REF: uccupbxozqnmhcloptcq
+          DIAS_AVISO: 14
+        run: |
+          set -u
+
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error title=Token ausente::O segredo SUPABASE_ACCESS_TOKEN não existe no GitHub. Siga docs/CREDENCIAIS.md, seção 'Renovar o token'."
+            exit 1
+          fi
+
+          codigo=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "https://api.supabase.com/v1/projects/${REF}")
+
+          if [ "${codigo}" != "200" ]; then
+            echo "::error title=Token inválido ou expirado::O Supabase respondeu HTTP ${codigo}. Siga docs/CREDENCIAIS.md, seção 'Renovar o token'."
+            exit 1
+          fi
+          echo "Token aceito pelo Supabase (HTTP 200)."
+
+          if [ -z "${EXPIRA_EM:-}" ] || [ "${EXPIRA_EM}" = "nunca" ]; then
+            echo "Sem data de vencimento registrada: conferida só a validade atual."
+            exit 0
+          fi
+
+          if ! fim=$(date -u -d "${EXPIRA_EM}" +%s 2>/dev/null); then
+            echo "::error title=Data inválida::A variável SUPABASE_TOKEN_EXPIRA_EM deve ser AAAA-MM-DD (ex.: 2027-02-01). Valor atual: ${EXPIRA_EM}"
+            exit 1
+          fi
+
+          hoje=$(date -u +%s)
+          dias=$(( (fim - hoje) / 86400 ))
+          echo "Faltam ${dias} dia(s) para o token vencer (${EXPIRA_EM})."
+
+          if [ "${dias}" -le "${DIAS_AVISO}" ]; then
+            echo "::error title=Token perto de vencer::Faltam ${dias} dia(s). Siga docs/CREDENCIAIS.md, seção 'Renovar o token'."
+            exit 1
+          fi
