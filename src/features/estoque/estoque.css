@@ -1,0 +1,527 @@
+/* Módulo de Estoque - Estilos Isolados (prefixo .est-) */
+
+.est-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 12px 96px 12px;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.est-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.est-title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.est-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.est-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Alertas e Banners */
+.est-banner {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.est-banner-unavailable {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.est-banner-error {
+  background-color: var(--color-danger-light);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.est-banner-warning {
+  background-color: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
+  color: var(--text-primary);
+}
+
+/* Grid de Resumo / Filtros de Situação */
+.est-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.est-summary-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  min-height: 44px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.est-summary-chip:hover {
+  border-color: var(--primary);
+}
+
+.est-summary-chip-active {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.est-summary-icon-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.est-summary-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Barra de Pesquisa e Filtro de Categoria */
+.est-filters-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.est-search-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.est-category-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.est-category-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.est-category-chip-active {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* Card do Produto */
+.est-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+}
+
+.est-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.est-card-title-group {
+  flex: 1;
+}
+
+.est-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 2px 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.est-card-category {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.est-badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.est-badge-acabou {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.est-badge-critico {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.est-badge-atencao {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
+.est-badge-sem_conferencia {
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.est-badge-ok {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+/* Dados do Produto */
+.est-card-body {
+  margin: 10px 0;
+  font-size: 0.875rem;
+}
+
+.est-saldo-principal {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.est-projecao-linha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.825rem;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.est-consumo-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Selos adicionais */
+.est-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.est-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.est-tag-comprador {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.est-tag-aviso {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
+.est-tag-receita {
+  background-color: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #d8b4fe;
+}
+
+.est-tag-receita-vencida {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+/* Ações no Card */
+.est-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.est-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.est-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.est-btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.est-btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.est-btn-secondary {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.est-btn-secondary:hover:not(:disabled) {
+  background-color: var(--border-color);
+}
+
+.est-btn-outline {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.est-btn-outline:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+}
+
+.est-btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.est-btn-warning {
+  background-color: var(--color-warning);
+  color: #ffffff;
+}
+
+/* Modais */
+.est-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.est-modal {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.est-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.est-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.est-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.est-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* Formulários */
+.est-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.est-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.est-help-text {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+}
+
+.est-input,
+.est-select,
+.est-textarea {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.est-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.est-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Badge no Bottom Nav */
+.est-nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background-color: var(--color-danger);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 5px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Histórico de Movimentos */
+.est-history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.825rem;
+}
+
+.est-history-item:last-child {
+  border-bottom: none;
+}
+
+.est-history-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}

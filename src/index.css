@@ -611,3 +611,109 @@ button, input, select, textarea {
   padding: 32px 16px;
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   Celular estreito (até 420 px): o topo encolhe para caber na tela.
+   Antes, o seletor de nome + os botões de chave e sair somavam mais que a
+   largura disponível (+50 px a 360 px). O Chrome do celular alarga a "tela"
+   inteira para acomodar isso e a barra de baixo (position: fixed) esticava
+   junto, deixando a última aba ("Configurações") fora da vista.
+   Só vale até 420 px: acima disso nada muda.
+   ========================================================================== */
+@media (max-width: 420px) {
+  .header-container {
+    gap: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* título um pouco menor: libera espaço para o nome de quem está usando o app */
+  .app-title {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    gap: 6px;
+  }
+
+  .app-title svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* grupo da direita (nome + chave + sair): pode encolher */
+  .header-container > div:not(.app-title) {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 2px !important;
+  }
+
+  .user-selector {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 6px;
+  }
+
+  .avatar-badge {
+    flex-shrink: 0;
+  }
+
+  .select-member {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 6px 4px;
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+  }
+
+  .header-container .btn.btn-outline {
+    flex-shrink: 0;
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+
+  /* barra de baixo: alvo de toque de pelo menos 44 px de altura */
+  .nav-item {
+    min-width: 0;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+/* Telas muito estreitas (até 340 px): rótulos da barra de baixo um pouco menores e, no topo,
+   o círculo do avatar some para o nome caber (a cor continua na borda do seletor). */
+@media (max-width: 340px) {
+  .nav-item {
+    font-size: 0.68rem;
+  }
+
+  .avatar-badge {
+    display: none;
+  }
+}
+
+/* Configurações, celular estreito: nome e e-mail ocupam a linha toda e o botão
+   "Redefinir senha" desce para a linha de baixo, em vez de empurrar a tela para o lado. */
+@media (max-width: 420px) {
+  .config-conta-linha {
+    flex-wrap: wrap;
+  }
+
+  .config-conta-linha > * {
+    min-width: 0;
+  }
+
+  .config-conta-info {
+    flex: 1 1 100%;
+  }
+
+  .config-conta-linha > button,
+  .config-conta-linha > div:not(.config-conta-info) {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .config-conta-info strong {
+    overflow-wrap: anywhere;
+  }
+}

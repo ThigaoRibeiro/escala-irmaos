@@ -1,0 +1,65 @@
+﻿====================================================
+PASSO 4: TESTES DE BANCO DE DADOS E SEGURANÇA (E1)
+====================================================
+Data/Hora: 2026-11-03T18:01:32Z
+Comando: node test_db_runner.mjs (ESTOQUE_DB_TEST=1)
+Código de saída: 0
+
+Saída:
+====================================================
+EXECUTANDO SU├ìTE DE TESTES DE BANCO E SEGURAN├çA (E1)
+ESTOQUE_DB_TEST=1
+====================================================
+
+1. Validando acesso de Irm├úo e Cuidadora Ativa:
+  [PASS] Irm├úo consegue criar produto (ID: e6045f49-0da9-4545-b7be-3ae7be14b776)
+  [PASS] Irm├úo consegue consultar produtos criados
+  [PASS] Cuidadora ativa consegue consultar produtos
+  [PASS] Cuidadora ativa consegue registrar confer├¬ncia
+  [PASS] Irm├úo consegue registrar sinaliza├º├úo
+
+2. Validando bloqueio total (Cuidadora Inativa, Estranho e Anon):
+  [PASS] Cuidadora inativa recebe ZERO linhas no SELECT
+  [PASS] Estranho recebe ZERO linhas no SELECT
+  [PASS] Anon recebe ZERO linhas no SELECT (data: null, error: 42501)
+  [PASS] Cuidadora inativa ├® BLOQUEADA em INSERT de movimento
+  [PASS] Estranho ├® BLOQUEADO em INSERT de movimento
+  [PASS] Anon ├® BLOQUEADO em INSERT de movimento
+
+3. Validando Autoria For├ºada pelo Banco (ignora dados forjados pelo cliente):
+  [PASS] Autoria do produto for├ºada para usu├írio real (thiagor21@gmail.com) e fake (hacker@nao-autorizado.com) descartado
+  [PASS] Autoria do movimento for├ºada para usu├írio real (thiagor21@gmail.com)
+
+4. Validando Imutabilidade e Append-Only (UPDATE/DELETE proibidos):
+  [PASS] DELETE em estoque_produtos ├® rejeitado pelo banco
+  [PASS] UPDATE em estoque_movimentos ├® rejeitado pelo banco
+  [PASS] DELETE em estoque_movimentos ├® rejeitado pelo banco
+
+5. Validando Regras de Movimentos e Estornos:
+  [PASS] Estorno de movimento de entrada realizado com sucesso
+  [PASS] Estorno duplo do mesmo movimento ├® rejeitado
+  [PASS] Estorno de outro estorno ├® rejeitado
+  [PASS] Movimento com data anterior a 30 dias ├® rejeitado
+  [PASS] Sa├¡da com motivo "uso" em produto modo taxa ├® rejeitada
+  [PASS] Sa├¡da com motivo "uso" em produto modo m├¡nimo ├® permitida
+  [PASS] Movimenta├º├úo em produto arquivado ├® rejeitada
+
+6. Validando Concorr├¬ncia no "Eu compro" (RPCs):
+  [PASS] Chamadas concorrentes simult├óneas: exatamente UMA compra assumida e UMA falha
+  [PASS] Concluir compra com quantidade negativa falha
+  [PASS] Atomicidade garantida: compra continua no estado "assumida" ap├│s falha na entrada
+  [PASS] Conclus├úo at├┤mica de compra gera movimento de entrada
+  [PASS] Compra finalizada vinculada ├á entrada gerada
+
+7. Validando Triggers de Auditoria:
+  [PASS] Auditoria registrou 2 opera├º├Áes (INSERT e UPDATE)
+  [PASS] Log de UPDATE cont├®m dados "antes" e "depois" registrando o arquivamento
+
+8. Validando Lista de E-mails da Migration vs USER_MAPPING:
+  [PASS] Todos os 6 e-mails do USER_MAPPING de src/utils/db.js est├úo presentes na migration
+
+====================================================
+RESULTADO FINAL DA SU├ìTE: 31 PASSOU, 0 FALHOU
+====================================================
+
+

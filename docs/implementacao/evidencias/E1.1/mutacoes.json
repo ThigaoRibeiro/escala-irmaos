@@ -1,0 +1,455 @@
+{
+  "resumo": {
+    "commit": "c124658",
+    "geradoEm": "2026-11-04T00:59:17.592Z",
+    "duracaoSegundos": 203,
+    "total": 28,
+    "mortas": 28,
+    "sobreviventes": [],
+    "erros": [],
+    "arvoreLimpaAoFinal": true
+  },
+  "resultados": [
+    {
+      "id": "M1",
+      "grupo": "especificação",
+      "titulo": "<= vira < no limiar crítico",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/limiares.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "limiares.test.js - Limiares e fronteiras exatas (M1, M3) Modo taxa contínua fronteira crítica exata: diasRestantes == dias_critico cai em crítico (M1: <= crítico)",
+        "limiares.test.js - Limiares e fronteiras exatas (M1, M3) Modo taxa contínua antecedência de receita antecipa os limiares (M3: não pode ignorar antecedencia_receita_dias)"
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 8
+    },
+    {
+      "id": "M2",
+      "grupo": "especificação",
+      "titulo": "movimentos estornados continuam contando",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/saldo.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "saldo.js - Âncora, saldo e cálculo temporal puro exclui movimentos estornados e o próprio estorno do cálculo (M2: não pode incluir estornados)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 7
+    },
+    {
+      "id": "M3",
+      "grupo": "especificação",
+      "titulo": "ignora a antecedência da receita",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/limiares.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "limiares.test.js - Limiares e fronteiras exatas (M1, M3) Modo taxa contínua antecedência de receita antecipa os limiares (M3: não pode ignorar antecedencia_receita_dias)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 8
+    },
+    {
+      "id": "M4",
+      "grupo": "especificação",
+      "titulo": "usa a conferência mais ANTIGA como âncora",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/saldo.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "saldo.js - Âncora, saldo e cálculo temporal puro usa a conferência mais RECENTE como âncora (M4: não pode usar a mais antiga)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 7
+    },
+    {
+      "id": "M5",
+      "grupo": "especificação",
+      "titulo": "remove a elevação por sinalização pendente",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/sinalizacao.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "sinalizacao.test.js - Sinalização \"está acabando\" (M5) sinalização pendente eleva situação de ok (🟢) para atenção (🟡) (M5)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 3
+    },
+    {
+      "id": "M6",
+      "grupo": "especificação",
+      "titulo": "dias decorridos pela data LOCAL (getDate) em vez de milissegundos",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/saldo.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "saldo.js - Âncora, saldo e cálculo temporal puro calcula dias decorridos de forma puramente fracionária em ms (M6: imune a timezone)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 7
+    },
+    {
+      "id": "M7",
+      "grupo": "especificação",
+      "titulo": "policy de SELECT com USING (true)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) nenhuma policy do estoque usa USING/WITH CHECK (true)",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 2. Cuidadora inativa, estranho (signUp) e anon: zero linhas e erro em escrita cuidadora inativa recebe zero linhas em todas as tabelas do estoque",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 2. Cuidadora inativa, estranho (signUp) e anon: zero linhas e erro em escrita estranho recebe zero linhas em todas as tabelas do estoque",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: conclusões simultâneas da MESMA compra geram exatamente uma entrada"
+      ],
+      "totalQueCaíram": 4,
+      "totalTestes": 46
+    },
+    {
+      "id": "M8",
+      "grupo": "especificação",
+      "titulo": "remove a autoria forçada nos movimentos",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 3. Autoria vem do banco (dados forjados pelo cliente são ignorados) movimento: registrado_por e e-mail forçados para o usuário real",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 4. Nada é apagado nem editado UPDATE em movimento é rejeitado",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 4. Nada é apagado nem editado DELETE em movimento é rejeitado",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 5. Regras dos movimentos estorno válido funciona"
+      ],
+      "totalQueCaíram": 6,
+      "totalTestes": 46
+    },
+    {
+      "id": "M9",
+      "grupo": "especificação",
+      "titulo": "GRANT UPDATE e DELETE em estoque_movimentos",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) authenticated só tem os privilégios previstos, tabela a tabela",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 4. Nada é apagado nem editado UPDATE em movimento é rejeitado",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 4. Nada é apagado nem editado DELETE em movimento é rejeitado"
+      ],
+      "totalQueCaíram": 3,
+      "totalTestes": 46
+    },
+    {
+      "id": "M9b",
+      "grupo": "especificação",
+      "titulo": "remove o TRIGGER de só-inserção dos movimentos (camada independente do grant)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção triggers de só-inserção valem até para o dono do banco UPDATE e DELETE em movimento são rejeitados pelo trigger"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
+    },
+    {
+      "id": "M10",
+      "grupo": "especificação",
+      "titulo": "remove o índice único de compra assumida",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção índice único de compra assumida duas compras \"assumida\" do mesmo produto são rejeitadas pelo índice (SQL direto)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
+    },
+    {
+      "id": "M11",
+      "grupo": "especificação",
+      "titulo": "lê o texto de `dose` como quantidade",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/agenda.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "agenda.test.js - Vínculo com a agenda de remédios (M11) calcula consumo pela agenda ignorando completamente o texto de dose (M11)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 5
+    },
+    {
+      "id": "M12",
+      "grupo": "especificação",
+      "titulo": "mostra dias restantes em produto sem conferência (⚪)",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/semConferencia.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "semConferencia.test.js - Produto novo sem conferência (M12) NUNCA expõe dias restantes nem previsão para produto sem conferência (M12)",
+        "semConferencia.test.js - Produto novo sem conferência (M12) entradas sem conferência não criam saldo estimável (conferência inicial é obrigatória)"
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 3
+    },
+    {
+      "id": "B1",
+      "grupo": "vistoria",
+      "titulo": "canal Realtime com nome fixo (selo e aba colidem)",
+      "arquivo": "src/features/estoque/data/estoqueService.js",
+      "testes": [
+        "tests/estoque/unit/realtimeCanais.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "realtimeCanais.test.js - assinaturas simultâneas do estoque duas assinaturas em sequência (selo + aba) não lançam erro",
+        "realtimeCanais.test.js - assinaturas simultâneas do estoque cancelar uma assinatura não derruba a outra"
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 2
+    },
+    {
+      "id": "B2",
+      "grupo": "vistoria",
+      "titulo": "remove a barreira de erro dos dois React.lazy no App",
+      "arquivo": "src/App.jsx",
+      "testes": [
+        "tests/estoque/components/AppIsolamento.test.jsx"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "AppIsolamento.test.jsx - falha de carregamento do estoque não derruba o app com os dois chunks do estoque indisponíveis, Escalas e Diário continuam funcionando"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 1
+    },
+    {
+      "id": "B3",
+      "grupo": "vistoria",
+      "titulo": "busca só a primeira página (trunca em 1000 linhas)",
+      "arquivo": "src/features/estoque/data/estoqueService.js",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 8. B3: mais de 1000 movimentos não podem truncar o saldo o app calcula o saldo com TODOS os movimentos (âncora é o último registro)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 33
+    },
+    {
+      "id": "A1",
+      "grupo": "vistoria",
+      "titulo": "concluir compra SEM as duas defesas (FOR UPDATE e checagem do UPDATE): o defeito original, entrada em dobro",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: conclusões simultâneas da MESMA compra geram exatamente uma entrada",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: desistir e concluir ao mesmo tempo nunca deixam entrada com compra desistida"
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 33
+    },
+    {
+      "id": "A1a",
+      "grupo": "vistoria",
+      "titulo": "concluir compra sem o FOR UPDATE (a checagem do UPDATE ainda protege; só o teste estrutural vê)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: trava a linha da compra (FOR UPDATE)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
+    },
+    {
+      "id": "A1b",
+      "grupo": "vistoria",
+      "titulo": "concluir compra sem a checagem do UPDATE (o FOR UPDATE ainda protege; só o teste estrutural vê)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: aborta se o UPDATE da compra não afetou nenhuma linha"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
+    },
+    {
+      "id": "A2",
+      "grupo": "vistoria",
+      "titulo": "selo calcula sem a agenda de remédios",
+      "arquivo": "src/features/estoque/EstoqueNavBadge.jsx",
+      "testes": [
+        "tests/estoque/components/EstoqueNavBadgeAgenda.test.jsx"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "EstoqueNavBadgeAgenda.test.jsx - selo considera a agenda de remédios (A2) remédio vinculado à agenda entra na contagem (2/dia, saldo 8 = 4 dias = crítico)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 2
+    },
+    {
+      "id": "A3",
+      "grupo": "vistoria",
+      "titulo": "vínculo parcial reduz o consumo pelos horários que sobraram",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/agenda.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "agenda.test.js - Vínculo com a agenda de remédios (M11) A3: vínculo parcialmente quebrado com consumo manual usa o consumo manual (nunca reduz pelos horários restantes)",
+        "agenda.test.js - Vínculo com a agenda de remédios (M11) A3: vínculo parcialmente quebrado SEM consumo manual não estima nada (⚪ com o motivo)"
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 5
+    },
+    {
+      "id": "A4",
+      "grupo": "vistoria",
+      "titulo": "\"Acabou\" volta a usar o ícone ⚪",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/limiares.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "limiares.test.js - Limiares e fronteiras exatas (M1, M3) Modo mínimo saldo <= 0 -> acabou (⚫)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 8
+    },
+    {
+      "id": "A4b",
+      "grupo": "vistoria",
+      "titulo": "\"Acabou\" volta a usar o ícone ⚪ (cabeçalho e WhatsApp)",
+      "arquivo": "src/features/estoque/domain/whatsapp.js",
+      "testes": [
+        "tests/estoque/components/EstoqueHeaderIcones.test.jsx"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "EstoqueHeaderIcones.test.jsx - ícone de \"Acabou\" (A4) a mensagem do WhatsApp usa ⚫ para \"Acabou\""
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 3
+    },
+    {
+      "id": "M1v",
+      "grupo": "vistoria",
+      "titulo": "aviso em produto sem conferência é ignorado",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/sinalizacaoSemConferencia.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "sinalizacaoSemConferencia.test.js - aviso em produto sem conferência (M1) com aviso: eleva para 🟡, mantém \"sem conferência\" e NÃO expõe projeção",
+        "sinalizacaoSemConferencia.test.js - aviso em produto sem conferência (M1) a mensagem do WhatsApp lista o item na seção 🟡 marcando \"sem conferência\""
+      ],
+      "totalQueCaíram": 2,
+      "totalTestes": 4
+    },
+    {
+      "id": "M2v",
+      "grupo": "vistoria",
+      "titulo": "validade da receita no fim do dia UTC (21h de Brasília)",
+      "arquivo": "src/features/estoque/domain/saldo.js",
+      "testes": [
+        "tests/estoque/unit/receitaFuso.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "receitaFuso.test.js - validade da receita no fuso de Brasília (M2) às 22h de Brasília do último dia (01h UTC do dia seguinte) a receita ainda NÃO venceu"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 3
+    },
+    {
+      "id": "M3v",
+      "grupo": "vistoria",
+      "titulo": "arquivado_em volta a vir do cliente",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 7. M3: arquivamento usa o relógio do banco arquivado_em enviado pelo cliente (data falsa) é ignorado"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 33
+    },
+    {
+      "id": "H1",
+      "grupo": "vistoria",
+      "titulo": "authenticated mantém TRUNCATE/TRIGGER/REFERENCES nos movimentos",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) authenticated só tem os privilégios previstos, tabela a tabela"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 13
+    },
+    {
+      "id": "H2",
+      "grupo": "vistoria",
+      "titulo": "anon/PUBLIC voltam a executar a RPC de compra",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) anon não executa nenhuma função do estoque"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 13
+    }
+  ]
+}
