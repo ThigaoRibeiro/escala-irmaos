@@ -2,6 +2,7 @@
 // As chaves abaixo são os valores de demonstração publicados pela Supabase para o ambiente
 // local (`supabase start`). Elas NÃO funcionam em nenhum projeto remoto.
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 
 export const DB_TEST_ATIVO = process.env.ESTOQUE_DB_TEST === '1';
@@ -53,6 +54,15 @@ export function clientePara(chave) {
   const u = USUARIOS[chave];
   const token = gerarJwt({ sub: u.id, email: u.email });
   return createClient(SUPABASE_URL, ANON_KEY, { ...OPCOES, global: { headers: { Authorization: `Bearer ${token}` } } });
+}
+
+// SQL direto como dono do banco (container do Supabase local). Só para testes de estrutura.
+export function psql(sql) {
+  const r = spawnSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres', '-t', '-A'], {
+    input: sql,
+    encoding: 'utf8'
+  });
+  return { ok: r.status === 0, saida: (r.stdout || '').trim(), erro: (r.stderr || '').trim() };
 }
 
 export function nomeUnico(prefixo) {

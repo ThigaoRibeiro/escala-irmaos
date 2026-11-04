@@ -50,8 +50,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.estoque_usuario_autorizado() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.estoque_usuario_autorizado() TO authenticated;
-REVOKE ALL ON FUNCTION public.estoque_usuario_autorizado() FROM anon;
 
 -- 2. Tabela de Produtos (estoque_produtos)
 CREATE TABLE IF NOT EXISTS public.estoque_produtos (
@@ -632,13 +632,22 @@ BEGIN
 END;
 $$;
 
+-- EXECUTE: fecha o privilégio padrão (PUBLIC/anon) e abre só para authenticated.
+REVOKE ALL ON FUNCTION public.estoque_assumir_compra(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.estoque_desistir_compra(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.estoque_concluir_compra(uuid, numeric, numeric, text) FROM PUBLIC, anon;
+
 GRANT EXECUTE ON FUNCTION public.estoque_assumir_compra(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.estoque_desistir_compra(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.estoque_concluir_compra(uuid, numeric, numeric, text) TO authenticated;
 
-REVOKE ALL ON FUNCTION public.estoque_assumir_compra(uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.estoque_desistir_compra(uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.estoque_concluir_compra(uuid, numeric, numeric, text) FROM anon;
+-- Funções de trigger não são chamadas por ninguém: o EXECUTE só é checado ao criar o trigger.
+REVOKE ALL ON FUNCTION public.estoque_trg_autoria_produtos() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.estoque_trg_auditoria_produtos() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.estoque_trg_validar_movimento() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.estoque_trg_autoria_sinalizacoes() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.estoque_trg_bloquear_delete() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.estoque_trg_bloquear_update_delete() FROM PUBLIC, anon, authenticated;
 
 -- 9. Grants e Revogações de Permissões de Tabela
 ALTER TABLE public.estoque_produtos ENABLE ROW LEVEL SECURITY;
@@ -654,21 +663,19 @@ REVOKE ALL ON TABLE public.estoque_sinalizacoes FROM anon;
 REVOKE ALL ON TABLE public.estoque_compras FROM anon;
 REVOKE ALL ON TABLE public.estoque_auditoria FROM anon;
 
--- Grants para authenticated
+-- Grants para authenticated. Primeiro zera TUDO (os privilégios padrão do Supabase incluem TRUNCATE,
+-- TRIGGER e REFERENCES; TRUNCATE ignora triggers e RLS e furaria o "só-inserção"); depois concede só o necessário.
+REVOKE ALL ON TABLE public.estoque_produtos FROM authenticated;
+REVOKE ALL ON TABLE public.estoque_movimentos FROM authenticated;
+REVOKE ALL ON TABLE public.estoque_sinalizacoes FROM authenticated;
+REVOKE ALL ON TABLE public.estoque_compras FROM authenticated;
+REVOKE ALL ON TABLE public.estoque_auditoria FROM authenticated;
+
 GRANT SELECT, INSERT, UPDATE ON TABLE public.estoque_produtos TO authenticated;
-REVOKE DELETE ON TABLE public.estoque_produtos FROM authenticated;
-
 GRANT SELECT, INSERT ON TABLE public.estoque_movimentos TO authenticated;
-REVOKE UPDATE, DELETE ON TABLE public.estoque_movimentos FROM authenticated;
-
 GRANT SELECT, INSERT ON TABLE public.estoque_sinalizacoes TO authenticated;
-REVOKE UPDATE, DELETE ON TABLE public.estoque_sinalizacoes FROM authenticated;
-
 GRANT SELECT ON TABLE public.estoque_compras TO authenticated;
-REVOKE INSERT, UPDATE, DELETE ON TABLE public.estoque_compras FROM authenticated;
-
 GRANT SELECT ON TABLE public.estoque_auditoria TO authenticated;
-REVOKE INSERT, UPDATE, DELETE ON TABLE public.estoque_auditoria FROM authenticated;
 
 -- 10. Policies RLS (Zero USING(true); estritamente via estoque_usuario_autorizado)
 DROP POLICY IF EXISTS "estoque_produtos_select_policy" ON public.estoque_produtos;

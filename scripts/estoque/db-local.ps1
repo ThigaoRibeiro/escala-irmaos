@@ -1,119 +1,69 @@
 <#
 .SYNOPSIS
-    Gerencia o ambiente local do Supabase para desenvolvimento e testes do Estoque (Lote E1).
+    Gerencia o Supabase LOCAL (Docker) usado nos testes do Estoque.
 
 .DESCRIPTION
-    Este script roda o Supabase Local estritamente FORA do repositório principal
-    (em C:\Users\thiag\Projetos\_estoque-local-db) para garantir que supabase/config.toml
-    nunca seja modificado e nenhum comando remoto (link/db push) seja executado.
+    Roda o Supabase local num diretório FORA do repositório (padrão: pasta irmã "_estoque-local-db"),
+    para que supabase/config.toml do projeto nunca seja modificado e nenhum comando remoto
+    (supabase link / supabase db push) seja executado. Nenhum caminho é fixo: tudo parte da localização
+    deste script.
 
 .PARAMETER Action
-    start    - Inicializa e inicia o Supabase local com migrations e bootstrap.
-    stop     - Para os containers locais do Supabase.
-    status   - Exibe o status dos containers e portas locais.
-    reset    - Reinicia o banco local, reaplicando migrations e o bootstrap.
-    bootstrap- Aplica o arquivo local-bootstrap.sql no banco local.
+    start     - Inicializa e sobe o Supabase local com as migrations do repo e aplica o bootstrap.
+    stop      - Para os containers.
+    status    - Mostra o estado.
+    reset     - Recria o banco local (migrations + bootstrap).
+    bootstrap - Reaplica só scripts/estoque/local-bootstrap.sql (idempotente).
 #>
 
 param(
     [ValidateSet('start', 'stop', 'status', 'reset', 'bootstrap')]
     [string]$Action = 'start',
-    [string]$WorkDir = "C:\Users\thiag\Projetos\_estoque-local-db",
-    [string]$RepoDir = "C:\Users\thiag\Projetos\escala-irmaos"
+    [string]$WorkDir = '',
+    [string]$DbContainer = 'supabase_db_estoque-local-db'
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-Write-Host "=== Supabase Local (Estoque E1) - Ação: $Action ===" -ForegroundColor Cyan
-Write-Host "WorkDir externo: $WorkDir" -ForegroundColor Gray
-Write-Host "Repo: $RepoDir" -ForegroundColor Gray
-
-# 1. Garantir que o diretório externo existe
-if (-not (Test-Path $WorkDir)) {
-    New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
-    Write-Host "[OK] Diretório externo criado: $WorkDir" -ForegroundColor Green
+$RepoDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+if ([string]::IsNullOrWhiteSpace($WorkDir)) {
+    $WorkDir = Join-Path (Split-Path $RepoDir -Parent) '_estoque-local-db'
 }
 
-# 2. Inicializar o Supabase no workdir externo se necessário
-$localConfig = Join-Path $WorkDir "supabase\config.toml"
-if (-not (Test-Path $localConfig)) {
-    Write-Host "[INIT] Inicializando Supabase CLI no diretório externo..." -ForegroundColor Yellow
+Write-Host "=== Supabase local (Estoque) - acao: $Action ===" -ForegroundColor Cyan
+Write-Host "Repo:    $RepoDir"
+Write-Host "WorkDir: $WorkDir (fora do repo)"
+
+function Invoke-Bootstrap {
+    $bootstrap = Join-Path $RepoDir 'scripts\estoque\local-bootstrap.sql'
+    if (-not (Test-Path $bootstrap)) { throw "Bootstrap nao encontrado: $bootstrap" }
+    Write-Host "[BOOTSTRAP] $bootstrap" -ForegroundColor Yellow
+    Get-Content $bootstrap -Raw | docker exec -i $DbContainer psql -v ON_ERROR_STOP=1 -U postgres -d postgres | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Falha ao aplicar o bootstrap.' }
+    Write-Host '[OK] Bootstrap aplicado.' -ForegroundColor Green
+}
+
+if (-not (Test-Path $WorkDir)) { New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null }
+
+# Inicializa o projeto Supabase local no diretorio externo (uma vez).
+if (-not (Test-Path (Join-Path $WorkDir 'supabase\config.toml'))) {
     Push-Location $WorkDir
-    try {
-        & npx.cmd -y supabase init
-    } finally {
-        Pop-Location
-    }
+    try { & npx.cmd -y supabase init } finally { Pop-Location }
 }
 
-# 3. Sincronizar migrations do repositório para o workdir externo
-$repoMigrationsDir = Join-Path $RepoDir "supabase\migrations"
-$workMigrationsDir = Join-Path $WorkDir "supabase\migrations"
-if (-not (Test-Path $workMigrationsDir)) {
-    New-Item -ItemType Directory -Force -Path $workMigrationsDir | Out-Null
-}
+# Copia as migrations do repo para o diretorio externo.
+$migDestino = Join-Path $WorkDir 'supabase\migrations'
+if (-not (Test-Path $migDestino)) { New-Item -ItemType Directory -Force -Path $migDestino | Out-Null }
+Copy-Item -Path (Join-Path $RepoDir 'supabase\migrations\*') -Destination $migDestino -Force -Recurse
 
-if (Test-Path $repoMigrationsDir) {
-    Copy-Item -Path "$repoMigrationsDir\*" -Destination $workMigrationsDir -Force -Recurse
-    Write-Host "[SYNC] Migrations copiadas para o ambiente externo." -ForegroundColor Green
-}
-
-# 4. Executar a ação solicitada
 Push-Location $WorkDir
 try {
     switch ($Action) {
-        'start' {
-            Write-Host "[START] Iniciando Supabase local..." -ForegroundColor Yellow
-            & npx.cmd -y supabase start
-            Write-Host "[OK] Supabase local rodando!" -ForegroundColor Green
-            
-            # Aplicar bootstrap
-            $bootstrapPath = Join-Path $RepoDir "scripts\estoque\local-bootstrap.sql"
-            if (-not (Test-Path $bootstrapPath)) {
-                $bootstrapPath = Join-Path "c:\Users\thiag\OneDrive\Documentos\Projetos\escala-irmaos\.agents\teamwork\worker_banco" "local-bootstrap.sql"
-            }
-            if (Test-Path $bootstrapPath) {
-                Write-Host "[BOOTSTRAP] Aplicando $bootstrapPath..." -ForegroundColor Yellow
-                Get-Content $bootstrapPath -Raw | & npx.cmd -y supabase db execute
-                Write-Host "[OK] Bootstrap aplicado com sucesso!" -ForegroundColor Green
-            }
-        }
-        'stop' {
-            Write-Host "[STOP] Parando Supabase local..." -ForegroundColor Yellow
-            & npx.cmd -y supabase stop
-            Write-Host "[OK] Supabase local parado." -ForegroundColor Green
-        }
-        'status' {
-            Write-Host "[STATUS] Verificando status do Supabase local..." -ForegroundColor Yellow
-            & npx.cmd -y supabase status
-        }
-        'reset' {
-            Write-Host "[RESET] Resetando banco local..." -ForegroundColor Yellow
-            & npx.cmd -y supabase db reset
-            
-            $bootstrapPath = Join-Path $RepoDir "scripts\estoque\local-bootstrap.sql"
-            if (-not (Test-Path $bootstrapPath)) {
-                $bootstrapPath = Join-Path "c:\Users\thiag\OneDrive\Documentos\Projetos\escala-irmaos\.agents\teamwork\worker_banco" "local-bootstrap.sql"
-            }
-            if (Test-Path $bootstrapPath) {
-                Write-Host "[BOOTSTRAP] Reaplica bootstrap..." -ForegroundColor Yellow
-                Get-Content $bootstrapPath -Raw | & npx.cmd -y supabase db execute
-                Write-Host "[OK] Bootstrap reaplicado!" -ForegroundColor Green
-            }
-        }
-        'bootstrap' {
-            $bootstrapPath = Join-Path $RepoDir "scripts\estoque\local-bootstrap.sql"
-            if (-not (Test-Path $bootstrapPath)) {
-                $bootstrapPath = Join-Path "c:\Users\thiag\OneDrive\Documentos\Projetos\escala-irmaos\.agents\teamwork\worker_banco" "local-bootstrap.sql"
-            }
-            if (Test-Path $bootstrapPath) {
-                Write-Host "[BOOTSTRAP] Aplicando $bootstrapPath..." -ForegroundColor Yellow
-                Get-Content $bootstrapPath -Raw | & npx.cmd -y supabase db execute
-                Write-Host "[OK] Bootstrap aplicado!" -ForegroundColor Green
-            } else {
-                Write-Error "Arquivo de bootstrap não encontrado: $bootstrapPath"
-            }
-        }
+        'start'     { & npx.cmd -y supabase start; Invoke-Bootstrap }
+        'stop'      { & npx.cmd -y supabase stop }
+        'status'    { & npx.cmd -y supabase status }
+        'reset'     { & npx.cmd -y supabase db reset; Invoke-Bootstrap }
+        'bootstrap' { Invoke-Bootstrap }
     }
 } finally {
     Pop-Location
