@@ -123,9 +123,10 @@ console.log('=== Evidência E1.1 — clone limpo em', CLONE, '===\n');
 
 // 02. Nenhuma referência ao OneDrive fora dos documentos de plano/vistoria
 {
-  const r = git(['grep', '-n', '-i', 'onedrive', '--', '.', ':!docs/implementacao/prompts', ':!docs/implementacao/vistorias']);
+  // O próprio script de evidência cita a palavra que procura; fica de fora, junto com os planos/vistorias.
+  const r = git(['grep', '-n', '-i', 'onedrive', '--', '.', ':!docs/implementacao/prompts', ':!docs/implementacao/vistorias', ':!scripts/estoque/evidencia-e1.1.mjs']);
   registrar(2, 'sem-referencias-onedrive', {
-    comando: "git grep -n -i onedrive -- . ':!docs/implementacao/prompts' ':!docs/implementacao/vistorias'",
+    comando: "git grep -n -i onedrive -- . ':!docs/implementacao/prompts' ':!docs/implementacao/vistorias' ':!scripts/estoque/evidencia-e1.1.mjs'",
     codigo: r.status === 1 ? 0 : 1, // 1 = nenhuma ocorrência
     saida: r.stdout || '(nenhuma ocorrência)',
     detalhe: r.status === 1 ? 'nenhuma ocorrência' : 'ENCONTRADO'
@@ -136,7 +137,7 @@ console.log('=== Evidência E1.1 — clone limpo em', CLONE, '===\n');
 {
   const arquivos = git(['ls-files']).stdout.split('\n').filter((f) => f && !/(^package-lock\.json$|\.png$|\.ico$|\.svg$)/.test(f));
   const familia = new Set(['thiagor21@gmail.com', 'esterlessa13@gmail.com', 'professorajeanelessa@gmail.com', 'ananerianlv@gmail.com', 'deividylan@gmail.com', 'haniellessa@hotmail.com']);
-  const dominiosFicticios = /@(exemplo\.com|nao-autorizado\.com|lessacare\.com|cuidadora\.com|example\.com)$/i;
+  const dominiosFicticios = /(@(exemplo\.com|nao-autorizado\.com|lessacare\.com|cuidadora\.com|example\.com)|^seu@email\.com)$/i; // seu@email.com: placeholder do Login
   const problemas = [];
   for (const f of arquivos) {
     const txt = fs.readFileSync(path.join(CLONE, f), 'utf8');
@@ -158,7 +159,7 @@ console.log('=== Evidência E1.1 — clone limpo em', CLONE, '===\n');
 
 // 04-06. Dependências, lint, testes unitários nos 3 fusos
 executar(4, 'npm-ci', npx.replace('npx', 'npm'), ['ci', '--no-audit', '--no-fund']);
-if (falhou) { console.error('npm ci falhou; abortando.'); process.exit(1); }
+if (!passos.find((p) => p.numero === 4)?.ok) { console.error('npm ci falhou; abortando.'); process.exit(1); }
 executar(5, 'lint', npx, ['oxlint']);
 executar(6, 'testes-3-fusos', process.execPath, ['scripts/estoque/test-tz.mjs'], { detalhe: (r) => (/Tests\s+(\d+) passed/.exec(r.stdout || '') ? `${/Tests\s+(\d+) passed/.exec(r.stdout)[1]} testes por fuso (UTC, America/Sao_Paulo, Asia/Tokyo)` : '') });
 
