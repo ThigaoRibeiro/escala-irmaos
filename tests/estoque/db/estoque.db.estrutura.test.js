@@ -98,6 +98,22 @@ suite('Estoque (banco local): estrutura e camadas de proteção', () => {
     });
   });
 
+  describe('RPCs de compra mantêm as DUAS defesas contra corrida', () => {
+    // 1) FOR UPDATE serializa quem chega junto; 2) a checagem do UPDATE desfaz a transação inteira se a
+    // compra mudou. Cada uma sozinha já dá o resultado certo (o teste de comportamento não distingue), por
+    // isso a presença das duas é verificada na definição da função.
+    for (const fn of ['estoque_concluir_compra', 'estoque_desistir_compra']) {
+      it(`${fn}: trava a linha da compra (FOR UPDATE)`, () => {
+        const def = consulta(`select pg_get_functiondef(p.oid) from pg_proc p where p.proname='${fn}'`);
+        expect(def).toMatch(/FOR UPDATE/);
+      });
+      it(`${fn}: aborta se o UPDATE da compra não afetou nenhuma linha`, () => {
+        const def = consulta(`select pg_get_functiondef(p.oid) from pg_proc p where p.proname='${fn}'`);
+        expect(def).toContain('mudou de situacao durante a operacao');
+      });
+    }
+  });
+
   describe('autoria forçada em todas as tabelas com trigger', () => {
     it('os triggers de autoria e validação existem e estão ativos', () => {
       const r = consulta(`select string_agg(tgname, ',' order by tgname) from pg_trigger
