@@ -1,13 +1,11 @@
 {
   "resumo": {
-    "commit": "1e96bfb",
-    "geradoEm": "2026-11-04T00:50:15.942Z",
-    "duracaoSegundos": 169,
-    "total": 26,
-    "mortas": 25,
-    "sobreviventes": [
-      "A1"
-    ],
+    "commit": "c124658",
+    "geradoEm": "2026-11-04T00:59:17.592Z",
+    "duracaoSegundos": 203,
+    "total": 28,
+    "mortas": 28,
+    "sobreviventes": [],
     "erros": [],
     "arvoreLimpaAoFinal": true
   },
@@ -116,10 +114,11 @@
       "testesQueCaíram": [
         "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) nenhuma policy do estoque usa USING/WITH CHECK (true)",
         "Estoque (banco local): acesso, autoria, só-inserção e compras 2. Cuidadora inativa, estranho (signUp) e anon: zero linhas e erro em escrita cuidadora inativa recebe zero linhas em todas as tabelas do estoque",
-        "Estoque (banco local): acesso, autoria, só-inserção e compras 2. Cuidadora inativa, estranho (signUp) e anon: zero linhas e erro em escrita estranho recebe zero linhas em todas as tabelas do estoque"
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 2. Cuidadora inativa, estranho (signUp) e anon: zero linhas e erro em escrita estranho recebe zero linhas em todas as tabelas do estoque",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: conclusões simultâneas da MESMA compra geram exatamente uma entrada"
       ],
-      "totalQueCaíram": 3,
-      "totalTestes": 42
+      "totalQueCaíram": 4,
+      "totalTestes": 46
     },
     {
       "id": "M8",
@@ -138,7 +137,7 @@
         "Estoque (banco local): acesso, autoria, só-inserção e compras 5. Regras dos movimentos estorno válido funciona"
       ],
       "totalQueCaíram": 6,
-      "totalTestes": 42
+      "totalTestes": 46
     },
     {
       "id": "M9",
@@ -156,7 +155,7 @@
         "Estoque (banco local): acesso, autoria, só-inserção e compras 4. Nada é apagado nem editado DELETE em movimento é rejeitado"
       ],
       "totalQueCaíram": 3,
-      "totalTestes": 42
+      "totalTestes": 46
     },
     {
       "id": "M9b",
@@ -172,7 +171,7 @@
         "Estoque (banco local): estrutura e camadas de proteção triggers de só-inserção valem até para o dono do banco UPDATE e DELETE em movimento são rejeitados pelo trigger"
       ],
       "totalQueCaíram": 1,
-      "totalTestes": 42
+      "totalTestes": 46
     },
     {
       "id": "M10",
@@ -188,7 +187,7 @@
         "Estoque (banco local): estrutura e camadas de proteção índice único de compra assumida duas compras \"assumida\" do mesmo produto são rejeitadas pelo índice (SQL direto)"
       ],
       "totalQueCaíram": 1,
-      "totalTestes": 42
+      "totalTestes": 46
     },
     {
       "id": "M11",
@@ -270,15 +269,50 @@
     {
       "id": "A1",
       "grupo": "vistoria",
-      "titulo": "concluir compra sem FOR UPDATE (corrida: entrada em dobro)",
+      "titulo": "concluir compra SEM as duas defesas (FOR UPDATE e checagem do UPDATE): o defeito original, entrada em dobro",
       "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
       "testes": [
         "tests/estoque/db/estoque.db.test.js"
       ],
-      "resultado": "SOBREVIVEU",
-      "testesQueCaíram": [],
-      "totalQueCaíram": 0,
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: conclusões simultâneas da MESMA compra geram exatamente uma entrada",
+        "Estoque (banco local): acesso, autoria, só-inserção e compras 6. \"Eu compro\" (RPCs) A1: desistir e concluir ao mesmo tempo nunca deixam entrada com compra desistida"
+      ],
+      "totalQueCaíram": 2,
       "totalTestes": 33
+    },
+    {
+      "id": "A1a",
+      "grupo": "vistoria",
+      "titulo": "concluir compra sem o FOR UPDATE (a checagem do UPDATE ainda protege; só o teste estrutural vê)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: trava a linha da compra (FOR UPDATE)"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
+    },
+    {
+      "id": "A1b",
+      "grupo": "vistoria",
+      "titulo": "concluir compra sem a checagem do UPDATE (o FOR UPDATE ainda protege; só o teste estrutural vê)",
+      "arquivo": "supabase/migrations/20260707120000_estoque_e1.sql",
+      "testes": [
+        "tests/estoque/db/estoque.db.test.js",
+        "tests/estoque/db/estoque.db.estrutura.test.js"
+      ],
+      "resultado": "MORTA",
+      "testesQueCaíram": [
+        "Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: aborta se o UPDATE da compra não afetou nenhuma linha"
+      ],
+      "totalQueCaíram": 1,
+      "totalTestes": 46
     },
     {
       "id": "A2",
@@ -400,7 +434,7 @@
         "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) authenticated só tem os privilégios previstos, tabela a tabela"
       ],
       "totalQueCaíram": 1,
-      "totalTestes": 9
+      "totalTestes": 13
     },
     {
       "id": "H2",
@@ -415,7 +449,7 @@
         "Estoque (banco local): estrutura e camadas de proteção privilégios das tabelas (catálogo do Postgres) anon não executa nenhuma função do estoque"
       ],
       "totalQueCaíram": 1,
-      "totalTestes": 9
+      "totalTestes": 13
     }
   ]
 }

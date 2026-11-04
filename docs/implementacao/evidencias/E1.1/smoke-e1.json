@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-04T00:42:14.710Z",
+  "geradoEm": "2026-11-04T00:55:03.085Z",
   "node": "v24.20.0",
   "navegador": "156.0.8078.49",
   "viewport": "360x800 fixo (DPR 2, toque)",
@@ -2742,38 +2742,38 @@
   "telas": [
     {
       "nome": "A16-whatsapp-claro",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\A16-whatsapp-claro.png",
-      "sha256": "4e0df9f48a0e3074612e5898784291595f3ecf76c64d8a042adeacc24b519a7c"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\A16-whatsapp-claro.png",
+      "sha256": "d6e3b807f6b8771d565872c411f5bef4e6571214b80d36657ef603f72584d237"
     },
     {
       "nome": "B-estoque-irmao-light",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-irmao-light.png",
-      "sha256": "ec8a951ed05ee754ea0b53eb3bb26c14582b57ffc77781434bbe15e9b5821e31"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\B-estoque-irmao-light.png",
+      "sha256": "a6a5ca8a54fa51b8e84d7843a4b9ab4299ca5d2bfdb2fd13ff2e20847bed58c3"
     },
     {
       "nome": "B-estoque-irmao-dark",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-irmao-dark.png",
-      "sha256": "e72b886d74d628a8f22d8e190caeb078c42542395bd9b07e79179e9d39916b26"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\B-estoque-irmao-dark.png",
+      "sha256": "30d257e28cb9d52bcc64e568b73cc6d3980b94690970d9ab29f5b2b16b1c0137"
     },
     {
       "nome": "B-estoque-cuidadora-light",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-cuidadora-light.png",
-      "sha256": "c4760666d87d824d593265aad16de90e74192b4501515bfca4452e910673ce31"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\B-estoque-cuidadora-light.png",
+      "sha256": "b50e52984a7ecc5e616b42386ce683696ac57f62295a5df318031042701f1cd2"
     },
     {
       "nome": "B-estoque-cuidadora-dark",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\B-estoque-cuidadora-dark.png",
-      "sha256": "cc166430043622a9773705796553b9ab4dc3a3d921c57bebaf8694013a702a6d"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\B-estoque-cuidadora-dark.png",
+      "sha256": "3626d453436c532dc1c9f931efcc68de8b628a4219f85417b99894747c78d057"
     },
     {
       "nome": "C-sem-migration-irmao",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\C-sem-migration-irmao.png",
-      "sha256": "14345c5409ef681ca726621f2a7a3ccbfe2b6ab021a6651b2475b8f5116fa34c"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\C-sem-migration-irmao.png",
+      "sha256": "1fc3f81ca2f15eb05ecbe2d213cbeb4f4a3cff5666d6e905fce1cd0bcf819740"
     },
     {
       "nome": "C-sem-migration-cuidadora",
-      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-smoke\\C-sem-migration-cuidadora.png",
-      "sha256": "f0d3825e132e93ab181cf63f92046fe7e576f868a311d73398c23902a31af78c"
+      "arquivo": "C:\\Users\\thiag\\AppData\\Local\\Temp\\estoque-e1.1-h21iSt\\telas\\C-sem-migration-cuidadora.png",
+      "sha256": "c6719fc936c561aa7fd821c7df8cf2e0802103ab025c110e10334dd1750f7cfa"
     }
   ],
   "baselineMain": {

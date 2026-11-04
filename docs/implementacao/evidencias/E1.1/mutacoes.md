@@ -1,6 +1,6 @@
-# Prova de mutação (commit 1e96bfb)
+# Prova de mutação (commit c124658)
 
-25 de 26 mutações derrubaram a suíte. Árvore limpa ao final: sim.
+28 de 28 mutações derrubaram a suíte. Árvore limpa ao final: sim.
 
 | # | Grupo | Mutação | Arquivo | Resultado | Teste(s) que caíram |
 |---|---|---|---|---|---|
@@ -20,7 +20,9 @@
 | B1 | vistoria | canal Realtime com nome fixo (selo e aba colidem) | `src/features/estoque/data/estoqueService.js` | MORTA | realtimeCanais.test.js - assinaturas simultâneas do estoque duas assinaturas em sequência (selo + aba) não lançam erro<br>realtimeCanais.test.js - assinaturas simultâneas do estoque cancelar uma assinatura não derruba a outra |
 | B2 | vistoria | remove a barreira de erro dos dois React.lazy no App | `src/App.jsx` | MORTA | AppIsolamento.test.jsx - falha de carregamento do estoque não derruba o app com os dois chunks do estoque indisponíveis, Escalas e Diário continuam funcionando |
 | B3 | vistoria | busca só a primeira página (trunca em 1000 linhas) | `src/features/estoque/data/estoqueService.js` | MORTA | Estoque (banco local): acesso, autoria, só-inserção e compras 8. B3: mais de 1000 movimentos não podem truncar o saldo o app calcula o saldo com TODOS os movimentos (âncora é o último registro) |
-| A1 | vistoria | concluir compra sem FOR UPDATE (corrida: entrada em dobro) | `supabase/migrations/20260707120000_estoque_e1.sql` | SOBREVIVEU | - |
+| A1 | vistoria | concluir compra SEM as duas defesas (FOR UPDATE e checagem do UPDATE): o defeito original, entrada em dobro | `supabase/migrations/20260707120000_estoque_e1.sql` | MORTA | Estoque (banco local): acesso, autoria, só-inserção e compras 6. "Eu compro" (RPCs) A1: conclusões simultâneas da MESMA compra geram exatamente uma entrada<br>Estoque (banco local): acesso, autoria, só-inserção e compras 6. "Eu compro" (RPCs) A1: desistir e concluir ao mesmo tempo nunca deixam entrada com compra desistida |
+| A1a | vistoria | concluir compra sem o FOR UPDATE (a checagem do UPDATE ainda protege; só o teste estrutural vê) | `supabase/migrations/20260707120000_estoque_e1.sql` | MORTA | Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: trava a linha da compra (FOR UPDATE) |
+| A1b | vistoria | concluir compra sem a checagem do UPDATE (o FOR UPDATE ainda protege; só o teste estrutural vê) | `supabase/migrations/20260707120000_estoque_e1.sql` | MORTA | Estoque (banco local): estrutura e camadas de proteção RPCs de compra mantêm as DUAS defesas contra corrida estoque_concluir_compra: aborta se o UPDATE da compra não afetou nenhuma linha |
 | A2 | vistoria | selo calcula sem a agenda de remédios | `src/features/estoque/EstoqueNavBadge.jsx` | MORTA | EstoqueNavBadgeAgenda.test.jsx - selo considera a agenda de remédios (A2) remédio vinculado à agenda entra na contagem (2/dia, saldo 8 = 4 dias = crítico) |
 | A3 | vistoria | vínculo parcial reduz o consumo pelos horários que sobraram | `src/features/estoque/domain/saldo.js` | MORTA | agenda.test.js - Vínculo com a agenda de remédios (M11) A3: vínculo parcialmente quebrado com consumo manual usa o consumo manual (nunca reduz pelos horários restantes)<br>agenda.test.js - Vínculo com a agenda de remédios (M11) A3: vínculo parcialmente quebrado SEM consumo manual não estima nada (⚪ com o motivo) |
 | A4 | vistoria | "Acabou" volta a usar o ícone ⚪ | `src/features/estoque/domain/saldo.js` | MORTA | limiares.test.js - Limiares e fronteiras exatas (M1, M3) Modo mínimo saldo <= 0 -> acabou (⚫) |
